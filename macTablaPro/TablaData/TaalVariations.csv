@@ -1,0 +1,1054 @@
+variationType,taalName,variationNum,tempos,seqNum,bolLeft,bolRight,matra,numBeats,volLeft,volRight,bolName
+0,Pauri/Paudi,0,"2,3",1,,Ta,2,0.5,1.0,1.0,TaTa
+0,Pauri/Paudi,0,"2,3",2,,Ta,2,0.5,1.0,1.0,
+1,Teentaal,1,"2,3",1,,Ta,1,0.5,1.0,1.0,TaTa
+1,Teentaal,1,"2,3",2,,Ta,1,0.5,1.0,1.0,
+1,Teentaal,1,"2,3",3,,Ti,2,0.25,1.0,1.0,TiRaKiTa
+1,Teentaal,1,"2,3",4,,Ra,2,0.25,1.0,1.0,
+1,Teentaal,1,"2,3",5,Ki,,2,0.25,1.0,1.0,
+1,Teentaal,1,"2,3",6,,TTa,2,0.25,1.0,1.0,
+1,Teentaal,1,"2,3",7,Ge-B,Ta,3,0.5,1.0,1.0,DhaDha
+1,Teentaal,1,"2,3",8,Ge,Ta,3,0.5,1.0,1.0,
+1,Teentaal,1,"2,3",9,,Ti,4,0.25,1.0,1.0,TiRaKiTa
+1,Teentaal,1,"2,3",10,,Ra,4,0.25,1.0,1.0,
+1,Teentaal,1,"2,3",11,Ki,,4,0.25,1.0,1.0,
+1,Teentaal,1,"2,3",12,,TTa,4,0.25,1.0,1.0,
+1,Addha/Sitarkhani/Punjabi,2,"2,3",1,Ge,Ta,1,0.5,1.0,1.0,DhaGe
+1,Addha/Sitarkhani/Punjabi,2,"2,3",2,Ge-B,,1,0.5,0.5,1.0,
+1,Addha/Sitarkhani/Punjabi,2,"2,3",3,Ge,Ta,2,0.5,1.0,1.0,DhaTira
+1,Addha/Sitarkhani/Punjabi,2,"2,3",4,,Ti,2,0.25,1.0,1.0,
+1,Addha/Sitarkhani/Punjabi,2,"2,3",5,,Ra,2,0.25,1.0,1.0,
+1,Addha/Sitarkhani/Punjabi,2,"2,3",6,Ki,,3,0.25,1.0,1.0,KiTaTaka
+1,Addha/Sitarkhani/Punjabi,2,"2,3",7,,TTa,3,0.25,1.0,1.0,
+1,Addha/Sitarkhani/Punjabi,2,"2,3",8,,Taka,3,0.5,1.0,1.0,
+1,Addha/Sitarkhani/Punjabi,2,"2,3",9,,Ti,4,0.25,1.0,1.0,TiRaKiTa
+1,Addha/Sitarkhani/Punjabi,2,"2,3",10,,Ra,4,0.25,1.0,1.0,
+1,Addha/Sitarkhani/Punjabi,2,"2,3",11,Ki,,4,0.25,1.0,1.0,
+1,Addha/Sitarkhani/Punjabi,2,"2,3",12,,TTa,4,0.25,1.0,1.0,
+1,Teentaal,3,"2,3",1,Ge,Ta,1,0.5,1.0,1.0,DhaGe
+1,Teentaal,3,"2,3",2,Ge-B,,1,0.5,0.5,1.0,
+1,Teentaal,3,"2,3",3,Ge,Ta,2,0.5,1.0,1.0,DhaTira
+1,Teentaal,3,"2,3",4,,Ti,2,0.25,1.0,1.0,
+1,Teentaal,3,"2,3",5,,Ra,2,0.25,1.0,1.0,
+1,Teentaal,3,"2,3",6,Ki,,3,0.25,1.0,1.0,KiTaTaka
+1,Teentaal,3,"2,3",7,,TTa,3,0.25,1.0,1.0,
+1,Teentaal,3,"2,3",8,,Taka,3,0.5,1.0,1.0,
+1,Teentaal,3,"2,3",9,,Ti,4,0.25,1.0,1.0,TiRaKiTa
+1,Teentaal,3,"2,3",10,,Ra,4,0.25,1.0,1.0,
+1,Teentaal,3,"2,3",11,Ki,,4,0.25,1.0,1.0,
+1,Teentaal,3,"2,3",12,,TTa,4,0.25,1.0,1.0,
+1,Teentaal,4,"2,3",1,Ge,Ta,1,0.5,1.0,1.0,Dha-Ti-
+1,Teentaal,4,"2,3",2,,Ti,1,0.5,1.0,1.0,
+1,Teentaal,4,"2,3",3,Ge,Ta,2,0.5,1.0,1.0,Dha-TiRa
+1,Teentaal,4,"2,3",4,,Ti,2,0.25,1.0,1.0,
+1,Teentaal,4,"2,3",5,,Ra,2,0.25,1.0,1.0,
+1,Teentaal,4,"2,3",6,Ki,,3,0.25,1.0,1.0,KiTaTaka
+1,Teentaal,4,"2,3",7,,TTa,3,0.25,1.0,1.0,
+1,Teentaal,4,"2,3",8,,Taka,3,0.5,1.0,1.0,
+1,Teentaal,4,"2,3",9,,Ti,4,0.25,1.0,1.0,TiRaKiTa
+1,Teentaal,4,"2,3",10,,Ra,4,0.25,1.0,1.0,
+1,Teentaal,4,"2,3",11,Ki,,4,0.25,1.0,1.0,
+1,Teentaal,4,"2,3",12,,TTa,4,0.25,1.0,1.0,
+1,Teentaal,5,"2,3",1,,Ti,1,0.5,1.0,1.0,TiTa
+1,Teentaal,5,"2,3",2,,TTa,1,0.5,1.0,1.0,
+1,Teentaal,5,"2,3",3,Ge,Ta,2,0.5,1.0,1.0,Dha-Tira
+1,Teentaal,5,"2,3",4,,Ti,2,0.25,1.0,1.0,
+1,Teentaal,5,"2,3",5,,Ra,2,0.25,1.0,1.0,
+1,Teentaal,5,"2,3",6,Ki,,3,0.25,1.0,1.0,KiTaDha-
+1,Teentaal,5,"2,3",7,,TTa,3,0.25,1.0,1.0,
+1,Teentaal,5,"2,3",8,Ge,Ta,3,0.5,1.0,1.0,
+1,Teentaal,5,"2,3",9,,Ti,4,0.25,1.0,1.0,TiRaKiTa
+1,Teentaal,5,"2,3",10,,Ra,4,0.25,1.0,1.0,
+1,Teentaal,5,"2,3",11,Ki,,4,0.25,1.0,1.0,
+1,Teentaal,5,"2,3",12,,TTa,4,0.25,1.0,1.0,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Rupak",6,"2,3",1,,Ti,1,0.25,1.0,1.0,TiRaKiTa
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Rupak",6,"2,3",2,,Ra,1,0.25,1.0,1.0,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Rupak",6,"2,3",3,Ki,,1,0.25,1.0,1.0,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Rupak",6,"2,3",4,,TTa,1,0.25,1.0,1.0,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Rupak",6,"2,3",5,Ge,Ta,2,0.5,1.0,1.0,Dha-Tira
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Rupak",6,"2,3",6,,Ti,2,0.25,1.0,1.0,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Rupak",6,"2,3",7,,Ra,2,0.25,1.0,1.0,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Rupak",6,"2,3",8,Ki,,3,0.25,1.0,1.0,KiTaDha-
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Rupak",6,"2,3",9,,TTa,3,0.25,1.0,1.0,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Rupak",6,"2,3",10,Ge,Ta,3,0.5,1.0,1.0,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Rupak",6,"2,3",11,,Ti,4,0.25,1.0,1.0,TiRaKiTa
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Rupak",6,"2,3",12,,Ra,4,0.25,1.0,1.0,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Rupak",6,"2,3",13,Ki,,4,0.25,1.0,1.0,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Rupak",6,"2,3",14,,TTa,4,0.25,1.0,1.0,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Deepchandi",7,2,1,Ge,Ta,1,0.5,1.0,1.0,Dha-TiTa
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Deepchandi",7,2,2,,Ti,1,0.25,1.0,1.0,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Deepchandi",7,2,3,,TTa,1,0.25,1.0,1.0,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Deepchandi",7,2,4,Ge-B,,2,0.25,0.5,1.0,GiDaNaGa
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Deepchandi",7,2,5,,TiL,2,0.25,1.0,1.0,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Deepchandi",7,2,6,,Na,2,0.25,1.0,1.0,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Deepchandi",7,2,7,Ge-B,,2,0.25,1.0,0.5,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Deepchandi",7,2,8,,Ta,3,0.5,1.0,1.0,Ta-TiTa
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Deepchandi",7,2,9,,Ti,3,0.25,1.0,1.0,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Deepchandi",7,2,10,,TTa,3,0.25,1.0,1.0,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Deepchandi",7,2,11,Ge-B,,4,0.25,0.5,1.0,GiDaNaGa
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Deepchandi",7,2,12,,TiL,4,0.25,1.0,1.0,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Deepchandi",7,2,13,,Na,4,0.25,1.0,1.0,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Deepchandi",7,2,14,Ge-B,,4,0.25,1.0,0.5,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Ektaal",8,"2,3",1,,Ta,1,0.5,1.0,1.0,Ta-TiTa
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Ektaal",8,"2,3",2,,Ti,1,0.25,1.0,1.0,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Ektaal",8,"2,3",3,,TTa,1,0.25,1.0,1.0,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Ektaal",8,"2,3",4,Ge-B,TinMed,2,0.5,0.5,1.0,Dhin-Ta-
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Ektaal",8,"2,3",5,,Ta,2,0.5,1.0,1.0,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Ektaal",8,"2,3",6,,Ti,3,0.25,1.0,1.0,TiTaDhin-
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Ektaal",8,"2,3",7,,TTa,3,0.25,1.0,1.0,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Ektaal",8,"2,3",8,Ge-B,TinMed,3,0.5,1.0,1.0,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Ektaal",8,"2,3",9,,Ta,4,0.5,1.0,1.0,Ta-TiTa
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Ektaal",8,"2,3",10,,Ti,4,0.25,1.0,1.0,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Ektaal",8,"2,3",11,,TTa,4,0.25,1.0,1.0,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Rupak,Ektaal",9,2,1,Ge,Ta,1,0.25,1.0,1.0,DhaGeTiTa
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Rupak,Ektaal",9,2,2,Ge-B,,1,0.25,0.5,1.0,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Rupak,Ektaal",9,2,3,,Ti,1,0.25,1.0,1.0,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Rupak,Ektaal",9,2,4,,TTa,1,0.25,1.0,1.0,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Rupak,Ektaal",9,2,5,Ge-B,TinMed,2,0.5,0.5,1.0,Dhin-DhaGe
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Rupak,Ektaal",9,2,6,Ge,Ta,2,0.25,1.0,1.0,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Rupak,Ektaal",9,2,7,Ge-B,,2,0.25,0.5,1.0,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Rupak,Ektaal",9,2,8,,Ti,3,0.25,1.0,1.0,TiTaDhin-
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Rupak,Ektaal",9,2,9,,TTa,3,0.25,1.0,1.0,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Rupak,Ektaal",9,2,10,Ge-B,TinMed,3,0.5,1.0,1.0,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Rupak,Ektaal",9,2,11,Ge,Ta,4,0.25,1.0,1.0,DhaGeTiTa
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Rupak,Ektaal",9,2,12,Ge-B,,4,0.25,0.5,1.0,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Rupak,Ektaal",9,2,13,,Ti,4,0.25,1.0,1.0,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Rupak,Ektaal",9,2,14,,TTa,4,0.25,1.0,1.0,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Rupak,Jhaptaal,Deepchandi",10,2,1,Ge,Ta,1,0.5,1.0,1.0,DhaGe
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Rupak,Jhaptaal,Deepchandi",10,2,2,Ge-B,,1,0.5,0.5,1.0,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Rupak,Jhaptaal,Deepchandi",10,2,3,,Ta,2,0.5,1.0,1.0,NaDha
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Rupak,Jhaptaal,Deepchandi",10,2,4,Ge,Ta,2,0.5,1.0,1.0,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Rupak,Jhaptaal,Deepchandi",10,2,5,,Ti,3,0.25,1.0,1.0,TiRaKiTa
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Rupak,Jhaptaal,Deepchandi",10,2,6,,Ra,3,0.25,1.0,1.0,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Rupak,Jhaptaal,Deepchandi",10,2,7,Ki,,3,0.25,1.0,1.0,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Rupak,Jhaptaal,Deepchandi",10,2,8,,TTa,3,0.25,1.0,1.0,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Deepchandi",11,"2,3",1,,Ta,1,0.5,1.0,1.0,Ta
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Deepchandi",11,"2,3",2,,TiL,1,0.5,1.0,1.0,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Deepchandi",11,"2,3",3,Ge,Ta,2,0.5,1.0,1.0,DhaDhi
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Deepchandi",11,"2,3",4,Ge-B,Tin,2,0.5,1.0,1.0,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Deepchandi",11,"2,3",5,,Ta,3,0.5,1.0,1.0,NaDha
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Deepchandi",11,"2,3",6,Ge,Ta,3,0.5,1.0,1.0,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Deepchandi",11,"2,3",7,,Tin,4,0.5,1.0,1.0,TiNa
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Deepchandi",11,"2,3",8,,Na,4,0.5,1.0,1.0,
+1,Teentaal,12,"2,3",1,Ge,Ta,1,0.5,1.0,1.0,DhaTi
+1,Teentaal,12,"2,3",2,,Ti,1,0.5,1.0,1.0,
+1,Teentaal,12,"2,3",3,Ge,Ta,2,1.0,1.0,1.0,Dha-
+1,Teentaal,12,"2,3",4,Ge,Ta,3,0.5,1.0,1.0,DhaTi
+1,Teentaal,12,"2,3",5,,Ti,3,0.5,1.0,1.0,
+1,Teentaal,12,"2,3",6,Ge,Ta,4,1.0,1.0,1.0,Dha-
+1,Teentaal,12,"2,3",7,Ge,Ta,5,0.5,1.0,1.0,DhaTi
+1,Teentaal,12,"2,3",8,,Ti,5,0.5,1.0,1.0,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Ektaal,Deepchandi",13,"2,3",1,Ge,Ta,1,0.5,1.0,1.0,DhaTi
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Ektaal,Deepchandi",13,"2,3",2,,Ti,1,0.5,1.0,1.0,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Ektaal,Deepchandi",13,"2,3",3,Ge,Ta,2,0.5,1.0,1.0,DhaDha
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Ektaal,Deepchandi",13,"2,3",4,Ge-B,Ta,2,0.5,0.5,1.0,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Ektaal,Deepchandi",13,"2,3",5,,Ti,3,0.5,1.0,1.0,TiDha
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Ektaal,Deepchandi",13,"2,3",6,Ge,Ta,3,0.5,1.0,1.0,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Ektaal,Deepchandi",13,"2,3",7,Ge,Ta,4,0.5,1.0,1.0,DhaTi
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Ektaal,Deepchandi",13,"2,3",8,,Ti,4,0.5,1.0,1.0,
+0,Addha/Sitarkhani/Punjabi,14,"2,3",1,Ge-B,Ta,5,0.5,1.0,1.0,DhaGe
+0,Addha/Sitarkhani/Punjabi,14,"2,3",2,Ge,,5,0.5,0.75,1.0,
+0,Addha/Sitarkhani/Punjabi,14,"2,3",3,,TiL,6,0.5,1.0,0.5,-Dhin
+0,Addha/Sitarkhani/Punjabi,14,"2,3",4,Ge-LT6,TinMed,6,0.5,1.0,1.0,
+0,Addha/Sitarkhani/Punjabi,14,"2,3",5,,,7,0.5,1.0,1.0,-
+0,Addha/Sitarkhani/Punjabi,14,"2,3",6,,TiL,7,0.5,1.0,0.5,
+0,Addha/Sitarkhani/Punjabi,14,"2,3",7,Ge,Ta,8,0.5,1.0,1.0,Dha
+0,Addha/Sitarkhani/Punjabi,14,"2,3",8,,TiL,8,0.5,1.0,0.5,
+0,Teentaal,15,"2,3",1,Ge,Ta,9,0.5,1.0,1.0,Dha
+0,Teentaal,15,"2,3",2,Ge-B,,9,0.5,0.5,1.0,
+0,Teentaal,15,"2,3",3,Ka,Tu,10,1.0,1.0,1.0,Tu
+0,Teentaal,15,"2,3",4,Ka,Tu,11,1.0,1.0,1.0,Tu
+0,Teentaal,15,"2,3",5,,Ta,12,0.5,1.0,1.0,Ta
+0,Teentaal,15,"2,3",6,,TiL,12,0.5,1.0,1.0,
+0,Teentaal,16,"2,3",1,Ge,Ta,5,0.5,1.0,1.0,DhaGe
+0,Teentaal,16,"2,3",2,Ge-B,,5,0.5,1.0,1.0,
+0,Teentaal,16,"2,3",3,Ge-LT6,Tin,6,1.0,1.0,1.0,Dhin
+0,Teentaal,16,"2,3",4,Ge,Tin,7,1.0,1.0,1.0,Dhin
+0,Teentaal,16,"2,3",5,Ge-B,Ta,8,0.5,1.0,0.75,Dha
+0,Teentaal,16,"2,3",6,,TiL,8,0.5,1.0,0.5,
+0,Teentaal,16,"2,3",7,Ge,Ta,9,0.5,1.0,1.0,DhaGe
+0,Teentaal,16,"2,3",8,Ge-B,,9,0.5,1.0,1.0,
+0,Teentaal,17,2,1,Ge,Ta,1,1.0,1.0,1.0,Dha
+0,Teentaal,17,2,2,Ge-LT6,Tin,2,0.75,1.0,1.0,Dhin
+0,Teentaal,17,2,3,,KDa,2,0.25,0.75,0.75,
+0,Teentaal,17,2,4,Ge,Tin,3,0.5,1.0,1.0,DhinDhin
+0,Teentaal,17,2,5,Ge-LT6,Tin,3,0.5,1.0,0.5,
+0,Teentaal,17,2,6,Ge,Ta,4,0.5,1.0,0.75,Dha
+0,Teentaal,17,2,7,,TiL,4,0.5,1.0,1.0,
+0,Teentaal,17,2,8,Ge,Ta,5,1.0,1.0,1.0,Dha
+0,Teentaal,17,2,9,Ge-LT6,Tin,6,0.75,1.0,1.0,Dhin
+0,Teentaal,17,2,10,,KDa,6,0.25,0.75,0.75,
+0,Teentaal,17,2,11,Ge,Tin,7,0.5,1.0,1.0,DhinDhin
+0,Teentaal,17,2,12,Ge-LT6,Tin,7,0.5,1.0,0.5,
+0,Teentaal,17,2,13,Ge,Ta,8,0.5,1.0,0.75,Dha
+0,Teentaal,17,2,14,,TiL,8,0.5,1.0,1.0,
+0,Teentaal,18,2,1,Ge,Ta,1,0.5,1.0,1.0,Dha
+0,Teentaal,18,2,2,,TiL,1,0.5,1.0,1.0,
+0,Teentaal,18,2,3,Ge-LT6,Tin,2,0.75,1.0,1.0,Dhin
+0,Teentaal,18,2,4,,KDa,2,0.25,1.0,1.0,
+0,Teentaal,18,2,5,Ge,Tin,3,0.5,1.0,1.0,Dhin
+0,Teentaal,18,2,6,,TiL,3,0.5,1.0,1.0,
+0,Teentaal,18,2,7,Ge,Ta,4,0.5,1.0,0.5,DhaDha
+0,Teentaal,18,2,8,Ge-B,Ta,4,0.5,0.5,0.75,
+0,Teentaal,18,2,9,Ge,Ta,5,0.5,1.0,1.0,Dha
+0,Teentaal,18,2,10,,TiL,5,0.5,1.0,1.0,
+0,Teentaal,18,2,11,Ge-LT6,Tin,6,0.75,1.0,1.0,Dhin
+0,Teentaal,18,2,12,,KDa,6,0.25,1.0,1.0,
+0,Teentaal,18,2,13,Ge,Tin,7,0.5,1.0,1.0,Dhin
+0,Teentaal,18,2,14,,TiL,7,0.5,1.0,1.0,
+0,Teentaal,18,2,15,Ge,Ta,8,0.5,1.0,0.5,DhaDha
+0,Teentaal,18,2,16,Ge-B,Ta,8,0.5,0.5,0.75,
+0,Rupak,19,2,1,Ka,Tu,1,0.75,1.0,1.0,Tu
+0,Rupak,19,2,2,,KDa,1,0.25,1.0,0.75,
+0,Rupak,19,2,3,Ka,Tu,2,0.5,1.0,1.0,Tu
+0,Rupak,19,2,4,Ka,Tin,2,0.5,1.0,1.0,
+0,Rupak,19,2,5,,Na,3,0.5,1.0,1.0,Na
+0,Rupak,19,2,6,,TiL,3,0.5,1.0,0.5,
+1,Rupak,20,"55,2",1,,Na,7,0.25,1.0,1.0,NaNaTiTa
+1,Rupak,20,"55,2",2,,Na,7,0.25,1.0,1.0,
+1,Rupak,20,"55,2",3,,Ti,7,0.25,1.0,1.0,
+1,Rupak,20,"55,2",4,,TTa,7,0.25,1.0,1.0,
+1,Rupak,21,2,1,Ge-S,TinFull,1,1.0,1.0,1.0,Dhin
+1,Rupak,21,2,2,,Ti,2,0.25,1.0,1.0,TiRaKiTa
+1,Rupak,21,2,3,,Ra,2,0.25,1.0,1.0,
+1,Rupak,21,2,4,Ki,,2,0.25,1.0,1.0,
+1,Rupak,21,2,5,,TTa,2,0.25,1.0,1.0,
+1,Rupak,21,2,6,Ge-B,TinFull,3,0.75,1.0,1.0,Dhin
+1,Rupak,21,2,7,,KDa,3,0.25,1.0,0.75,
+1,Rupak,21,2,8,,Na,4,0.5,1.0,1.0,NaKat
+1,Rupak,21,2,9,Kat,,4,0.5,1.0,1.0,
+1,Rupak,22,2,1,Ge,Ta,1,0.5,1.0,1.0,DhaDhin
+1,Rupak,22,2,2,Ge-F,TinMed,1,0.5,0.5,1.0,
+1,Rupak,22,2,3,,Ti,2,0.25,1.0,1.0,TiRaKiTa
+1,Rupak,22,2,4,,Ra,2,0.25,1.0,1.0,
+1,Rupak,22,2,5,Ki,,2,0.25,1.0,1.0,
+1,Rupak,22,2,6,,TTa,2,0.25,1.0,1.0,
+1,Rupak,22,2,7,Ge,Ta,3,0.5,1.0,1.0,DhaGe
+1,Rupak,22,2,8,Ge-B,,3,0.5,0.5,1.0,
+1,Rupak,22,2,9,Ge,Ta,4,0.5,1.0,1.0,DhaTi
+1,Rupak,22,2,10,,Ti,4,0.5,1.0,1.0,
+1,"Ektaal,Deepchandi",23,2,1,Ge,Ta,1,0.5,1.0,1.0,DhaGe
+1,"Ektaal,Deepchandi",23,2,2,Ge-B,,1,0.5,0.5,1.0,
+1,"Ektaal,Deepchandi",23,2,3,,Ti,2,0.25,1.0,1.0,TiRaKiTa
+1,"Ektaal,Deepchandi",23,2,4,,Ra,2,0.25,1.0,1.0,
+1,"Ektaal,Deepchandi",23,2,5,Ki,,2,0.25,1.0,1.0,
+1,"Ektaal,Deepchandi",23,2,6,,TTa,2,0.25,1.0,1.0,
+1,"Ektaal,Deepchandi",23,2,7,Ge,Ta,3,0.5,1.0,1.0,DhaGe
+1,"Ektaal,Deepchandi",23,2,8,Ge-B,,3,0.5,0.5,1.0,
+1,"Ektaal,Deepchandi",23,2,9,Ge,Ta,4,0.5,1.0,1.0,DhaTi
+1,"Ektaal,Deepchandi",23,2,10,,Ti,4,0.5,1.0,1.0,
+1,"Ektaal,Deepchandi",24,3,1,Ge,Ta,1,0.5,1.0,1.0,DhaGe
+1,"Ektaal,Deepchandi",24,3,2,Ge-B,,1,0.5,0.5,1.0,
+1,"Ektaal,Deepchandi",24,3,3,,Ti,2,0.5,1.0,1.0,TiTa
+1,"Ektaal,Deepchandi",24,3,4,,TTa,2,0.5,1.0,1.0,
+1,"Ektaal,Deepchandi",24,3,5,Ge,Ta,3,0.5,1.0,1.0,DhaGe
+1,"Ektaal,Deepchandi",24,3,6,Ge-B,,3,0.5,0.5,1.0,
+1,"Ektaal,Deepchandi",24,3,7,Ge,Ta,4,0.5,1.0,1.0,DhaTi
+1,"Ektaal,Deepchandi",24,3,8,,Ti,4,0.5,1.0,1.0,
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",25,"0,1",1,Ge,Ta,1,0.1875,1.0,1.0,Dha
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",25,"0,1",2,,KDa,1,0.0625,1.0,0.5,
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",25,"0,1",3,Ge,Ta,1,0.125,1.0,1.0,
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",25,"0,1",4,Ge-B,Tin,1,0.125,1.0,1.0,
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",25,"0,1",5,,Na,1,0.125,1.0,1.0,
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",25,"0,1",6,Ge,Ta,1,0.125,1.0,1.0,
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",25,"0,1",7,Ka,Tin,1,0.125,1.0,1.0,
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",25,"0,1",8,,Na,1,0.125,1.0,1.0,
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",26,"0,1",1,Ge,Ta,1,0.1875,1.0,1.0,Dha
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",26,"0,1",2,,KDa,1,0.0625,1.0,0.5,
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",26,"0,1",3,Ge-B,Tin,1,0.125,1.0,1.0,
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",26,"0,1",4,Ge,Ta,1,0.125,1.0,1.0,
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",26,"0,1",5,,,1,0.125,1.0,1.0,
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",26,"0,1",6,Ge-LT6,Ta,1,0.125,1.0,1.0,
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",26,"0,1",7,Ge,Ta,1,0.125,1.0,1.0,
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",26,"0,1",8,,Ti,1,0.125,1.0,1.0,
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",27,"0,1",1,Ge,Ta,1,0.1875,1.0,1.0,Dha
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",27,"0,1",2,,KDa,1,0.0625,1.0,0.5,
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",27,"0,1",3,Ge-B,Tin,1,0.125,1.0,1.0,
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",27,"0,1",4,Ge,Ta,1,0.125,1.0,1.0,
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",27,"0,1",5,,,1,0.125,1.0,1.0,
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",27,"0,1",6,Ge-LT6,Ta,1,0.125,1.0,1.0,
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",27,"0,1",7,,Ti,1,0.125,1.0,0.5,
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",27,"0,1",8,Ge,Ta,1,0.125,1.0,1.0,
+1,"Rupak,Ektaal,Teentaal,Ada Chautaal",28,0,1,Ge,Ta,1,0.1875,1.0,1.0,Dha
+1,"Rupak,Ektaal,Teentaal,Ada Chautaal",28,0,2,,KDa,1,0.0625,1.0,0.5,
+1,"Rupak,Ektaal,Teentaal,Ada Chautaal",28,0,3,Ge-B,Tin,1,0.125,1.0,1.0,
+1,"Rupak,Ektaal,Teentaal,Ada Chautaal",28,0,4,Ge,Ta,1,0.125,0.5,0.5,
+1,"Rupak,Ektaal,Teentaal,Ada Chautaal",28,0,5,Ge,Ta,1,0.0416667,1.0,1.0,
+1,"Rupak,Ektaal,Teentaal,Ada Chautaal",28,0,6,,,1,0.0416667,0.5,0.5,
+1,"Rupak,Ektaal,Teentaal,Ada Chautaal",28,0,7,,Ti,1,0.0416667,1.0,0.5,
+1,"Rupak,Ektaal,Teentaal,Ada Chautaal",28,0,8,Ge,Ta,1,0.0416667,1.0,1.0,
+1,"Rupak,Ektaal,Teentaal,Ada Chautaal",28,0,9,Ka,Tin,1,0.0416667,0.5,0.5,
+1,"Rupak,Ektaal,Teentaal,Ada Chautaal",28,0,10,,Na,1,0.0416667,1.0,0.5,
+1,"Rupak,Ektaal,Teentaal,Ada Chautaal",28,0,11,Ge,Ta,1,0.0416667,1.0,1.0,
+1,"Rupak,Ektaal,Teentaal,Ada Chautaal",28,0,12,Ge-B,Tin,1,0.0416667,0.5,0.5,
+1,"Rupak,Ektaal,Teentaal,Ada Chautaal",28,0,13,,Na,1,0.0416667,1.0,0.5,
+1,"Rupak,Ektaal,Teentaal,Ada Chautaal",28,0,14,Ge,Ta,1,0.0416667,1.0,1.0,
+1,"Rupak,Ektaal,Teentaal,Ada Chautaal",28,0,15,Ka,Tin,1,0.0416667,0.5,0.5,
+1,"Rupak,Ektaal,Teentaal,Ada Chautaal",28,0,16,,Na,1,0.0416667,1.0,0.5,
+1,Tilwada,29,"0,1",1,Ge-B,TinFull,1,0.1875,1.0,1.0,Dhin
+1,Tilwada,29,"0,1",2,,KDa,1,0.0625,1.0,0.5,
+1,Tilwada,29,"0,1",3,Ge,Ta,1,0.125,1.0,1.0,
+1,Tilwada,29,"0,1",4,Ge-B,Tin,1,0.125,1.0,1.0,
+1,Tilwada,29,"0,1",5,,Na,1,0.125,1.0,1.0,
+1,Tilwada,29,"0,1",6,Ge,Ta,1,0.125,1.0,1.0,
+1,Tilwada,29,"0,1",7,Ka,Tin,1,0.125,1.0,1.0,
+1,Tilwada,29,"0,1",8,,Na,1,0.125,1.0,1.0,
+1,Tilwada,30,"0,1",1,Ge-B,TinFull,1,0.1875,1.0,1.0,Dhin
+1,Tilwada,30,"0,1",2,,KDa,1,0.0625,1.0,0.5,
+1,Tilwada,30,"0,1",3,Ge-B,Tin,1,0.125,1.0,1.0,
+1,Tilwada,30,"0,1",4,Ge,Ta,1,0.125,1.0,1.0,
+1,Tilwada,30,"0,1",5,,,1,0.125,1.0,1.0,
+1,Tilwada,30,"0,1",6,Ge-LT6,Ta,1,0.125,1.0,1.0,
+1,Tilwada,30,"0,1",7,Ge,Ta,1,0.125,1.0,1.0,
+1,Tilwada,30,"0,1",8,,Ti,1,0.125,1.0,1.0,
+1,Tilwada,31,"0,1",1,Ge-B,TinFull,1,0.1875,1.0,1.0,Dhin
+1,Tilwada,31,"0,1",2,,KDa,1,0.0625,1.0,0.5,
+1,Tilwada,31,"0,1",3,Ge-B,Tin,1,0.125,1.0,1.0,
+1,Tilwada,31,"0,1",4,Ge,Ta,1,0.125,1.0,1.0,
+1,Tilwada,31,"0,1",5,,,1,0.125,1.0,1.0,
+1,Tilwada,31,"0,1",6,Ge-LT6,Ta,1,0.125,1.0,1.0,
+1,Tilwada,31,"0,1",7,,Ti,1,0.125,1.0,0.5,
+1,Tilwada,31,"0,1",8,Ge,Ta,1,0.125,1.0,1.0,
+1,Tilwada,32,0,1,Ge-B,TinFull,1,0.1875,1.0,1.0,Dhin
+1,Tilwada,32,0,2,,KDa,1,0.0625,1.0,0.5,
+1,Tilwada,32,0,3,Ge-B,Tin,1,0.125,1.0,1.0,
+1,Tilwada,32,0,4,Ge,Ta,1,0.125,0.5,0.5,
+1,Tilwada,32,0,5,Ge,Ta,1,0.0416667,1.0,1.0,
+1,Tilwada,32,0,6,,,1,0.0416667,0.5,0.5,
+1,Tilwada,32,0,7,,Ti,1,0.0416667,1.0,0.5,
+1,Tilwada,32,0,8,Ge,Ta,1,0.0416667,1.0,1.0,
+1,Tilwada,32,0,9,Ka,Tin,1,0.0416667,0.5,0.5,
+1,Tilwada,32,0,10,,Na,1,0.0416667,1.0,0.5,
+1,Tilwada,32,0,11,Ge,Ta,1,0.0416667,1.0,1.0,
+1,Tilwada,32,0,12,Ge-B,Tin,1,0.0416667,0.5,0.5,
+1,Tilwada,32,0,13,,Na,1,0.0416667,1.0,0.5,
+1,Tilwada,32,0,14,Ge,Ta,1,0.0416667,1.0,1.0,
+1,Tilwada,32,0,15,Ka,Tin,1,0.0416667,0.5,0.5,
+1,Tilwada,32,0,16,,Na,1,0.0416667,1.0,0.5,
+1,"Rupak,Ektaal,Teentaal,Ada Chautaal",33,0,1,Ge,Ta,1,0.1875,1.0,1.0,Dha
+1,"Rupak,Ektaal,Teentaal,Ada Chautaal",33,0,2,,KDa,1,0.0625,1.0,0.5,
+1,"Rupak,Ektaal,Teentaal,Ada Chautaal",33,0,3,Ge-B,Tin,1,0.125,1.5,1.5,
+1,"Rupak,Ektaal,Teentaal,Ada Chautaal",33,0,4,Ge,Ta,1,0.0625,0.5,0.5,
+1,"Rupak,Ektaal,Teentaal,Ada Chautaal",33,0,5,,TiL,1,0.0625,0.5,0.5,
+1,"Rupak,Ektaal,Teentaal,Ada Chautaal",33,0,6,Ge,Ta,1,0.0625,1.5,1.5,
+1,"Rupak,Ektaal,Teentaal,Ada Chautaal",33,0,7,Ge-B,Tin,1,0.0625,0.5,0.5,
+1,"Rupak,Ektaal,Teentaal,Ada Chautaal",33,0,8,,Na,1,0.0625,0.5,0.5,
+1,"Rupak,Ektaal,Teentaal,Ada Chautaal",33,0,9,Ge-B,Tin,1,0.0625,0.5,0.5,
+1,"Rupak,Ektaal,Teentaal,Ada Chautaal",33,0,10,Ge,Ta,1,0.0625,1.5,1.5,
+1,"Rupak,Ektaal,Teentaal,Ada Chautaal",33,0,11,Ge-B,Ta,1,0.0625,0.5,0.5,
+1,"Rupak,Ektaal,Teentaal,Ada Chautaal",33,0,12,Ki,,1,0.0625,1.0,1.0,
+1,"Rupak,Ektaal,Teentaal,Ada Chautaal",33,0,13,,TTa,1,0.0625,1.0,1.0,
+1,Tilwada,34,"0,1",1,Ge-B,TinFull,1,0.1875,1.0,1.0,Dhin
+1,Tilwada,34,"0,1",2,,KDa,1,0.0625,1.0,0.5,
+1,Tilwada,34,"0,1",3,Ge-B,Tin,1,0.125,1.5,1.5,
+1,Tilwada,34,"0,1",4,Ge,Ta,1,0.0625,0.5,0.5,
+1,Tilwada,34,"0,1",5,,TiL,1,0.0625,0.5,0.5,
+1,Tilwada,34,"0,1",6,Ge,Ta,1,0.0625,1.5,1.5,
+1,Tilwada,34,"0,1",7,Ge-B,Tin,1,0.0625,0.5,0.5,
+1,Tilwada,34,"0,1",8,,Na,1,0.0625,0.5,0.5,
+1,Tilwada,34,"0,1",9,Ge-B,Tin,1,0.0625,0.5,0.5,
+1,Tilwada,34,"0,1",10,Ge,Ta,1,0.0625,1.5,1.5,
+1,Tilwada,34,"0,1",11,Ge-B,Ta,1,0.0625,0.5,0.5,
+1,Tilwada,34,"0,1",12,Ki,,1,0.0625,1.0,1.0,
+1,Tilwada,34,"0,1",13,,TTa,1,0.0625,1.0,1.0,
+1,"Rupak,Ektaal,Teentaal,Ada Chautaal",35,0,1,Ge,Ta,1,0.125,1.0,1.0,Dha
+1,"Rupak,Ektaal,Teentaal,Ada Chautaal",35,0,2,,Ti,1,0.03125,1.0,1.0,
+1,"Rupak,Ektaal,Teentaal,Ada Chautaal",35,0,3,,Ra,1,0.03125,1.0,1.0,
+1,"Rupak,Ektaal,Teentaal,Ada Chautaal",35,0,4,Ki,,1,0.03125,1.0,1.0,
+1,"Rupak,Ektaal,Teentaal,Ada Chautaal",35,0,5,,TTa,1,0.03125,1.0,1.0,
+1,"Rupak,Ektaal,Teentaal,Ada Chautaal",35,0,6,Ge-B,TinFull,1,0.1875,1.25,1.25,
+1,"Rupak,Ektaal,Teentaal,Ada Chautaal",35,0,7,Ge,Ta,1,0.0625,1.0,1.0,
+1,"Rupak,Ektaal,Teentaal,Ada Chautaal",35,0,8,,Ti,1,0.03125,1.0,1.0,
+1,"Rupak,Ektaal,Teentaal,Ada Chautaal",35,0,9,,Ra,1,0.03125,1.0,1.0,
+1,"Rupak,Ektaal,Teentaal,Ada Chautaal",35,0,10,Ki,,1,0.03125,1.0,1.0,
+1,"Rupak,Ektaal,Teentaal,Ada Chautaal",35,0,11,,TTa,1,0.03125,1.0,1.0,
+1,"Rupak,Ektaal,Teentaal,Ada Chautaal",35,0,12,Ge-B,TinFull,1,0.125,1.25,1.25,
+1,"Rupak,Ektaal,Teentaal,Ada Chautaal",35,0,13,,,1,0.0625,1.0,1.0,
+1,"Rupak,Ektaal,Teentaal,Ada Chautaal",35,0,14,Ge,Ta,1,0.0625,1.0,1.0,
+1,"Rupak,Ektaal,Teentaal,Ada Chautaal",35,0,15,,Ti,1,0.03125,1.0,1.0,
+1,"Rupak,Ektaal,Teentaal,Ada Chautaal",35,0,16,,Ra,1,0.03125,1.0,1.0,
+1,"Rupak,Ektaal,Teentaal,Ada Chautaal",35,0,17,Ki,,1,0.03125,1.0,1.0,
+1,"Rupak,Ektaal,Teentaal,Ada Chautaal",35,0,18,,TTa,1,0.03125,1.0,1.0,
+1,Tilwada,36,0,1,Ge-B,Tin,1,0.125,1.0,1.0,Dhin
+1,Tilwada,36,0,2,,Ti,1,0.03125,1.0,1.0,
+1,Tilwada,36,0,3,,Ra,1,0.03125,1.0,1.0,
+1,Tilwada,36,0,4,Ki,,1,0.03125,1.0,1.0,
+1,Tilwada,36,0,5,,TTa,1,0.03125,1.0,1.0,
+1,Tilwada,36,0,6,Ge,Ta,1,0.1875,1.25,1.25,
+1,Tilwada,36,0,7,Ge-B,Tin,1,0.0625,1.0,1.0,
+1,Tilwada,36,0,8,,Ti,1,0.03125,1.0,1.0,
+1,Tilwada,36,0,9,,Ra,1,0.03125,1.0,1.0,
+1,Tilwada,36,0,10,Ki,,1,0.03125,1.0,1.0,
+1,Tilwada,36,0,11,,TTa,1,0.03125,1.0,1.0,
+1,Tilwada,36,0,12,Ge,Ta,1,0.125,1.25,1.25,
+1,Tilwada,36,0,13,,,1,0.0625,1.0,1.0,
+1,Tilwada,36,0,14,Ge-B,Tin,1,0.0625,1.0,1.0,
+1,Tilwada,36,0,15,,Ti,1,0.03125,1.0,1.0,
+1,Tilwada,36,0,16,,Ra,1,0.03125,1.0,1.0,
+1,Tilwada,36,0,17,Ki,,1,0.03125,1.0,1.0,
+1,Tilwada,36,0,18,,TTa,1,0.03125,1.0,1.0,
+0,Teentaal,37,3,1,Ge,Ta,1,1.0,1.0,1.0,Dha
+0,Teentaal,37,3,2,Ge-B,Tin,2,0.5,1.0,1.0,Dhin
+0,Teentaal,37,3,3,,TiL,2,0.5,1.0,0.75,
+0,Teentaal,37,3,4,Ge,Tin,3,1.0,1.0,1.0,Dhin
+0,Teentaal,37,3,5,Ge-B,Ta,4,0.5,1.0,0.75,Dha
+0,Teentaal,37,3,6,,TiL,4,0.5,1.0,1.0,
+0,Teentaal,37,3,7,Ge,Ta,5,1.0,1.0,1.0,Dha
+0,Teentaal,37,3,8,Ge-B,Tin,6,0.5,1.0,1.0,Dhin
+0,Teentaal,37,3,9,,TiL,6,0.5,1.0,0.75,
+0,Teentaal,37,3,10,Ge,Tin,7,1.0,1.0,1.0,Dhin
+0,Teentaal,37,3,11,Ge-B,Ta,8,0.5,1.0,0.75,Dha
+0,Teentaal,37,3,12,,TiL,8,0.5,1.0,1.0,
+0,Teentaal,38,3,1,Ge,Ta,1,1.0,1.0,1.0,Dha
+0,Teentaal,38,3,3,Ge-LT6,Tin,2,0.5,1.0,1.0,Dhin
+0,Teentaal,38,3,4,,TiL,2,0.5,1.0,1.0,
+0,Teentaal,38,3,5,Ge,Tin,3,1.0,1.0,1.0,Dhin
+0,Teentaal,38,3,6,Ge,Ta,4,0.5,1.0,0.5,DhaDha
+0,Teentaal,38,3,7,Ge-B,Ta,4,0.5,0.5,0.75,
+0,Teentaal,38,3,8,Ge,Ta,5,0.5,1.0,1.0,Dha
+0,Teentaal,38,3,9,,TiL,5,0.5,1.0,1.0,
+0,Teentaal,38,3,10,Ge-LT6,Tin,6,0.5,1.0,1.0,Dhin
+0,Teentaal,38,3,11,,TiL,6,0.5,1.0,1.0,
+0,Teentaal,38,3,12,Ge,Tin,7,1.0,1.0,1.0,Dhin
+0,Teentaal,38,3,13,Ge,Ta,8,0.5,1.0,0.5,DhaDha
+0,Teentaal,38,3,14,Ge-B,Ta,8,0.5,0.5,0.75,
+0,Rupak,39,2,1,Ka,TinFull,1,1.0,1.0,1.0,Tin
+0,Rupak,39,2,2,,TiL,2,0.5,1.0,0.5,-Ta
+0,Rupak,39,2,3,,Ta,2,0.5,1.0,1.0,
+0,Rupak,39,2,4,,,3,0.5,1.0,1.0,-
+0,Rupak,39,2,5,,TiL,3,0.5,1.0,0.5,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Rupak,Jhaptaal",40,3,1,Ge,Ta,1,0.5,1.0,1.0,DhaGe
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Rupak,Jhaptaal",40,3,2,Ge-B,,1,0.5,0.5,1.0,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Rupak,Jhaptaal",40,3,3,,Ta,2,0.5,1.0,1.0,NaDha
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Rupak,Jhaptaal",40,3,4,Ge,Ta,2,0.5,1.0,1.0,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Rupak,Jhaptaal",40,3,5,,Ti,3,0.5,1.0,1.0,TiTa
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Rupak,Jhaptaal",40,3,6,,TTa,3,0.5,1.0,1.0,
+1,Jhaptaal,41,2,1,Ge,TinFull,1,0.75,1.0,1.0,Dhin
+1,Jhaptaal,41,2,2,,KDa,1,0.25,0.75,0.75,
+1,Jhaptaal,41,2,3,Ge,Ta,2,0.25,1.0,1.0,DhaGeNaTin
+1,Jhaptaal,41,2,4,Ge-B,,2,0.25,0.5,1.0,
+1,Jhaptaal,41,2,5,,Na,2,0.25,1.0,1.0,
+1,Jhaptaal,41,2,6,Ka,Tin,2,0.25,0.5,1.0,
+1,Jhaptaal,41,2,7,Ge,Ta,3,0.25,1.0,1.0,DhaGeTiTa
+1,Jhaptaal,41,2,8,Ge-B,,3,0.25,0.5,1.0,
+1,Jhaptaal,41,2,9,,Ti,3,0.25,1.0,1.0,
+1,Jhaptaal,41,2,10,,TTa,3,0.25,1.0,1.0,
+1,"Jhaptaal,Deepchandi",42,"2,3",1,Ge,Ta,1,0.5,1.0,1.0,DhaGe
+1,"Jhaptaal,Deepchandi",42,"2,3",2,Ge-B,,1,0.5,0.5,1.0,
+1,"Jhaptaal,Deepchandi",42,"2,3",3,Ge,Tin,2,0.5,1.0,1.0,DhiNa
+1,"Jhaptaal,Deepchandi",42,"2,3",4,,Na,2,0.5,1.0,1.0,
+1,"Jhaptaal,Deepchandi",42,"2,3",5,,Ti,3,0.5,1.0,1.0,TiTa
+1,"Jhaptaal,Deepchandi",42,"2,3",6,,TTa,3,0.5,1.0,1.0,
+1,"Jhaptaal,Deepchandi",43,"2,3",1,Ge,Ta,1,0.5,1.0,1.0,DhaDhi
+1,"Jhaptaal,Deepchandi",43,"2,3",2,Ge-B,Tin,1,0.5,0.5,0.5,
+1,"Jhaptaal,Deepchandi",43,"2,3",3,,Na,2,0.5,1.0,1.0,NaDha
+1,"Jhaptaal,Deepchandi",43,"2,3",4,Ge,Ta,2,0.5,1.0,1.0,
+1,"Jhaptaal,Deepchandi",43,"2,3",5,Ge-B,,3,0.5,0.5,0.5,GiNa
+1,"Jhaptaal,Deepchandi",43,"2,3",6,,Na,3,0.5,1.0,1.0,
+1,"Jhaptaal,Deepchandi",44,"2,3",1,Ge,Ta,1,0.5,1.0,1.0,DhaTi
+1,"Jhaptaal,Deepchandi",44,"2,3",2,,Ti,1,0.5,1.0,1.0,
+1,"Jhaptaal,Deepchandi",44,"2,3",3,,TTa,2,0.5,1.0,1.0,TTaDha
+1,"Jhaptaal,Deepchandi",44,"2,3",4,Ge,Ta,2,0.5,1.0,1.0,
+1,"Jhaptaal,Deepchandi",44,"2,3",5,Ge-B,,3,0.5,0.5,0.5,GiNa
+1,"Jhaptaal,Deepchandi",44,"2,3",6,,Na,3,0.5,1.0,1.0,
+1,Jhaptaal,45,2,1,Ge,Ta,1,0.5,1.0,1.0,Dha-TiRa
+1,Jhaptaal,45,2,2,,Ti,1,0.25,1.0,1.0,
+1,Jhaptaal,45,2,3,,Ra,1,0.25,1.0,1.0,
+1,Jhaptaal,45,2,4,Ki,,2,0.25,1.0,1.0,KiTaDha-
+1,Jhaptaal,45,2,5,,TTa,2,0.25,1.0,1.0,
+1,Jhaptaal,45,2,6,Ge,Ta,2,0.5,1.0,1.0,
+1,Jhaptaal,45,2,7,Ge-B,,3,0.5,0.5,0.5,GiNa
+1,Jhaptaal,45,2,8,,Na,3,0.5,1.0,1.0,
+1,"Jhaptaal,Deepchandi",46,2,1,Ge-B,Ta,1,0.5,0.5,0.75,DhaDha
+1,"Jhaptaal,Deepchandi",46,2,2,Ge-F,Ta,1,0.5,0.5,0.5,
+1,"Jhaptaal,Deepchandi",46,2,3,,Ti,2,0.25,1.0,1.0,TiRaKiTa
+1,"Jhaptaal,Deepchandi",46,2,4,,Ra,2,0.25,1.0,1.0,
+1,"Jhaptaal,Deepchandi",46,2,5,Ki,,2,0.25,1.0,1.0,
+1,"Jhaptaal,Deepchandi",46,2,6,,TTa,2,0.25,1.0,1.0,
+1,"Jhaptaal,Deepchandi",46,2,7,Ge-B,TinMed,3,0.5,1.0,1.0,DhinTa
+1,"Jhaptaal,Deepchandi",46,2,8,,Ta,3,0.5,1.0,1.0,
+1,"Jhaptaal,Deepchandi",46,2,9,,Ti,4,0.25,1.0,1.0,TiRaKiTa
+1,"Jhaptaal,Deepchandi",46,2,10,,Ra,4,0.25,1.0,1.0,
+1,"Jhaptaal,Deepchandi",46,2,11,Ki,,4,0.25,1.0,1.0,
+1,"Jhaptaal,Deepchandi",46,2,12,,TTa,4,0.25,1.0,1.0,
+1,Jhaptaal,47,"2,3",1,Ge-F,Tin,1,0.5,0.5,1.0,DhiDhi
+1,Jhaptaal,47,"2,3",2,Ge,Tin,1,0.5,0.5,0.5,
+1,Jhaptaal,47,"2,3",3,,Na,2,0.5,1.0,0.75,NaDhi
+1,Jhaptaal,47,"2,3",4,Ge-F,Tin,2,0.5,0.5,1.0,
+1,Jhaptaal,47,"2,3",5,Ge,Tin,3,0.5,0.5,0.5,DhiNa
+1,Jhaptaal,47,"2,3",6,,Na,3,0.5,1.0,0.75,
+1,Jhaptaal,48,1,1,Ge-B,TinFull,1,0.75,1.0,1.0,Dhin
+1,Jhaptaal,48,1,2,,KDa,1,0.25,1.0,1.0,
+1,Jhaptaal,48,1,3,Ge,Ta,2,0.25,1.0,1.0,DhaGeTiTa
+1,Jhaptaal,48,1,4,Ge,,2,0.25,0.5,1.0,
+1,Jhaptaal,48,1,5,,Ti,2,0.25,0.5,1.0,
+1,Jhaptaal,48,1,6,,TTa,2,0.25,0.5,1.0,
+1,Jhaptaal,48,1,7,Ge-B,TinFull,3,0.5,1.0,1.0,Dhin-Naka
+1,Jhaptaal,48,1,8,,Na,3,0.25,1.0,1.0,
+1,Jhaptaal,48,1,9,,TiL,3,0.25,1.0,1.0,
+1,Jhaptaal,49,1,1,Ge-B,TinFull,1,0.75,1.0,1.0,Dhin
+1,Jhaptaal,49,1,2,,KDa,1,0.25,1.0,1.0,
+1,Jhaptaal,49,1,3,Ge,Ta,2,0.5,1.0,1.0,Dha-DhaDhi
+1,Jhaptaal,49,1,4,Ge-F,Ta,2,0.25,1.0,1.0,
+1,Jhaptaal,49,1,5,Ge-B,Tin,2,0.25,0.5,0.5,
+1,Jhaptaal,49,1,6,,Na,3,0.25,1.0,0.5,NaDhaTiNa
+1,Jhaptaal,49,1,7,Ge,Ta,3,0.25,1.0,1.0,
+1,Jhaptaal,49,1,8,,Tin,3,0.25,1.0,0.5,
+1,Jhaptaal,49,1,9,,Na,3,0.25,1.0,1.0,
+1,Jhaptaal,50,"1,2",1,Ge-LT6,TinFull,1,0.75,1.0,1.0,Dhin--Dha
+1,Jhaptaal,50,"1,2",2,Ge,Ta,1,0.25,1.0,1.0,
+1,Jhaptaal,50,"1,2",3,,,2,0.25,1.0,1.0,-KdaDhin-
+1,Jhaptaal,50,"1,2",4,,KDa,2,0.25,1.0,1.0,
+1,Jhaptaal,50,"1,2",5,Ge-LT6,TinFull,2,0.5,1.0,1.0,
+1,Jhaptaal,50,"1,2",6,,,3,0.25,1.0,1.0,-Dha-Kda
+1,Jhaptaal,50,"1,2",7,Ge,Ta,3,0.5,1.0,1.0,
+1,Jhaptaal,50,"1,2",8,,KDa,3,0.25,1.0,1.0,
+0,Jhaptaal,51,1,1,,Na,5,0.5,1.0,1.0,NaNa
+0,Jhaptaal,51,1,2,,Na,5,0.25,1.0,1.0,
+0,Jhaptaal,51,1,3,,TiL,5,0.25,1.0,1.0,
+0,Jhaptaal,52,1,1,,Na,5,0.25,1.0,1.0,NaGeDhiNa
+0,Jhaptaal,52,1,2,Ge,,5,0.25,0.25,1.0,
+0,Jhaptaal,52,1,3,Ge-B,Tin,5,0.25,0.5,0.5,
+0,Jhaptaal,52,1,4,,TiL,5,0.25,1.0,0.5,
+0,Jhaptaal,53,1,1,Ka,Tu,6,0.75,1.0,1.0,Tu
+0,Jhaptaal,53,1,2,,TiL,6,0.25,1.0,1.0,
+0,Jhaptaal,54,"2,3",1,Ka,Tu,6,1.0,1.0,1.0,Tu
+0,Jhaptaal,55,1,1,Ge-S,Tin,4,0.75,1.0,1.0,Dhin
+0,Jhaptaal,55,1,2,,TiL,4,0.25,1.0,1.0,
+0,Jhaptaal,56,2,1,Ge-LT6,TinFull,3,1.0,1.0,1.0,Dhin
+0,Jhaptaal,56,2,2,Ge,Tin,4,1.0,1.0,1.0,Dhin
+0,Teentaal,57,1,1,Ge,Ta,4,0.25,1.0,1.0,DhaGeTiTa
+0,Teentaal,57,1,2,Ge,,4,0.25,0.5,1.0,
+0,Teentaal,57,1,3,,TiTaL,4,0.5,1.0,1.0,
+0,Teentaal,59,0,1,Ge,Ta,4,0.375,1.0,1.0,Dha
+0,Teentaal,59,0,2,,KDa,4,0.125,0.5,0.5,
+0,Teentaal,59,0,3,Ge,Ta,4,0.125,0.5,0.5,
+0,Teentaal,59,0,4,Ge,,4,0.125,0.5,1.0,
+0,Teentaal,59,0,5,,TiTaL,4,0.25,1.0,1.0,
+1,Jhaptaal,60,"2,3",1,Ge-LT6,Tin,1,0.5,1.0,1.0,DhiDhi
+1,Jhaptaal,60,"2,3",2,Ge-B,Tin,1,0.5,0.5,0.5,
+1,Jhaptaal,60,"2,3",3,,Na,2,0.5,1.0,0.75,NaDhi
+1,Jhaptaal,60,"2,3",4,Ge-LT6,Tin,2,0.5,1.0,1.0,
+1,Jhaptaal,60,"2,3",5,Ge-B,Tin,3,0.5,0.5,0.5,DhiNa
+1,Jhaptaal,60,"2,3",6,,Na,3,0.5,1.0,0.75,
+0,Teentaal,61,"2,3",1,,Tra,13,0.5,1.0,1.0,TraKa
+0,Teentaal,61,"2,3",2,Ka,,13,0.5,0.5,1.0,
+0,Teentaal,62,"2,3",1,,Ta,12,0.5,1.0,0.75,Ta
+0,Teentaal,62,"2,3",2,,TiL,12,0.5,1.0,0.5,
+0,Teentaal,62,"2,3",3,,Ta,13,1.0,1.0,1.0,TraKa
+1,Deepchandi,63,"2,3",1,,Na,1,0.5,1.0,1.0,NaTi
+1,Deepchandi,63,"2,3",2,,Ti,1,0.5,1.0,1.0,
+1,Deepchandi,63,"2,3",3,Ge,Ta,2,1.0,1.0,1.0,Dha-
+1,Deepchandi,63,"2,3",4,,Na,3,0.5,1.0,1.0,NaTi
+1,Deepchandi,63,"2,3",5,,Ti,3,0.5,1.0,1.0,
+1,Deepchandi,63,"2,3",6,Ge,Ta,4,1.0,1.0,1.0,Dha-
+1,Deepchandi,63,"2,3",7,,Na,5,0.5,1.0,1.0,NaTi
+1,Deepchandi,63,"2,3",8,,Ti,5,0.5,1.0,1.0,
+0,Deepchandi,64,"2,3",1,Ge-F,Ta,4,1.0,1.0,1.0,Dha
+0,Deepchandi,64,"2,3",2,Ge-B,,5,1.0,0.5,1.0,Ge
+0,Deepchandi,64,"2,3",3,Ka,Tu,6,1.0,1.0,1.0,Tin
+0,Deepchandi,64,"2,3",4,,TiL,7,1.0,1.0,1.0,
+0,Deepchandi,65,"2,3",1,Ge-F,Ta,4,1.0,1.0,1.0,Dha
+0,Deepchandi,65,"2,3",2,Ge-B,,5,1.0,0.5,1.0,Ge
+0,Deepchandi,65,"2,3",3,Ka,Tin,6,1.0,1.0,1.0,Tin
+0,Deepchandi,65,"2,3",4,,TiL,7,1.0,1.0,1.0,-
+0,Deepchandi,66,"2,3",1,Ge,Ta,4,1.0,1.0,1.0,Dha
+0,Deepchandi,66,"2,3",2,,,5,1.0,0.5,1.0,
+0,Deepchandi,66,"2,3",3,Ka,Tin,6,1.0,1.0,1.0,Tin
+0,Deepchandi,66,"2,3",4,,TiL,7,1.0,1.0,1.0,
+0,Jhaptaal,67,2,1,,Na,2,0.5,1.0,1.0,Na
+0,Jhaptaal,67,2,2,,TiTaL,2,0.5,1.0,1.0,
+0,Jhaptaal,68,2,1,,Na,5,0.25,1.0,1.0,Na
+0,Jhaptaal,68,2,2,Ka,,5,0.25,0.5,1.0,
+0,Jhaptaal,68,2,3,,TiTaL,5,0.5,1.0,0.75,
+0,Jhaptaal,68,2,4,Ka,TinFull,6,1.0,1.0,1.0,Tin
+0,Jhaptaal,68,2,5,,Na,7,0.5,1.0,1.0,Na
+0,Jhaptaal,68,2,6,,TiTaL,7,0.5,1.0,1.0,
+1,"Jhaptaal,Deepchandi",69,"1,2",1,Ge-B,TinMed,1,0.5,1.0,1.0,DhinNa
+1,"Jhaptaal,Deepchandi",69,"1,2",2,,Na,1,0.25,1.0,0.75,
+1,"Jhaptaal,Deepchandi",69,"1,2",3,Ka,,1,0.25,0.5,1.0,
+1,"Jhaptaal,Deepchandi",69,"1,2",4,Ge,Ta,2,0.25,0.5,0.75,DhaDhaKiTa
+1,"Jhaptaal,Deepchandi",69,"1,2",5,Ge-F,Ta,2,0.25,0.5,0.5,
+1,"Jhaptaal,Deepchandi",69,"1,2",6,Ki,,2,0.25,1.0,1.0,
+1,"Jhaptaal,Deepchandi",69,"1,2",7,,TTa,2,0.25,1.0,1.0,
+1,Jhaptaal,70,"1,2",1,Ge-B,TinFull,1,0.75,1.0,1.0,Dhin
+1,Jhaptaal,70,"1,2",2,,KDa,1,0.25,1.0,1.0,
+1,Jhaptaal,70,"1,2",3,Ge,TinMed,2,0.5,1.0,1.0,Dhin-NaKa
+1,Jhaptaal,70,"1,2",4,,Na,2,0.25,1.0,0.75,
+1,Jhaptaal,70,"1,2",5,Ka,,2,0.25,0.5,1.0,
+1,Jhaptaal,70,"1,2",6,Ge,Tin,3,0.5,1.0,1.0,Dhin-NaKa
+1,Jhaptaal,70,"1,2",7,,Na,3,0.25,1.0,1.0,
+1,Jhaptaal,70,"1,2",8,Ka,,3,0.25,0.5,1.0,
+1,Jhaptaal,71,1,1,Ge-F,Tin,1,0.25,1.0,1.0,DhiDhiNaDha
+1,Jhaptaal,71,1,2,Ge-B,Tin,1,0.25,1.0,0.5,
+1,Jhaptaal,71,1,3,,Na,1,0.25,1.0,0.75,
+1,Jhaptaal,71,1,4,Ge,Ta,1,0.25,1.0,1.0,
+1,Jhaptaal,71,1,5,Ge-B,Ta,2,0.25,0.5,0.5,DhaTiDhiDhi
+1,Jhaptaal,71,1,6,,Ti,2,0.25,1.0,1.0,
+1,Jhaptaal,71,1,7,Ge-F,Tin,2,0.25,1.0,1.0,
+1,Jhaptaal,71,1,8,Ge-B,Tin,2,0.25,1.0,0.5,
+1,Jhaptaal,71,1,9,,Na,3,0.25,1.0,0.75,NaDhaDhaTi
+1,Jhaptaal,71,1,10,Ge,Ta,3,0.25,1.0,1.0,
+1,Jhaptaal,71,1,11,Ge-B,Ta,3,0.25,0.5,0.5,
+1,Jhaptaal,71,1,12,,Ti,3,0.25,1.0,1.0,
+1,Jhaptaal,72,1,1,Ge-LT6,Tin,1,0.5,1.0,1.0,DhiDhi
+1,Jhaptaal,72,1,2,Ge,Tin,1,0.5,1.0,0.5,
+1,Jhaptaal,72,1,3,,Na,2,0.25,1.0,1.0,NaDhi
+1,Jhaptaal,72,1,4,,TiL,2,0.25,1.0,1.0,
+1,Jhaptaal,72,1,5,Ge-LT6,Tin,2,0.5,1.0,1.0,
+1,Jhaptaal,72,1,6,Ge,Tin,3,0.5,1.0,0.5,DhiNa
+1,Jhaptaal,72,1,7,,Na,3,0.25,1.0,1.0,
+1,Jhaptaal,72,1,8,,Na,3,0.25,1.0,1.0,
+1,Jhaptaal,73,2,1,Ge-LT6,TinFull,1,1.0,1.0,1.0,Dhi-
+1,Jhaptaal,73,2,3,,Na,2,0.5,1.0,1.0,NaDhi
+1,Jhaptaal,73,2,4,Ge-LT6,TinMed,2,0.5,1.0,1.0,
+1,Jhaptaal,73,2,5,,,3,0.5,1.0,1.0,-Na
+1,Jhaptaal,73,2,6,,Na,3,0.5,1.0,1.0,
+1,Jhaptaal,74,"1,2",1,Ge,Ta,1,0.25,1.0,1.0,DhaGeTiTa
+1,Jhaptaal,74,"1,2",2,Ge-B,,1,0.25,0.5,1.0,
+1,Jhaptaal,74,"1,2",3,,Ti,1,0.25,1.0,0.5,
+1,Jhaptaal,74,"1,2",4,,TTa,1,0.25,1.0,0.5,
+1,Jhaptaal,74,"1,2",5,Ge,TinMed,2,0.5,1.0,1.0,DhinDhin
+1,Jhaptaal,74,"1,2",6,Ge-LT6,Tin,2,0.5,1.0,0.5,
+1,Jhaptaal,74,"1,2",7,,Na,3,0.5,1.0,1.0,NaNa
+1,Jhaptaal,74,"1,2",8,,Na,3,0.5,1.0,1.0,
+1,Jhaptaal,75,2,1,Ka,TinMed,1,0.5,1.0,1.0,TiNa
+1,Jhaptaal,75,2,2,,Na,1,0.5,1.0,0.5,
+1,Jhaptaal,75,2,3,Kat,,2,0.5,1.0,1.0,KatTa
+1,Jhaptaal,75,2,4,,Ta,2,0.5,1.0,0.5,
+1,Jhaptaal,75,2,5,Ge-F,Ta,3,0.5,1.0,1.0,DhaDhi
+1,Jhaptaal,75,2,6,Ge,Tin,3,0.5,1.0,1.0,
+1,Jhaptaal,75,2,7,,Na,4,0.5,1.0,1.0,NaDha
+1,Jhaptaal,75,2,8,Ge-F,Ta,4,0.5,1.0,1.0,
+1,Jhaptaal,75,2,9,Ka,Tin,5,0.5,1.0,1.0,TiNa
+1,Jhaptaal,75,2,10,,Na,5,0.5,1.0,1.0,
+1,Jhaptaal,76,1,1,Ka,TinMed,1,0.5,1.0,1.0,TinNa
+1,Jhaptaal,76,1,2,,Na,1,0.5,1.0,0.5,
+1,Jhaptaal,76,1,3,,Ti,2,0.25,1.0,1.0,TiRaKiTa
+1,Jhaptaal,76,1,4,,Ra,2,0.25,1.0,0.5,
+1,Jhaptaal,76,1,5,Ki,,2,0.25,1.0,0.5,
+1,Jhaptaal,76,1,6,,TTa,2,0.25,1.0,0.5,
+1,Jhaptaal,76,1,7,Ge-LT6,Ta,3,0.5,1.0,1.0,DhaDhi
+1,Jhaptaal,76,1,8,Ge-B,Tin,3,0.5,1.0,1.0,
+1,Jhaptaal,76,1,9,,Na,4,0.5,1.0,1.0,NaDha
+1,Jhaptaal,76,1,10,Ge-LT6,Ta,4,0.5,1.0,1.0,
+1,Jhaptaal,76,1,11,Ka,Tin,5,0.5,1.0,1.0,TiNa
+1,Jhaptaal,76,1,12,,Na,5,0.5,1.0,1.0,
+1,Jhaptaal,77,2,1,Ka,TinMed,1,0.5,1.0,1.0,TinNa
+1,Jhaptaal,77,2,2,,Na,1,0.5,1.0,0.5,
+1,Jhaptaal,77,2,3,,Ti,2,0.25,1.0,1.0,TiRaKiTa
+1,Jhaptaal,77,2,4,,Ra,2,0.25,1.0,0.5,
+1,Jhaptaal,77,2,5,Ki,,2,0.25,1.0,0.5,
+1,Jhaptaal,77,2,6,,TTa,2,0.25,1.0,0.5,
+1,Jhaptaal,77,2,7,Ge-F,Ta,3,0.5,1.0,1.0,DhaDhi
+1,Jhaptaal,77,2,8,Ge,Tin,3,0.5,1.0,1.0,
+1,Jhaptaal,77,2,9,,Na,4,0.5,1.0,1.0,NaDha
+1,Jhaptaal,77,2,10,Ge-F,Ta,4,0.5,1.0,1.0,
+1,Jhaptaal,77,2,11,Ka,Tin,5,0.5,1.0,1.0,TiNa
+1,Jhaptaal,77,2,12,,Na,5,0.5,1.0,1.0,
+1,Jhaptaal,78,"1,2",1,Ge-B,TinMed,1,0.5,1.0,1.0,DhinTa
+1,Jhaptaal,78,"1,2",2,,Ta,1,0.5,1.0,0.5,
+1,Jhaptaal,78,"1,2",3,,Ti,2,0.25,1.0,1.0,TiRaKiTa
+1,Jhaptaal,78,"1,2",4,,Ra,2,0.25,1.0,0.5,
+1,Jhaptaal,78,"1,2",5,Ki,,2,0.25,1.0,0.5,
+1,Jhaptaal,78,"1,2",6,,TTa,2,0.25,1.0,0.5,
+0,Rupak,79,1,1,Ge-B,TinFull,4,0.375,1.0,1.0,Dhin
+0,Rupak,79,1,2,,KDa,4,0.125,0.25,0.25,
+0,Rupak,79,1,3,Ge,Tin,4,0.25,0.5,0.25,
+0,Rupak,79,1,4,Ge-LT6,Tin,4,0.25,1.0,0.5,
+1,Rupak,80,1,1,Ge,Ta,1,0.375,1.0,1.0,DhaDha
+1,Rupak,80,1,2,,KDa,1,0.125,1.0,0.5,
+1,Rupak,80,1,3,Ge,Ta,1,0.125,1.0,1.0,
+1,Rupak,80,1,4,Ge-B,,1,0.125,0.5,1.0,
+1,Rupak,80,1,5,Ge,Ta,1,0.125,1.0,1.0,
+1,Rupak,80,1,6,Ka,Ti,1,0.125,1.0,1.0,
+1,Rupak,81,1,1,Ge,Ta,1,0.375,1.0,1.0,DhaDha
+1,Rupak,81,1,2,,KDa,1,0.125,1.0,0.5,
+1,Rupak,81,1,3,Ge,Ta,1,0.125,1.0,1.0,
+1,Rupak,81,1,4,Ge-F,Ta,1,0.125,0.5,0.5,
+1,Rupak,81,1,5,Ki,,1,0.125,1.0,1.0,
+1,Rupak,81,1,6,,TTa,1,0.125,1.0,1.0,
+1,Rupak,82,1,1,Ge,Ta,1,0.25,1.0,1.0,DhaDha
+1,Rupak,82,1,2,Ge-S,Tin,1,0.25,1.0,1.0,
+1,Rupak,82,1,3,Ge,Ta,1,0.125,1.0,1.0,
+1,Rupak,82,1,4,Ge-F,Ta,1,0.125,0.5,0.5,
+1,Rupak,82,1,5,Ka,Tin,1,0.125,1.0,1.0,
+1,Rupak,82,1,6,,TiL,1,0.125,1.0,1.0,
+0,Rupak,83,1,1,,Ta,3,0.25,1.0,1.0,NaNa
+0,Rupak,83,1,2,Ka,,3,0.25,1.0,1.0,
+0,Rupak,83,1,3,,Ta,3,0.125,1.0,1.0,
+0,Rupak,83,1,4,Ka,,3,0.125,1.0,1.0,
+0,Rupak,83,1,5,,Ti,3,0.125,1.0,0.5,
+0,Rupak,83,1,6,,TTa,3,0.125,1.0,0.5,
+1,Rupak,84,1,1,Ge,Ta,1,0.125,1.0,1.0,Dha
+1,Rupak,84,1,2,Ge-F,,1,0.125,0.5,1.0,
+1,Rupak,84,1,3,Ge-B,Ta,1,0.125,1.0,1.0,
+1,Rupak,84,1,4,Ge-S,Tin,1,0.125,1.0,1.0,
+1,Rupak,84,1,5,,,1,0.125,1.0,1.0,
+1,Rupak,84,1,6,,Ti,1,0.125,1.0,1.0,
+1,Rupak,84,1,7,,Na,1,0.125,1.0,1.0,
+1,Rupak,84,1,8,Ka,TiL,1,0.125,0.5,1.0,
+0,Rupak,85,1,1,,Na,3,0.125,1.0,1.0,NaNa
+0,Rupak,85,1,2,,Na,3,0.125,1.0,1.0,
+0,Rupak,85,1,3,Ki,,3,0.125,1.0,1.0,
+0,Rupak,85,1,4,,TTa,3,0.125,1.0,0.5,
+0,Rupak,85,1,5,,Ta,3,0.125,1.0,1.0,
+0,Rupak,85,1,6,Ka,,3,0.125,1.0,1.0,
+0,Rupak,85,1,7,,Ti,3,0.125,1.0,0.5,
+0,Rupak,85,1,8,,TTa,3,0.125,1.0,0.5,
+1,Rupak,86,1,1,Ge,Ta,1,0.25,1.0,1.0,Dha
+1,Rupak,86,1,2,,TiL,1,0.25,1.0,1.0,
+1,Rupak,86,1,3,Ge,Ta,1,0.0625,0.5,0.5,
+1,Rupak,86,1,4,Ge,,1,0.0625,0.5,0.5,
+1,Rupak,86,1,5,,Na,1,0.0625,0.5,0.5,
+1,Rupak,86,1,6,Ge,Ta,1,0.0625,0.5,0.5,
+1,Rupak,86,1,7,Ka,Ti,1,0.0625,0.5,0.5,
+1,Rupak,86,1,8,,Na,1,0.0625,0.5,0.5,
+1,Rupak,86,1,9,Ka,Ti,1,0.0625,0.5,0.5,
+1,Rupak,86,1,10,Ge,Ta,1,0.0625,0.5,0.5,
+0,Addha/Sitarkhani/Punjabi,87,"2,3",1,Ge,Ta,9,1.0,1.0,1.0,Dha
+0,Addha/Sitarkhani/Punjabi,87,"2,3",2,,KDa,10,0.5,1.0,1.0,- Tin
+0,Addha/Sitarkhani/Punjabi,87,"2,3",3,Ka,Tu,10,0.5,1.0,1.0,
+0,Addha/Sitarkhani/Punjabi,87,"2,3",4,,,11,0.5,1.0,1.0,
+0,Addha/Sitarkhani/Punjabi,87,"2,3",5,,KDa,11,0.5,1.0,0.5,
+0,Addha/Sitarkhani/Punjabi,87,"2,3",6,,Ta,12,0.5,1.0,1.0,Ta
+0,Addha/Sitarkhani/Punjabi,87,"2,3",7,,TiL,12,0.5,1.0,0.5,
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",88,1,1,Ge,Ta,1,0.25,1.0,1.0,Dha
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",88,1,2,Ge,Ta,1,0.125,1.0,1.0,DhaGe
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",88,1,3,Ge-B,,1,0.125,0.5,1.0,
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",88,1,4,Ge,Ta,1,0.0625,1.0,1.0,DhaTi
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",88,1,5,,Ti,1,0.0625,1.0,1.0,
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",88,1,6,Ge,Ta,1,0.0625,1.0,1.0,DhaTira
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",88,1,7,,Ti,1,0.03125,0.5,0.5,
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",88,1,8,,Ra,1,0.03125,0.5,0.5,
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",88,1,9,Ki,,1,0.03125,0.5,0.5,KiTaTaka
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",88,1,10,,TTa,1,0.03125,0.5,0.5,
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",88,1,11,,Taka,1,0.0625,0.5,0.5,
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",88,1,12,,Ti,1,0.03125,0.5,0.5,TiRaKiTa
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",88,1,13,,Ra,1,0.03125,0.5,0.5,
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",88,1,14,Ki,,1,0.03125,0.5,0.5,
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",88,1,15,,TTa,1,0.03125,0.5,0.5,
+0,Saatva,89,"2,3",1,Ge,Ta,1,1.0,1.0,1.0,Dha
+0,Saatva,89,"2,3",2,Ge-LT6,Tin,2,1.0,1.0,1.0,Dhin
+0,Saatva,89,"2,3",3,,TiL,3,1.0,1.0,1.0,Na
+0,Saatva,90,"2,3",1,Ge,Ta,1,1.0,1.0,1.0,Dha
+0,Saatva,90,"2,3",2,Ge-LT6,Tin,2,0.5,1.0,1.0,DhinNa
+0,Saatva,90,"2,3",3,,Na,2,0.5,1.0,0.5,
+0,Saatva,90,"2,3",4,Ge-B,,3,0.5,1.0,1.0,GiNa
+0,Saatva,90,"2,3",5,,Na,3,0.5,1.0,0.5,
+1,Saatva,91,"2,3",1,Ka,Tu,1,1.0,1.0,0.5,Tu
+1,Saatva,91,"2,3",2,,TiL,2,1.0,1.0,0.5,
+1,Saatva,92,"2,3",1,,TiL,1,0.5,1.0,1.0,TiRa
+1,Saatva,92,"2,3",2,,Ra,1,0.5,1.0,0.5,
+1,Saatva,92,"2,3",3,Ki,,2,0.5,0.5,1.0,KiTa
+1,Saatva,92,"2,3",4,,TTaL,2,0.5,1.0,1.0,
+2,Bhajani,93,"2,3",1,Ka,TinFull,1,0.5,1.0,1.5,TiNa
+2,Bhajani,93,"2,3",2,,Na,1,0.5,1.0,1.0,
+2,Bhajani,93,"2,3",3,,Na,2,0.5,1.0,1.0,NaTi
+2,Bhajani,93,"2,3",4,Ka,TinFull,2,0.5,1.0,1.5,
+2,Bhajani,93,"2,3",5,,Na,3,0.5,1.0,1.0,NaNa
+2,Bhajani,93,"2,3",6,,Na,3,0.5,1.0,1.0,
+2,Bhajani,93,"2,3",7,Ka,TinFull,4,0.5,1.0,1.5,TiNa
+2,Bhajani,93,"2,3",8,,Na,4,0.5,1.0,1.0,
+2,Bhajani,93,"2,3",9,Ka,TinFull,5,0.5,1.0,1.5,TiNa
+2,Bhajani,93,"2,3",10,,Na,5,0.5,1.0,1.0,
+2,Bhajani,93,"2,3",11,,Na,6,0.5,1.0,1.0,NaTi
+2,Bhajani,93,"2,3",12,Ka,TinFull,6,0.5,1.0,1.5,
+2,Bhajani,93,"2,3",13,,Na,7,0.5,1.0,1.0,NaNa
+2,Bhajani,93,"2,3",14,,Na,7,0.5,1.0,1.0,
+2,Bhajani,93,"2,3",15,Ka,TinFull,8,0.5,1.0,1.5,TiNa
+2,Bhajani,93,"2,3",16,,Na,8,0.5,1.0,1.0,
+2,Bhajani,94,"2,3",1,Ge,TinFull,1,0.5,1.0,1.5,DhiNa
+2,Bhajani,94,"2,3",2,,Na,1,0.5,1.0,1.0,
+2,Bhajani,94,"2,3",3,,Na,2,0.5,1.0,1.0,NaDhi
+2,Bhajani,94,"2,3",4,Ge,TinFull,2,0.5,1.0,1.5,
+2,Bhajani,94,"2,3",5,,Na,3,0.5,1.0,1.0,NaNa
+2,Bhajani,94,"2,3",6,,Na,3,0.5,1.0,1.0,
+2,Bhajani,94,"2,3",7,Ge,TinFull,4,0.5,1.0,1.5,DhiNa
+2,Bhajani,94,"2,3",8,,Na,4,0.5,1.0,1.0,
+2,Bhajani,94,"2,3",9,Ge,TinFull,5,0.5,1.0,1.5,DhiNa
+2,Bhajani,94,"2,3",10,,Na,5,0.5,1.0,1.0,
+2,Bhajani,94,"2,3",11,,Na,6,0.5,1.0,1.0,NaDhi
+2,Bhajani,94,"2,3",12,Ge,TinFull,6,0.5,1.0,1.5,
+2,Bhajani,94,"2,3",13,,Na,7,0.5,1.0,1.0,NaNa
+2,Bhajani,94,"2,3",14,,Na,7,0.5,1.0,1.0,
+2,Bhajani,94,"2,3",15,Ge,TinFull,8,0.5,1.0,1.5,DhiNa
+2,Bhajani,94,"2,3",16,,Na,8,0.5,1.0,1.0,
+2,Bhajani,95,"2,3",1,,Ti,1,0.5,1.0,1.0,TiTa
+2,Bhajani,95,"2,3",2,,TTa,1,0.5,1.0,1.0,
+2,Bhajani,95,"2,3",3,,Ta,2,0.5,1.0,1.5,TaTa
+2,Bhajani,95,"2,3",4,,Ta,2,0.5,1.0,1.0,
+2,Bhajani,95,"2,3",5,,Ti,3,0.5,1.0,1.0,TiTa
+2,Bhajani,95,"2,3",6,,TTa,3,0.5,1.0,1.0,
+2,Bhajani,95,"2,3",7,,Ta,4,0.5,1.0,1.5,TaTa
+2,Bhajani,95,"2,3",8,,Ta,4,0.5,1.0,1.0,
+2,Bhajani,95,"2,3",9,,Ti,5,0.5,1.0,1.0,TiTa
+2,Bhajani,95,"2,3",10,,TTa,5,0.5,1.0,1.0,
+2,Bhajani,95,"2,3",11,,Ta,6,0.5,1.0,1.5,TaTiRa
+2,Bhajani,95,"2,3",12,,Ti,6,0.25,1.0,1.0,
+2,Bhajani,95,"2,3",13,,Ra,6,0.25,1.0,1.0,
+2,Bhajani,95,"2,3",14,Ki,,7,0.25,1.0,1.0,KiTaTaka
+2,Bhajani,95,"2,3",15,,TTa,7,0.25,1.0,1.0,
+2,Bhajani,95,"2,3",16,,TaKa,7,0.5,1.0,1.0,
+2,Bhajani,95,"2,3",17,,Ti,8,0.25,1.0,1.0,TiRaKiTa
+2,Bhajani,95,"2,3",18,,Ra,8,0.25,1.0,1.0,
+2,Bhajani,95,"2,3",19,Ki,,8,0.25,1.0,1.0,
+2,Bhajani,95,"2,3",20,,TTa,8,0.25,1.0,1.0,
+2,Bhajani,96,"2,3",1,Ge-OP,,1,0.5,1.0,1.0,DheNa
+2,Bhajani,96,"2,3",2,,Na,1,0.5,1.0,1.0,
+2,Bhajani,96,"2,3",3,,Na,2,0.5,1.0,1.0,NaKe
+2,Bhajani,96,"2,3",4,Ka,,2,0.5,1.5,1.0,
+2,Bhajani,96,"2,3",5,,Na,3,0.5,1.0,1.0,NaNa
+2,Bhajani,96,"2,3",6,,Na,3,0.5,1.0,1.0,
+2,Bhajani,96,"2,3",7,Ka,,4,0.5,1.5,1.0,KeNa
+2,Bhajani,96,"2,3",8,,Na,4,0.5,1.0,1.0,
+2,Bhajani,96,"2,3",9,Ka,,5,0.5,1.5,1.0,KeNa
+2,Bhajani,96,"2,3",10,,Na,5,0.5,1.0,1.0,
+2,Bhajani,96,"2,3",11,,Na,6,0.5,1.0,1.0,NaKe
+2,Bhajani,96,"2,3",12,Ka,,6,0.5,1.5,1.0,
+2,Bhajani,96,"2,3",13,,Na,7,0.5,1.0,1.0,NaNa
+2,Bhajani,96,"2,3",14,,Na,7,0.5,1.0,1.0,
+2,Bhajani,96,"2,3",15,Ka,,8,0.5,1.5,1.0,KeNa
+2,Bhajani,96,"2,3",16,,Na,8,0.5,1.0,1.0,
+3,Bhajani,97,2,1,Ge-B,TinFull,1,1.0,1.5,1.5,Dhin-
+3,Bhajani,97,2,2,,,2,0.5,1.0,1.0,-Dha
+3,Bhajani,97,2,3,Ge,Ta,2,0.5,1.0,1.0,
+3,Bhajani,97,2,4,,Ti,3,0.25,1.0,1.0,TiRaKiTa
+3,Bhajani,97,2,5,,Ra,3,0.25,1.0,1.0,
+3,Bhajani,97,2,6,Ki,,3,0.25,1.0,1.0,
+3,Bhajani,97,2,7,,TTa,3,0.25,1.0,1.0,
+3,Bhajani,97,2,8,Ge-B,TinFull,4,1.0,1.5,1.5,Dhin-
+3,Bhajani,97,2,9,Ge,Ta,5,0.5,1.0,1.0,DhaTi
+3,Bhajani,97,2,10,,Ti,5,0.25,1.0,1.0,
+3,Bhajani,97,2,11,,Ra,5,0.25,1.0,1.0,
+3,Bhajani,97,2,12,Ki,,6,0.25,1.0,1.0,KiTaDhin
+3,Bhajani,97,2,13,,TTa,6,0.25,1.0,1.0,
+3,Bhajani,97,2,14,Ge-B,TinFull,6,0.5,1.5,1.5,
+3,Bhajani,97,2,15,,,7,0.5,1.0,1.0,-Dha
+3,Bhajani,97,2,16,Ge,Ta,7,0.5,1.0,1.0,
+3,Bhajani,97,2,17,,Ti,8,0.25,1.0,1.0,TiRaKiTa
+3,Bhajani,97,2,18,,Ra,8,0.25,1.0,1.0,
+3,Bhajani,97,2,19,Ki,,8,0.25,1.0,1.0,
+3,Bhajani,97,2,20,,TTa,8,0.25,1.0,1.0,
+3,Bhajani,98,3,1,Ge-B,TinFull,1,1.0,1.5,1.5,Dhin-
+3,Bhajani,98,3,2,,,2,0.5,1.0,1.0,-Dha
+3,Bhajani,98,3,3,Ge,Ta,2,0.5,1.0,1.0,
+3,Bhajani,98,3,4,,Ti,3,0.5,1.0,1.0,TiTa
+3,Bhajani,98,3,5,,TTa,3,0.5,1.0,1.0,
+3,Bhajani,98,3,6,Ge-B,TinFull,4,1.0,1.5,1.5,Dhin-
+3,Bhajani,98,3,7,Ge,Ta,5,0.5,1.0,1.0,DhaTi
+3,Bhajani,98,3,8,,Ti,5,0.5,1.0,1.0,
+3,Bhajani,98,3,9,,TTa,6,0.5,1.0,1.0,TaDhin
+3,Bhajani,98,3,10,Ge-B,TinFull,6,0.5,1.5,1.5,
+3,Bhajani,98,3,11,,,7,0.5,1.0,1.0,-Dha
+3,Bhajani,98,3,12,Ge,Ta,7,0.5,1.0,1.0,
+3,Bhajani,98,3,13,,Ti,8,0.5,1.0,1.0,TiTa
+3,Bhajani,98,3,14,,TTa,8,0.5,1.0,1.0,
+3,Bhajani,99,2,1,Ge-B,TinFull,1,1.0,1.5,1.5,Dhin-
+3,Bhajani,99,2,2,,,2,0.5,1.0,1.0,-Dha
+3,Bhajani,99,2,3,Ge,Ta,2,0.5,1.0,1.0,
+3,Bhajani,99,2,4,,Ti,3,0.25,1.0,1.0,TiRaKiTa
+3,Bhajani,99,2,5,,Ra,3,0.25,1.0,1.0,
+3,Bhajani,99,2,6,Ki,,3,0.25,1.0,1.0,
+3,Bhajani,99,2,7,,TTa,3,0.25,1.0,1.0,
+3,Bhajani,99,2,8,Ka,TinFull,4,1.0,1.5,1.5,Tin-
+3,Bhajani,99,2,9,,Ta,5,0.5,1.0,1.0,TaTiRa
+3,Bhajani,99,2,10,,Ti,5,0.25,1.0,1.0,
+3,Bhajani,99,2,11,,Ra,5,0.25,1.0,1.0,
+3,Bhajani,99,2,12,Ki,,6,0.25,1.0,1.0,KiTaDhin
+3,Bhajani,99,2,13,,TTa,6,0.25,1.0,1.0,
+3,Bhajani,99,2,14,Ge-B,TinFull,6,0.5,1.5,1.5,
+3,Bhajani,99,2,15,,,7,0.5,1.0,1.0,-Dha
+3,Bhajani,99,2,16,Ge,Ta,7,0.5,1.0,1.0,
+3,Bhajani,99,2,17,,Ti,8,0.25,1.0,1.0,TiRaKiTa
+3,Bhajani,99,2,18,,Ra,8,0.25,1.0,1.0,
+3,Bhajani,99,2,19,Ki,,8,0.25,1.0,1.0,
+3,Bhajani,99,2,20,,TTa,8,0.25,1.0,1.0,
+3,Bhajani,100,3,1,Ge-B,TinFull,1,1.0,1.5,1.5,Dhin-
+3,Bhajani,100,3,2,,,2,0.5,1.0,1.0,-Dha
+3,Bhajani,100,3,3,Ge,Ta,2,0.5,1.0,1.0,
+3,Bhajani,100,3,4,,Ti,3,0.5,1.0,1.0,TiTa
+3,Bhajani,100,3,5,,TTa,3,0.5,1.0,1.0,
+3,Bhajani,100,3,6,Ka,TinFull,4,1.0,1.5,1.5,Tin-
+3,Bhajani,100,3,7,,Ta,5,0.5,1.0,1.0,TaTi
+3,Bhajani,100,3,8,,Ti,5,0.5,1.0,1.0,
+3,Bhajani,100,3,9,,TTa,6,0.5,1.0,1.0,TaDhin
+3,Bhajani,100,3,10,Ge-B,TinFull,6,0.5,1.5,1.5,
+3,Bhajani,100,3,11,,,7,0.5,1.0,1.0,-Dha
+3,Bhajani,100,3,12,Ge,Ta,7,0.5,1.0,1.0,
+3,Bhajani,100,3,13,,Ti,8,0.5,1.0,1.0,TiTa
+3,Bhajani,100,3,14,,TTa,8,0.5,1.0,1.0,
+3,Bhajani,101,2,1,Ge-B,TinFull,1,0.5,1.0,1.0,DhiNAAN
+3,Bhajani,101,2,2,,NNa,1,0.5,1.0,1.5,
+3,Bhajani,101,2,3,,,2,0.5,1.0,1.0,-Dha
+3,Bhajani,101,2,4,Ge,Ta,2,0.5,1.0,1.0,
+3,Bhajani,101,2,5,,Ti,3,0.25,1.0,1.0,TiRaKiTa
+3,Bhajani,101,2,6,,Ra,3,0.25,1.0,1.0,
+3,Bhajani,101,2,7,Ki,,3,0.25,1.0,1.0,
+3,Bhajani,101,2,8,,TTa,3,0.25,1.0,1.0,
+3,Bhajani,101,2,9,Ge-B,TinFull,4,1.0,1.5,1.5,Dhin-
+3,Bhajani,101,2,10,Ge,Ta,5,0.5,1.0,1.0,DhaTiRa
+3,Bhajani,101,2,11,,Ti,5,0.25,1.0,1.0,
+3,Bhajani,101,2,12,,Ra,5,0.25,1.0,1.0,
+3,Bhajani,101,2,13,Ki,,6,0.25,1.0,1.0,KiTaDhin
+3,Bhajani,101,2,14,,TTa,6,0.25,1.0,1.0,
+3,Bhajani,101,2,15,Ge-B,TinFull,6,0.5,1.5,1.5,
+3,Bhajani,101,2,16,,,7,0.5,1.0,1.0,-Dha
+3,Bhajani,101,2,17,Ge,Ta,7,0.5,1.0,1.0,
+3,Bhajani,101,2,18,,Ti,8,0.25,1.0,1.0,TiRaKiTa
+3,Bhajani,101,2,19,,Ra,8,0.25,1.0,1.0,
+3,Bhajani,101,2,20,Ki,,8,0.25,1.0,1.0,
+3,Bhajani,101,2,21,,TTa,8,0.25,1.0,1.0,
+3,Bhajani,102,3,1,Ge-B,TinFull,1,0.5,1.0,1.0,DhiNAAN
+3,Bhajani,102,3,2,,NNa,1,0.5,1.0,1.5,
+3,Bhajani,102,3,3,,,2,0.5,1.0,1.0,-Dha
+3,Bhajani,102,3,4,Ge,Ta,2,0.5,1.0,1.0,
+3,Bhajani,102,3,5,,Ti,3,0.5,1.0,1.0,TiTa
+3,Bhajani,102,3,6,,TTa,3,0.5,1.0,1.0,
+3,Bhajani,102,3,7,Ge-B,TinFull,4,1.0,1.5,1.5,Dhin-
+3,Bhajani,102,3,8,Ge,Ta,5,0.5,1.0,1.0,DhaTi
+3,Bhajani,102,3,9,,Ti,5,0.5,1.0,1.0,
+3,Bhajani,102,3,10,,TTa,6,0.5,1.0,1.0,TaDhin
+3,Bhajani,102,3,11,Ge-B,TinFull,6,0.5,1.5,1.5,
+3,Bhajani,102,3,12,,,7,0.5,1.0,1.0,-Dha
+3,Bhajani,102,3,13,Ge,Ta,7,0.5,1.0,1.0,
+3,Bhajani,102,3,14,,Ti,8,0.5,1.0,1.0,TiTa
+3,Bhajani,102,3,15,,TTa,8,0.5,1.0,1.0,
+1,"Ektaal,Teentaal,Ada Chautaal,Jhaptaal,Rupak,Tilwada",103,55,1,Ge,Ta,1,0.25,1.0,1.0,DhaTiDhaDha
+1,"Ektaal,Teentaal,Ada Chautaal,Jhaptaal,Rupak,Tilwada",103,55,2,,Ti,1,0.25,1.0,0.5,
+1,"Ektaal,Teentaal,Ada Chautaal,Jhaptaal,Rupak,Tilwada",103,55,3,Ge,Ta,1,0.25,0.5,0.5,
+1,"Ektaal,Teentaal,Ada Chautaal,Jhaptaal,Rupak,Tilwada",103,55,4,Ge-B,Ta,1,0.25,0.5,0.75,
+1,"Ektaal,Teentaal,Ada Chautaal,Jhaptaal,Rupak,Tilwada",104,55,1,Ge,Ta,1,0.25,1.0,1.0,DhaGeTiTa
+1,"Ektaal,Teentaal,Ada Chautaal,Jhaptaal,Rupak,Tilwada",104,55,2,Ge-B,,1,0.25,0.5,1.0,
+1,"Ektaal,Teentaal,Ada Chautaal,Jhaptaal,Rupak,Tilwada",104,55,3,,Ti,1,0.25,1.0,1.0,
+1,"Ektaal,Teentaal,Ada Chautaal,Jhaptaal,Rupak,Tilwada",104,55,4,,TTa,1,0.25,1.0,1.0,
+1,"Ektaal,Teentaal,Ada Chautaal,Jhaptaal,Rupak,Tilwada",105,55,1,Ge,Ta,1,0.25,1.0,1.0,DhaGeDhaTi
+1,"Ektaal,Teentaal,Ada Chautaal,Jhaptaal,Rupak,Tilwada",105,55,2,Ge-B,,1,0.25,0.5,1.0,
+1,"Ektaal,Teentaal,Ada Chautaal,Jhaptaal,Rupak,Tilwada",105,55,3,Ge,Ta,1,0.25,0.5,0.5,
+1,"Ektaal,Teentaal,Ada Chautaal,Jhaptaal,Rupak,Tilwada",105,55,4,,Ti,1,0.25,1.0,1.0,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Rupak,Jhaptaal,Deepchandi",106,3,1,Ge,Ta,1,0.5,1.0,1.0,DhaGe
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Rupak,Jhaptaal,Deepchandi",106,3,2,Ge-B,,1,0.5,0.5,1.0,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Rupak,Jhaptaal,Deepchandi",106,3,3,,Ta,2,0.5,1.0,1.0,NaDha
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Rupak,Jhaptaal,Deepchandi",106,3,4,Ge,Ta,2,0.5,1.0,1.0,
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Rupak,Jhaptaal,Deepchandi",106,3,5,,Ti,3,0.5,1.0,0.5,TiTa
+1,"Addha/Sitarkhani/Punjabi,Teentaal,Rupak,Jhaptaal,Deepchandi",106,3,8,,TTa,3,0.5,1.0,0.5,
+1,Teentaal,107,"2,3",1,,Ti,1,0.5,1.0,1.0,TiTa
+1,Teentaal,107,"2,3",2,,TTa,1,0.5,1.0,1.0,
+1,Teentaal,107,"2,3",3,Ge,Ta,2,1.0,1.0,1.0,Dha-
+1,Teentaal,107,"2,3",4,,TiL,3,0.5,1.0,1.0,TiDha
+1,Teentaal,107,"2,3",5,Ge,Ta,3,0.5,1.0,1.0,
+1,Teentaal,107,"2,3",6,,,4,0.5,1.0,1.0,-Ti
+1,Teentaal,107,"2,3",7,,TiL,4,0.5,1.0,1.0,
+1,Teentaal,108,"2,3",1,,Ti,1,0.5,1.0,1.0,TiTa
+1,Teentaal,108,"2,3",2,,TTa,1,0.5,1.0,1.0,
+1,Teentaal,108,"2,3",3,Ge,Ta,2,0.5,1.0,1.0,Dha-Tira
+1,Teentaal,108,"2,3",4,,Ti,2,0.25,1.0,1.0,
+1,Teentaal,108,"2,3",5,,Ra,2,0.25,1.0,1.0,
+1,Teentaal,108,"2,3",6,Ki,,3,0.25,1.0,1.0,KiTaTaKa
+1,Teentaal,108,"2,3",7,,TTa,3,0.25,1.0,1.0,
+1,Teentaal,108,"2,3",8,,TaKa,3,0.5,1.0,1.0,
+1,Teentaal,108,"2,3",9,,Ti,4,0.25,1.0,1.0,TiRaKiTa
+1,Teentaal,108,"2,3",10,,Ra,4,0.25,1.0,1.0,
+1,Teentaal,108,"2,3",11,Ki,,4,0.25,1.0,1.0,
+1,Teentaal,108,"2,3",12,,TTa,4,0.25,1.0,1.0,
+0,Rupak,109,"1,55,2",1,Ka,Tu,1,0.75,1.0,1.0,Tu
+0,Rupak,109,"1,55,2",2,,TiL,1,0.25,1.0,0.5,
+2,Dadra,110,"2,3",1,Ge,Ta,1,0.5,1.5,1.5,Dha Ti
+2,Dadra,110,"2,3",2,,Ti,1,0.5,1.0,1.0,
+2,Dadra,110,"2,3",3,Ge,Ta,2,0.5,1.5,1.5,Dha Ge
+2,Dadra,110,"2,3",4,Ge,,2,0.5,1.0,1.0,
+2,Dadra,110,"2,3",5,Ge-B,TinMed,3,0.5,1.0,1.0,Dhi Na
+2,Dadra,110,"2,3",6,,Na,3,0.5,1.0,1.5,
+2,Dadra,110,"2,3",7,,Ti,4,0.25,1.0,1.5,TiRaKiTa
+2,Dadra,110,"2,3",8,,Ra,4,0.25,1.0,1.0,
+2,Dadra,110,"2,3",9,Ki,,4,0.25,1.0,1.0,
+2,Dadra,110,"2,3",10,,TTa,4,0.25,1.0,1.0,
+2,Dadra,110,"2,3",11,,Ta,5,0.25,1.0,1.0,TaKa Dhit
+2,Dadra,110,"2,3",12,Ka,,5,0.25,1.0,1.0,
+2,Dadra,110,"2,3",13,Ge,Ti,5,0.5,1.5,1.5,
+2,Dadra,110,"2,3",14,,Ta,6,1.0,1.0,2.0,Ta
+3,Dadra,111,"2,3",1,Ge,Ta,1,0.5,1.5,1.5,Dha Ge
+3,Dadra,111,"2,3",2,Ge,,1,0.5,1.0,1.0,
+3,Dadra,111,"2,3",3,,Na,2,0.5,1.0,1.0,Na Dha
+3,Dadra,111,"2,3",4,Ge,Ta,2,0.5,1.5,1.5,
+3,Dadra,111,"2,3",5,,Ti,3,0.5,1.0,1.0,Ti TTa
+3,Dadra,111,"2,3",6,,TTa,3,0.5,1.0,1.0,
+3,Dadra,111,"2,3",7,,Ta,4,0.5,1.0,2.0,Ta Ta
+3,Dadra,111,"2,3",8,,Ta,4,0.5,1.0,1.5,
+3,Dadra,111,"2,3",9,Ka,,5,0.5,0.5,1.0,Ka Dhi
+3,Dadra,111,"2,3",10,Ge-B,TinMed,5,0.5,1.0,1.0,
+3,Dadra,111,"2,3",11,,Na,6,0.5,1.0,2.0,Na
+3,Dadra,111,"2,3",12,,TiL,6,0.5,1.0,0.5,
+1,"Jhaptaal,Jhoomra",112,"0,1",1,,Ti,1,0.0625,1.0,1.0,TiRaKiTa
+1,"Jhaptaal,Jhoomra",112,"0,1",2,,Ra,1,0.0625,1.0,1.0,
+1,"Jhaptaal,Jhoomra",112,"0,1",3,Ki,,1,0.0625,1.0,1.0,
+1,"Jhaptaal,Jhoomra",112,"0,1",4,,TTa,1,0.0625,1.0,1.0,
+1,"Jhaptaal,Jhoomra",112,"0,1",5,Ge-B,TinFull,1,0.125,1.0,1.0,Dhin
+1,"Jhaptaal,Jhoomra",112,"0,1",6,,Ti,1,0.0625,1.0,1.0,TiRaKiTa
+1,"Jhaptaal,Jhoomra",112,"0,1",7,,Ra,1,0.0625,1.0,1.0,
+1,"Jhaptaal,Jhoomra",112,"0,1",8,Ki,,1,0.0625,1.0,1.0,
+1,"Jhaptaal,Jhoomra",112,"0,1",9,,TTa,1,0.0625,1.0,1.0,
+1,"Jhaptaal,Jhoomra",112,"0,1",10,Ge-B,TinFull,1,0.125,1.0,1.0,Dhin
+1,"Jhaptaal,Jhoomra",112,"0,1",11,,Ti,1,0.0625,1.0,1.0,TiRaKiTa
+1,"Jhaptaal,Jhoomra",112,"0,1",12,,Ra,1,0.0625,1.0,1.0,
+1,"Jhaptaal,Jhoomra",112,"0,1",13,Ki,,1,0.0625,1.0,1.0,
+1,"Jhaptaal,Jhoomra",112,"0,1",14,,TTa,1,0.0625,1.0,1.0,
+1,Jhoomra,113,"0,1",1,,Ti,1,0.25,1.0,1.0,TiRaKiTa
+1,Jhoomra,113,"0,1",2,,Ra,1,0.25,1.0,1.0,
+1,Jhoomra,113,"0,1",3,,Ti,1,0.125,1.0,0.75,
+1,Jhoomra,113,"0,1",4,,Ra,1,0.125,1.0,0.75,
+1,Jhoomra,113,"0,1",5,Ki,,1,0.125,1.0,1.0,
+1,Jhoomra,113,"0,1",6,,TTa,1,0.125,1.0,1.0,
+0,Jhoomra,114,"0,1",1,,Ti,7,0.25,1.0,1.0,TiRaKiTa
+0,Jhoomra,114,"0,1",2,,Ra,7,0.25,1.0,1.0,
+0,Jhoomra,114,"0,1",3,,Ti,7,0.125,1.0,0.5,
+0,Jhoomra,114,"0,1",4,,Ra,7,0.125,1.0,0.5,
+0,Jhoomra,114,"0,1",5,Ki,,7,0.125,1.0,1.0,
+0,Jhoomra,114,"0,1",6,,TTa,7,0.125,1.0,1.0,
+1,Jhoomra,115,1,1,,Ti,1,0.25,1.0,1.0,TiRaKiTa
+1,Jhoomra,115,1,2,,Ra,1,0.25,1.0,1.0,
+1,Jhoomra,115,1,4,Ge,Ta,1,0.0625,1.0,1.0,DhaTi
+1,Jhoomra,115,1,5,,Ti,1,0.0625,1.0,1.0,
+1,Jhoomra,115,1,6,Ge,Ta,1,0.0625,1.0,1.0,DhaTira
+1,Jhoomra,115,1,7,,Ti,1,0.03125,0.5,0.5,
+1,Jhoomra,115,1,8,,Ra,1,0.03125,0.5,0.5,
+1,Jhoomra,115,1,9,Ki,,1,0.03125,0.5,0.5,KiTaTaka
+1,Jhoomra,115,1,10,,TTa,1,0.03125,0.5,0.5,
+1,Jhoomra,115,1,11,,Taka,1,0.0625,0.5,0.5,
+1,Jhoomra,115,1,12,,Ti,1,0.03125,0.5,0.5,TiRaKiTa
+1,Jhoomra,115,1,13,,Ra,1,0.03125,0.5,0.5,
+1,Jhoomra,115,1,14,Ki,,1,0.03125,0.5,0.5,
+1,Jhoomra,115,1,15,,TTa,1,0.03125,0.5,0.5,
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",116,0,1,Ge,Ta,1,0.25,1.5,1.5,Dha
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",116,0,2,Ge-LT6,,1,0.125,1.0,1.0,
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",116,0,3,,Ti,1,0.0625,1.0,1.0,
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",116,0,4,,TTa,1,0.0625,1.0,1.0,
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",116,0,5,Ge,Ta,1,0.0625,1.5,1.5,
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",116,0,6,Ge-B,,1,0.0625,0.5,1.0,
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",116,0,7,,Ti,1,0.0625,1.0,1.0,
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",116,0,8,,TTa,1,0.0625,1.0,1.0,
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",116,0,9,Ge,Ta,1,0.125,1.0,1.0,
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",116,0,10,,Tat,1,0.125,1.0,1.0,
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",117,1,1,Ge,Ta,1,0.125,1.5,1.5,Dha
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",117,1,2,Ge-B,,1,0.125,0.5,1.0,
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",117,1,3,,Ti,1,0.125,1.0,1.0,
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",117,1,4,,TTa,1,0.125,1.0,1.0,
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",117,1,5,Ge,Ta,1,0.25,1.5,1.5,
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",117,1,6,Ge,Ta,1,0.125,1.0,1.0,
+1,"Ektaal,Teentaal,Ada Chautaal,Rupak",117,1,7,,Tat,1,0.125,1.0,1.0,
+1,Tilwada,118,0,1,Ge-B,TinFull,1,0.25,1.5,1.5,Dhin
+1,Tilwada,118,0,2,Ge-LT6,,1,0.125,1.0,1.0,
+1,Tilwada,118,0,3,,Ti,1,0.0625,1.0,1.0,
+1,Tilwada,118,0,4,,TTa,1,0.0625,1.0,1.0,
+1,Tilwada,118,0,5,Ge-B,TinMed,1,0.125,1.5,1.5,
+1,Tilwada,118,0,6,,Ti,1,0.0625,1.0,1.0,
+1,Tilwada,118,0,7,,TTa,1,0.0625,1.0,1.0,
+1,Tilwada,118,0,8,Ge,Ta,1,0.125,1.0,1.0,
+1,Tilwada,118,0,9,,Tat,1,0.125,1.0,1.0,
+1,Tilwada,119,1,1,Ge-B,TinFull,1,0.125,1.5,1.5,Dhin
+1,Tilwada,119,1,2,Ge-B,,1,0.125,0.5,1.0,
+1,Tilwada,119,1,3,,Ti,1,0.125,1.0,1.0,
+1,Tilwada,119,1,4,,TTa,1,0.125,1.0,1.0,
+1,Tilwada,119,1,5,Ge-B,TinMed,1,0.25,1.5,1.5,
+1,Tilwada,119,1,6,Ge,Ta,1,0.125,1.0,1.0,
+1,Tilwada,119,1,7,,Tat,1,0.125,1.0,1.0,

@@ -1,0 +1,59 @@
+Here is exactly what the data for Pauri/Paudi (Pro Default) looks like when your parser finishes reading those CSV rows and converts them into your Swift models in memory.
+
+The Instantiated Swift Data
+Swift
+// 1. The atomic events are created first (from TaalBols.csv)
+// Notice how matra 2 is split into two 0.5 duration events!
+let event1 = TablaStrokeEvent(
+    seqNum: 1,
+    matra: 1,
+    durationFraction: 1.0,
+    leftSampleName: "Ge-OP", // Plays the bass
+    rightSampleName: nil,    // Silence on the treble drum
+    leftVolume: 1.0,
+    rightVolume: 1.0,
+    bolName: "Ge"
+)
+
+let event2 = TablaStrokeEvent(
+    seqNum: 2,
+    matra: 2,
+    durationFraction: 0.5,   // Plays for half a beat
+    leftSampleName: nil,     // Silence on the bass drum
+    rightSampleName: "Ti",   // Plays the treble
+    leftVolume: 1.0,
+    rightVolume: 1.0,
+    bolName: "TiTa"
+)
+
+let event3 = TablaStrokeEvent(
+    seqNum: 3,
+    matra: 2,
+    durationFraction: 0.5,   // Plays for the second half of beat 2
+    leftSampleName: nil,
+    rightSampleName: "TTa",
+    leftVolume: 1.0,
+    rightVolume: 1.0,
+    bolName: nil
+)
+
+// 2. Those events are grouped into a specific style variation
+let proDefaultVariation = TablaStyleVariation(
+    id: 1,
+    name: "Pro Default",
+    allowedTempos: [2, 3],
+    timeline: [event1, event2, event3] // And so on for the rest of the loop...
+)
+
+// 3. Finally, the variation is attached to the parent Taal (from Taal.csv)
+// (Note: I am using the style name "Pro Default" as the key here based on your String dictionary)
+let pauriTaal = TaalDefinition(
+    name: "Pauri/Paudi",
+    displayName: "Pauri/Paudi", // Inherits the name since the CSV was blank here
+    matras: 4.0,
+    taaliMatras: [1],
+    khaaliMatras: [3],
+    variations: [
+        "Pro Default": proDefaultVariation
+    ]
+)

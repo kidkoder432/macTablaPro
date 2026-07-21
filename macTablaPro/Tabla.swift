@@ -1,0 +1,215 @@
+//
+//  Tabla.swift
+//  macTablaPro
+//
+//  Created by Prajwal Agrawal on 7/18/26.
+//
+
+import AVFoundation
+import Combine
+import Foundation
+
+let wavURLs: [URL] =
+    Bundle.main.urls(forResourcesWithExtension: "wav", subdirectory: nil) ?? []
+
+let tablaManifest: [PitchedSample] = wavURLs.filter { url in
+    let baseName = url.deletingPathExtension().lastPathComponent
+    return baseName.contains("Bayaan") || baseName.contains("Dayaan")
+}.map { url in
+    let baseName = url.deletingPathExtension().lastPathComponent
+    return PitchedSample(
+        fileName: baseName,
+        pitch: baseName.contains("C#")
+            ? 100 : (baseName.contains("G#") ? 800 : 0),
+        role: baseName.contains("Bayaan")
+            ? "b"
+            : "d"
+                + (baseName.contains("Tip")
+                    ? "t" : (baseName.contains("Sur") ? "s" : ""))
+    )
+}
+
+@MainActor
+class Tabla: Instrument {
+    @Published var activeTaal: String = "Teentaal"
+    @Published var activeVariation: String = "Pro Default"
+    @Published var useSurTabla = false
+    @Published var currentMatra: Int = 1
+    @Published var currentBolName: String = ""
+    @Published var currentStepIndex = 0
+
+    private let taalDb = TablaDatabase().taalCatalog
+
+    // MARK: - Mentor Stubs for Tempo & Tier Management
+
+    /// Maps the current raw tempoBPM to its corresponding Tempo Tier Index (0...4)
+    /// Tier 0: 10-25 (Ati-Vilambit), Tier 1: 25-80 (Vilambit), Tier 2: 81-150 (Madhya),
+    /// Tier 3: 151-300 (Drut), Tier 4: 301-700 (Ati-Drut)
+    func currentTempoTier() -> Int {
+        switch tempoBPM {
+        case ..<25: return 0
+        case 25..<81: return 1
+        case 81..<151: return 2
+        case 151..<301: return 3
+        default: return 4
+        }
+    }
+
+    /// STUB: Resolves the active timeline for the current Taal, Variation, and Tempo Tier.
+    /// Implements fallback clamping if the current tier is unavailable in the variation's allowedTempos.
+    func resolveActiveTimeline() -> [TablaStrokeEvent] {
+        guard let taal = taalDb[activeTaal],
+            let variation = taal.variations[activeVariation]
+        else {
+            return []
+        }
+
+        let desiredTier = currentTempoTier()
+
+        // If exact tier exists in variation, use it
+        if let timeline = variation.timelinesByTempoTier[desiredTier],
+            !timeline.isEmpty
+        {
+            return timeline
+        }
+
+        // STUB: Fallback clamping to nearest available tier
+        if let fallbackTier = variation.allowedTempos.sorted().min(by: {
+            abs($0 - desiredTier) < abs($1 - desiredTier)
+        }),
+            let timeline = variation.timelinesByTempoTier[fallbackTier]
+        {
+            return timeline
+        }
+
+        return variation.timelinesByTempoTier.values.first ?? []
+    }
+
+    private var lastExecutedTier: Int = -1
+
+    /// Finds the step index in a new timeline that matches the given matra (beat number).
+    /// If currentMatra exceeds the max matra of the new timeline, resets to Sam (1).
+    /// Jumps to the first sub-stroke of the target matra for a clean, accented start.
+    func findMatchingStepIndex(
+        forMatra matra: Int,
+        inTimeline timeline: [TablaStrokeEvent]
+    ) -> Int {
+        guard !timeline.isEmpty else { return 0 }
+        let maxMatra = timeline.map({ $0.matra }).max() ?? 1
+        
+        // Overflow Rule: If currentMatra exceeds maxMatra of the new timeline, reset to Sam (1)
+        let targetMatra = (matra > maxMatra) ? 1 : matra
+        
+        if let matchIndex = timeline.firstIndex(where: { $0.matra >= targetMatra }) {
+            return matchIndex
+        }
+        return 0
+    }
+
+    /// Transitions playback seamlessly to a new timeline, maintaining matra position
+    /// or resetting to Sam (1) if matra exceeded maxMatra.
+    func updateTimelinePosition() {
+        if isPlaying {
+            let newTimeline = resolveActiveTimeline()
+            let matchingStep = findMatchingStepIndex(forMatra: currentMatra, inTimeline: newTimeline)
+            let steps = newTimeline.isEmpty ? 1 : newTimeline.count
+            clock.start(stepsCount: steps, startingAtStep: matchingStep)
+        }
+    }
+
+    private func getTimelineCount() -> Int {
+        let timeline = resolveActiveTimeline()
+        return timeline.isEmpty ? 1 : timeline.count
+    }
+
+    func restartClockIfPlaying() {
+        if isPlaying {
+            let steps = getTimelineCount()
+            clock.start(stepsCount: steps)
+        }
+    }
+
+    override func togglePlay() {
+        isPlaying.toggle()
+        if isPlaying {
+            currentStepIndex = 0
+            currentMatra = 1
+            currentBolName = ""
+            lastExecutedTier = currentTempoTier()
+            let steps = getTimelineCount()
+            clock.start(stepsCount: steps)
+        } else {
+            clock.stop()
+        }
+    }
+
+    override internal func executeSequenceTick(stepIndex: Int, time: AVAudioTime?) -> Double {
+        let activeTier = currentTempoTier()
+        if lastExecutedTier != activeTier {
+            lastExecutedTier = activeTier
+            updateTimelinePosition()
+        }
+
+        let timeline = resolveActiveTimeline()
+        guard !timeline.isEmpty else {
+            return 1.0  // Safe fallback if no timeline is loaded
+        }
+
+        // Defend against out-of-bounds index
+        let safeIndex = stepIndex % timeline.count
+        self.currentStepIndex = safeIndex
+
+        let event = timeline[safeIndex]
+        self.currentMatra = event.matra
+        self.currentBolName = event.bolName ?? ""
+
+        // Execute Left Hand (Bayan)
+        if let leftSample = event.leftSampleName,
+            let sampleToPlay = sampleRegistry["Bayaan_" + leftSample] {
+            print("Playing sample " + leftSample)
+            _ = self.voicePool.play(
+                sample: sampleToPlay,
+                targetPitchCents: 0,
+                volume: Double(event.leftVolume) * self.effectiveVolume,
+                time: time
+            )
+        } else {
+            print("Failed to play sample \(event.leftSampleName ?? "nil")")
+        }
+
+        // Execute Right Hand (Dayan)
+        let tablaPitch: String =
+            orchestrator.scaleOffsetCents <= 400 ? "C#" : "G#"
+        
+        if taalDb[activeTaal]!.forceSur {
+            useSurTabla = true
+        }
+        
+        var surString: String = ""
+        if tablaPitch == "C#" {
+            surString = useSurTabla ? "Sur_" : "Tip_"
+        }
+
+        if let bol = event.rightSampleName {
+            let sampleString = "Dayaan_" + tablaPitch + "_" + surString + bol
+            print("Loading sample " + sampleString)
+            if let sampleToPlay = sampleRegistry[sampleString] {
+                _ = self.voicePool.play(
+                    sample: sampleToPlay,
+                    targetPitchCents: orchestrator.scaleOffsetCents
+                        + orchestrator.fineTuneCents,
+                    volume: Double(event.rightVolume) * self.effectiveVolume,
+                    time: time
+                )
+            } else {
+                print("🛑 Failed to load sample: \(sampleString)")
+            }
+        }
+
+        print(
+            "🥁 Played step \(safeIndex) (Matra \(event.matra) - \(event.bolName ?? "Rest")) - Waiting \(event.durationFraction) beats."
+        )
+
+        return event.durationFraction
+    }
+}
