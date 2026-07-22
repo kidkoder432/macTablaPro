@@ -40,6 +40,36 @@ class Tabla: Instrument {
 
     private let taalDb = TablaDatabase().taalCatalog
 
+    /// Returns the allowed BPM range (min...max) for the currently selected Taal and Variation.
+    func allowedBPMRange() -> ClosedRange<Double> {
+        guard let taal = taalDb[activeTaal],
+              let variation = taal.variations[activeVariation],
+              !variation.allowedTempos.isEmpty else {
+            return 10.0...700.0
+        }
+        let tiers = variation.allowedTempos
+        let minTier = tiers.min() ?? 0
+        let maxTier = tiers.max() ?? 4
+        
+        let minBPMs = [10.0, 25.0, 81.0, 151.0, 301.0]
+        let maxBPMs = [25.0, 80.0, 150.0, 300.0, 700.0]
+        
+        let low = minBPMs[minTier]
+        let high = maxBPMs[maxTier]
+        return low...high
+    }
+
+    /// Clamps the current tempoBPM to stay within allowedBPMRange().
+    func clampTempoToAllowedRange() {
+        let range = allowedBPMRange()
+        if tempoBPM < range.lowerBound {
+            tempoBPM = range.lowerBound
+        } else if tempoBPM > range.upperBound {
+            tempoBPM = range.upperBound
+        }
+        updateTimelinePosition()
+    }
+
     // MARK: - Mentor Stubs for Tempo & Tier Management
 
     /// Maps the current raw tempoBPM to its corresponding Tempo Tier Index (0...4)

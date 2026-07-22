@@ -580,7 +580,7 @@ struct TablaCardView: View {
                         if let firstVar = database.taalCatalog[newTaal]?.variations.keys.sorted().first {
                             tabla.activeVariation = firstVar
                         }
-                        tabla.updateTimelinePosition()
+                        tabla.clampTempoToAllowedRange()
                     }
                 }
                 
@@ -596,7 +596,7 @@ struct TablaCardView: View {
                     .labelsHidden()
                     .pickerStyle(.menu)
                     .onChange(of: tabla.activeVariation) { _ in
-                        tabla.updateTimelinePosition()
+                        tabla.clampTempoToAllowedRange()
                     }
                 }
             }
@@ -658,7 +658,7 @@ struct TablaCardView: View {
                     Spacer()
                 }
 
-                Slider(value: $tabla.tempoBPM, in: 10...700, step: 1.0)
+                Slider(value: $tabla.tempoBPM, in: tabla.allowedBPMRange(), step: 1.0)
                     .tint(.accentColor)
 
                 Grid(horizontalSpacing: 8, verticalSpacing: 8) {
