@@ -5,7 +5,6 @@ import Foundation
 @MainActor
 class AudioVoice {
     private(set) var playerNode = AVAudioPlayerNode()
-    private(set) var pitchNode = AVAudioUnitVarispeed()
 
     // Tracks state safely for the allocator pool
     private(set) var isBusy = false
@@ -13,7 +12,6 @@ class AudioVoice {
     init(attachedTo engine: AVAudioEngine) {
         // 1. Permanently register these nodes with the engine graph
         engine.attach(playerNode)
-        engine.attach(pitchNode)
 
         // Note: We don't perform the engine.connect here because we don't
         // know the shared mixer's destination or format yet.
@@ -30,7 +28,7 @@ class AudioVoice {
         volume: Double,
         time: AVAudioTime?
     ) {
-        guard let buffer = sample.buffer else {
+        guard var buffer = sample.resampledBuffer else {
             print(
                 "⚠️ Voice error: Attempted to play an unallocated sample buffer."
             )
@@ -38,18 +36,12 @@ class AudioVoice {
         }
 
         isBusy = true
-
-        // Calculate raw target tuning relative to the file's recording properties
-        // Target Cents + Inherent Sample Recording Offset
-        let adjustedCents = targetPitchCents - sample.absolutePitch
-        print(sample.absolutePitch, adjustedCents)
-
-        // Update the physical DSP processor block
-        // pitchNode.pitch = Float(adjustedCents)
-        let newRate = Float(pow(2, (adjustedCents / 1200.0)))
-        if pitchNode.rate != newRate {
-            pitchNode.rate = newRate
-        }
+        
+        try? buffer = OfflineAudioResampler.resample(
+            sourceBuffer: buffer,
+            centsOffset: targetPitchCents - sample.resampledPitch
+        ) ?? buffer
+            
 
         playerNode.volume = Float(volume)
         // Schedule the buffer on the real-time audio thread pipeline

@@ -22,10 +22,10 @@ let tablaManifest: [PitchedSample] = wavURLs.filter { url in
         pitch: baseName.contains("C#")
             ? 100 : (baseName.contains("G#") ? 800 : 0),
         role: baseName.contains("Bayaan")
-            ? "b"
+            ? "UnPitched"
             : "d"
-                + (baseName.contains("Tip")
-                    ? "t" : (baseName.contains("Sur") ? "s" : ""))
+            + (baseName.contains("Tip")
+                ? "t" : (baseName.contains("Sur") ? "s" : ""))
     )
 }
 

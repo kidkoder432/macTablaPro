@@ -16,11 +16,20 @@ class AppAudioOrchestrator: ObservableObject {
     @Published var tanpura1: Tanpura!
     @Published var tanpura2: Tanpura!
     @Published var tabla: Tabla!
-
-    // 3. Global Pitch & Tempo Controls shared across the workstation
-    @Published var scaleOffsetCents: Double = 100.0  // Base scale note (e.g. C#3)
-    @Published var fineTuneCents: Double = 0.0
-    @Published var sharedTanpuraBPM: Double = 60.0
+    
+    @Published var scaleOffsetCents: Double = 100.0 {
+        didSet { updateMasterPitch() }
+    }
+    @Published var fineTuneCents: Double = 0.0 {
+        didSet { updateMasterPitch() }
+    }
+    
+    @Published var sharedTanpuraBPM: Double = 60.0 {
+        didSet {
+            tanpura1?.tempoBPM = sharedTanpuraBPM
+            tanpura2?.tempoBPM = sharedTanpuraBPM
+        }
+    }
     @Published var isInspectorPresented: Bool = false
     @Published var hasStartedFirstTime: Bool = false
     @Published var masterVolume: Double = 1.0 {
@@ -67,9 +76,13 @@ class AppAudioOrchestrator: ObservableObject {
         // Step 5: Instantiate your concrete child instruments
         self.tanpura1 = Tanpura(orchestrator: self, voicePool: self.voicePool, registry: tanpuraRegistry)
         self.tanpura2 = Tanpura(orchestrator: self, voicePool: self.voicePool, registry: tanpuraRegistry)
+        self.tanpura1.tempoBPM = self.sharedTanpuraBPM
+        self.tanpura2.tempoBPM = self.sharedTanpuraBPM
         
         let tablaRegistry = masterSampleRegistry.filter { $0.key.contains("Bayaan_") || $0.key.contains("Dayaan_") }
         self.tabla = Tabla(orchestrator: self, voicePool: self.voicePool, registry: tablaRegistry)
+        
+        updateMasterPitch()
     }
 
     private func preloadAllManifestAssets() {
@@ -91,8 +104,7 @@ class AppAudioOrchestrator: ObservableObject {
         engine.connect(masterMixer, to: engine.mainMixerNode, format: assetFormat)
 
         for voice in voicePool.voicePool {
-            engine.connect(voice.playerNode, to: voice.pitchNode, format: assetFormat)
-            engine.connect(voice.pitchNode, to: masterMixer, format: assetFormat)
+            engine.connect(voice.playerNode, to: masterMixer, format: assetFormat)
         }
 
         do {
@@ -132,4 +144,15 @@ class AppAudioOrchestrator: ObservableObject {
             tabla.togglePlay()
         }
     }
+                                                                                          
+    private func updateMasterPitch() {
+        let totalCents = scaleOffsetCents + fineTuneCents
+        let tablaRegistry = masterSampleRegistry.filter { key, _ in key.contains("Dayaan") || key.contains("Bayaan")}
+        OfflineAudioResampler.resampleBatch(
+            samples: Array(tablaRegistry.values),
+            targetPitchCents: totalCents
+        )
+    }
+    
+    
 }

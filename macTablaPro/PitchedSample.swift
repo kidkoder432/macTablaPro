@@ -19,6 +19,9 @@ class PitchedSample {
     
     var isLoaded: Bool
     var buffer: AVAudioPCMBuffer?
+    /// Holds the currently active resampled buffer matching the active pitch selection.
+    var resampledBuffer: AVAudioPCMBuffer?
+    var resampledPitch: Double
     
     
     init(fileName: String, pitch: Double, role: String = "") {
@@ -27,6 +30,9 @@ class PitchedSample {
         self.isLoaded = false
         self.absolutePitch = pitch
         self.role = role
+        
+        self.resampledBuffer = nil
+        self.resampledPitch = pitch
         
     }
     
@@ -67,6 +73,7 @@ class PitchedSample {
             // 4. Stream the raw audio data from the SSD into the allocated RAM
             try file.read(into: buffer)
             self.buffer = buffer
+            self.resampledBuffer = buffer
             
         } catch {
             print("Error reading audio file: \(error)")
