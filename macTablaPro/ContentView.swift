@@ -269,28 +269,23 @@ struct MasterPitchView: View {
                 
                 let displayData = getDisplayData(baseCents: audio.scaleOffsetCents, fineCents: audio.fineTuneCents)
                 
-                ZStack(alignment: .topTrailing) {
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(Color(NSColor.controlBackgroundColor))
-                        .shadow(color: Color.black.opacity(0.1), radius: 3, x: 0, y: 1)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
-                        )
-                    
-                    Text(displayData.noteName)
-                        .font(.system(size: 54, weight: .bold, design: .rounded))
-                        .foregroundColor(.primary)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    
-                    if let centsText = displayData.fineCentsString {
-                        Text(centsText)
-                            .font(.system(size: 14, weight: .medium, design: .monospaced))
-                            .foregroundColor(audio.fineTuneCents > 0 ? .green : .red)
-                            .padding([.top, .trailing], 12)
+                LiquidGlassDisplay(width: 170, height: 105) {
+                    ZStack(alignment: .topTrailing) {
+                        Text(displayData.noteName)
+                            .font(.system(size: 54, weight: .bold, design: .rounded))
+                            .foregroundColor(.white)
+                            .shadow(color: Color.cyan.opacity(0.4), radius: 6)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        
+                        if let centsText = displayData.fineCentsString {
+                            Text(centsText)
+                                .font(.system(size: 13, weight: .semibold, design: .monospaced))
+                                .foregroundColor(audio.fineTuneCents > 0 ? Color.green : Color.orange)
+                                .shadow(color: (audio.fineTuneCents > 0 ? Color.green : Color.orange).opacity(0.6), radius: 4)
+                                .padding([.top, .trailing], 12)
+                        }
                     }
                 }
-                .frame(width: 160, height: 100)
                 
                 Button(action: { executeCoarsePitchStep(upwards: true) }) {
                     Image(systemName: "chevron.right")
@@ -555,6 +550,23 @@ struct TablaCardView: View {
         }
     }
 
+    private func getTaalSymbol(matra: Int, taal: TaalDefinition?) -> String {
+        guard let taal = taal else { return "" }
+        if taal.khaaliMatras.contains(matra) {
+            return "O"
+        }
+        let sortedTaalis = taal.taaliMatras.sorted()
+        if let taaliIndex = sortedTaalis.firstIndex(of: matra) {
+            if matra == 1 {
+                return "X"
+            } else {
+                let number = taaliIndex + (taal.taaliMatras.contains(1) ? 1 : 2)
+                return "\(number)"
+            }
+        }
+        return ""
+    }
+
     var body: some View {
         VStack(spacing: 16) {
             HStack {
@@ -603,17 +615,26 @@ struct TablaCardView: View {
 
             // Central Matra Display and Play/Stop Control
             HStack(spacing: 20) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(Color(NSColor.controlBackgroundColor))
-                        .frame(width: 100, height: 70)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
-                        )
-                    
-                    Text("\(tabla.isPlaying ? tabla.currentMatra : 1)")
-                        .font(.system(size: 36, weight: .bold, design: .rounded))
+                LiquidGlassDisplay(width: 115, height: 75) {
+                    ZStack(alignment: .topLeading) {
+                        if tabla.isPlaying {
+                            let symbol = getTaalSymbol(matra: tabla.currentMatra, taal: database.taalCatalog[tabla.activeTaal])
+                            if !symbol.isEmpty {
+                                Text(symbol)
+                                    .font(.system(size: 15, weight: .bold, design: .rounded))
+                                    .foregroundColor(Color.cyan.opacity(0.9))
+                                    .shadow(color: Color.cyan.opacity(0.6), radius: 4)
+                                    .padding(.top, 8)
+                                    .padding(.leading, 12)
+                            }
+                            
+                            Text("\(tabla.currentMatra)")
+                                .font(.system(size: 38, weight: .bold, design: .rounded))
+                                .foregroundColor(.white)
+                                .shadow(color: Color.white.opacity(0.7), radius: 8)
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        }
+                    }
                 }
 
                 Button(action: { tabla.togglePlay() }) {
@@ -714,5 +735,74 @@ struct TablaCardView: View {
             RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .stroke(Color.gray.opacity(0.2), lineWidth: 1)
         )
+    }
+}
+
+// MARK: - Native macOS Liquid Glass Backlit Display Box
+struct LiquidGlassDisplay<Content: View>: View {
+    let width: CGFloat
+    let height: CGFloat
+    let content: () -> Content
+
+    var body: some View {
+        ZStack {
+            // 1. Recessed Outer Electronic Box Bezel Frame
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [Color.black.opacity(0.85), Color(NSColor.darkGray).opacity(0.6)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .shadow(color: Color.black.opacity(0.35), radius: 3, x: 0, y: 2)
+
+            // 2. Liquid Glass Translucent Backstage Pane
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(.ultraThinMaterial)
+                .overlay(
+                    LinearGradient(
+                        colors: [Color.black.opacity(0.5), Color.black.opacity(0.75)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .padding(2)
+
+            // 3. High-Gloss Specular Glare (Top Refraction Specular Highlight)
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Color.white.opacity(0.22),
+                            Color.white.opacity(0.05),
+                            Color.clear
+                        ],
+                        startPoint: .top,
+                        endPoint: .center
+                    )
+                )
+                .padding(2)
+
+            // 4. Subtle Inner Glow & Chamfered Glass Edge Border
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .strokeBorder(
+                    LinearGradient(
+                        colors: [
+                            Color.white.opacity(0.45),
+                            Color.white.opacity(0.1),
+                            Color.cyan.opacity(0.25)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 1.2
+                )
+                .padding(2)
+
+            // 5. Backlit Digital Display Content
+            content()
+        }
+        .frame(width: width, height: height)
     }
 }
