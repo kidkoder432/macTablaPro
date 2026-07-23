@@ -178,14 +178,15 @@ struct MixerCardView: View {
                 Spacer()
                 
                 Button(action: { audio.toggleMasterTransport() }) {
-                    Label(
-                        audio.isAnyInstrumentPlaying ? "Master Stop" : "Master Play",
-                        systemImage: audio.isAnyInstrumentPlaying ? "square.fill" : "play.fill"
-                    )
-                    .font(.system(size: 11, weight: .semibold))
+                    HStack(spacing: 4) {
+                        Image(systemName: audio.isAnyInstrumentPlaying ? "square.fill" : "play.fill")
+                            .font(.system(size: 10, weight: .bold))
+                        Text(audio.isAnyInstrumentPlaying ? "Stop All" : "Play All")
+                            .font(.caption)
+                            .fontWeight(.medium)
+                    }
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(audio.isAnyInstrumentPlaying ? .red : (isAntique ? .orange : .green))
+                .buttonStyle(CustomTagButtonStyle(isSelected: audio.isAnyInstrumentPlaying, isAntique: isAntique))
             }
 
             // System Master Volume Controller

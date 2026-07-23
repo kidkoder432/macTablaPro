@@ -43,6 +43,7 @@ class AppAudioOrchestrator: ObservableObject {
         didSet {
             masterMixer.outputVolume = Float(masterVolume)
             engine.mainMixerNode.outputVolume = Float(masterVolume)
+            setSystemMasterVolume(Float(masterVolume))
         }
     }
 
@@ -95,6 +96,12 @@ class AppAudioOrchestrator: ObservableObject {
         
         let tablaRegistry = masterSampleRegistry.filter { $0.key.contains("Bayaan_") || $0.key.contains("Dayaan_") }
         self.tabla = Tabla(orchestrator: self, voicePool: self.voicePool, registry: tablaRegistry)
+        
+        setupChildSubscriptions()
+        let sysVol = getSystemMasterVolume()
+        if sysVol > 0 {
+            self.masterVolume = Double(sysVol)
+        }
         
         updateMasterPitch()
         refreshAudioOutputDevices()
@@ -224,5 +231,64 @@ class AppAudioOrchestrator: ObservableObject {
             &devID,
             UInt32(MemoryLayout<AudioDeviceID>.size)
         )
+    }
+
+    private var cancellables = Set<AnyCancellable>()
+
+    private func setupChildSubscriptions() {
+        tanpura1.objectWillChange
+            .sink { [weak self] _ in self?.objectWillChange.send() }
+            .store(in: &cancellables)
+        tanpura2.objectWillChange
+            .sink { [weak self] _ in self?.objectWillChange.send() }
+            .store(in: &cancellables)
+        tabla.objectWillChange
+            .sink { [weak self] _ in self?.objectWillChange.send() }
+            .store(in: &cancellables)
+    }
+
+    private func getSystemMasterVolume() -> Float {
+        var defaultOutputDeviceID = AudioDeviceID(0)
+        var propertySize = UInt32(MemoryLayout<AudioDeviceID>.size)
+        var address = AudioObjectPropertyAddress(
+            mSelector: kAudioHardwarePropertyDefaultOutputDevice,
+            mScope: kAudioObjectPropertyScopeGlobal,
+            mElement: kAudioObjectPropertyElementMain
+        )
+        
+        if AudioObjectGetPropertyData(AudioObjectID(kAudioObjectSystemObject), &address, 0, nil, &propertySize, &defaultOutputDeviceID) == noErr {
+            var volume: Float32 = 0.0
+            var volSize = UInt32(MemoryLayout<Float32>.size)
+            var volAddress = AudioObjectPropertyAddress(
+                mSelector: kAudioHardwareServiceDeviceProperty_VirtualMainVolume,
+                mScope: kAudioDevicePropertyScopeOutput,
+                mElement: kAudioObjectPropertyElementMain
+            )
+            if AudioObjectGetPropertyData(defaultOutputDeviceID, &volAddress, 0, nil, &volSize, &volume) == noErr {
+                return volume
+            }
+        }
+        return 1.0
+    }
+
+    private func setSystemMasterVolume(_ volume: Float) {
+        var defaultOutputDeviceID = AudioDeviceID(0)
+        var propertySize = UInt32(MemoryLayout<AudioDeviceID>.size)
+        var address = AudioObjectPropertyAddress(
+            mSelector: kAudioHardwarePropertyDefaultOutputDevice,
+            mScope: kAudioObjectPropertyScopeGlobal,
+            mElement: kAudioObjectPropertyElementMain
+        )
+        
+        if AudioObjectGetPropertyData(AudioObjectID(kAudioObjectSystemObject), &address, 0, nil, &propertySize, &defaultOutputDeviceID) == noErr {
+            var vol = volume
+            let volSize = UInt32(MemoryLayout<Float32>.size)
+            var volAddress = AudioObjectPropertyAddress(
+                mSelector: kAudioHardwareServiceDeviceProperty_VirtualMainVolume,
+                mScope: kAudioDevicePropertyScopeOutput,
+                mElement: kAudioObjectPropertyElementMain
+            )
+            AudioObjectSetPropertyData(defaultOutputDeviceID, &volAddress, 0, nil, volSize, &vol)
+        }
     }
 }
