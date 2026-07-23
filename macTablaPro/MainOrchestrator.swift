@@ -1,6 +1,12 @@
 import AVFoundation
 import Combine
+import CoreAudio
 import Foundation
+
+struct AudioOutputDevice: Identifiable, Hashable {
+    let id: AudioDeviceID
+    let name: String
+}
 
 @MainActor
 class AppAudioOrchestrator: ObservableObject {
@@ -36,7 +42,13 @@ class AppAudioOrchestrator: ObservableObject {
     @Published var masterVolume: Double = 1.0 {
         didSet {
             masterMixer.outputVolume = Float(masterVolume)
+            engine.mainMixerNode.outputVolume = Float(masterVolume)
         }
+    }
+
+    @Published var availableOutputDevices: [AudioOutputDevice] = []
+    @Published var selectedOutputDeviceID: AudioDeviceID = 0 {
+        didSet { setAudioOutputDevice(deviceID: selectedOutputDeviceID) }
     }
 
     private var activeInstrumentsSnapshot: Set<ObjectIdentifier> = []
@@ -48,8 +60,9 @@ class AppAudioOrchestrator: ObservableObject {
     func toggleMasterTransport() {
         if !hasStartedFirstTime {
             hasStartedFirstTime = true
+            activeInstrumentsSnapshot.insert(ObjectIdentifier(tanpura1))
+            activeInstrumentsSnapshot.insert(ObjectIdentifier(tabla))
             if let t1 = tanpura1, !t1.isPlaying { t1.togglePlay() }
-            if let t2 = tanpura2, !t2.isPlaying { t2.togglePlay() }
             if let tb = tabla, !tb.isPlaying { tb.togglePlay() }
             return
         }
@@ -84,6 +97,7 @@ class AppAudioOrchestrator: ObservableObject {
         self.tabla = Tabla(orchestrator: self, voicePool: self.voicePool, registry: tablaRegistry)
         
         updateMasterPitch()
+        refreshAudioOutputDevices()
     }
 
     private func preloadAllManifestAssets() {
@@ -129,11 +143,14 @@ class AppAudioOrchestrator: ObservableObject {
             activeInstrumentsSnapshot.insert(ObjectIdentifier(tabla))
             tabla.togglePlay()
         }
-        voicePool.stopAll()
+        // Note: Intentional omission of voicePool.stopAll() to allow lingering sustain/decay ring out naturally!
     }
 
     func resumePreviousWorkstationAudio() {
-        guard !activeInstrumentsSnapshot.isEmpty else { return }
+        if activeInstrumentsSnapshot.isEmpty {
+            activeInstrumentsSnapshot.insert(ObjectIdentifier(tanpura1))
+            activeInstrumentsSnapshot.insert(ObjectIdentifier(tabla))
+        }
         
         if activeInstrumentsSnapshot.contains(ObjectIdentifier(tanpura1)) && !tanpura1.isPlaying {
             tanpura1.togglePlay()
@@ -154,6 +171,58 @@ class AppAudioOrchestrator: ObservableObject {
             targetPitchCents: totalCents
         )
     }
-    
-    
+
+    private func refreshAudioOutputDevices() {
+        var propertySize: UInt32 = 0
+        var address = AudioObjectPropertyAddress(
+            mSelector: kAudioHardwarePropertyDevices,
+            mScope: kAudioObjectPropertyScopeGlobal,
+            mElement: kAudioObjectPropertyElementMain
+        )
+        
+        guard AudioObjectGetPropertyDataSize(AudioObjectID(kAudioObjectSystemObject), &address, 0, nil, &propertySize) == noErr else { return }
+        
+        let deviceCount = Int(propertySize) / MemoryLayout<AudioDeviceID>.size
+        var deviceIDs = [AudioDeviceID](repeating: 0, count: deviceCount)
+        guard AudioObjectGetPropertyData(AudioObjectID(kAudioObjectSystemObject), &address, 0, nil, &propertySize, &deviceIDs) == noErr else { return }
+        
+        var devices: [AudioOutputDevice] = []
+        for devID in deviceIDs {
+            var streamAddress = AudioObjectPropertyAddress(
+                mSelector: kAudioDevicePropertyStreams,
+                mScope: kAudioDevicePropertyScopeOutput,
+                mElement: kAudioObjectPropertyElementMain
+            )
+            var streamSize: UInt32 = 0
+            if AudioObjectGetPropertyDataSize(devID, &streamAddress, 0, nil, &streamSize) == noErr && streamSize > 0 {
+                var nameAddress = AudioObjectPropertyAddress(
+                    mSelector: kAudioObjectPropertyName,
+                    mScope: kAudioObjectPropertyScopeGlobal,
+                    mElement: kAudioObjectPropertyElementMain
+                )
+                var nameString: CFString = "" as CFString
+                var nameSize = UInt32(MemoryLayout<CFString>.size)
+                if AudioObjectGetPropertyData(devID, &nameAddress, 0, nil, &nameSize, &nameString) == noErr {
+                    devices.append(AudioOutputDevice(id: devID, name: nameString as String))
+                }
+            }
+        }
+        self.availableOutputDevices = devices
+        if let first = devices.first {
+            self.selectedOutputDeviceID = first.id
+        }
+    }
+
+    private func setAudioOutputDevice(deviceID: AudioDeviceID) {
+        guard deviceID != 0, let audioUnit = engine.outputNode.audioUnit else { return }
+        var devID = deviceID
+        AudioUnitSetProperty(
+            audioUnit,
+            kAudioOutputUnitProperty_CurrentDevice,
+            kAudioUnitScope_Global,
+            0,
+            &devID,
+            UInt32(MemoryLayout<AudioDeviceID>.size)
+        )
+    }
 }

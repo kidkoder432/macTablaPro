@@ -25,22 +25,9 @@ struct ContentView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // MARK: - Master Transport Header Bar
+            // MARK: - Master Header Bar (Integrated with macOS Traffic Lights)
             HStack(spacing: 16) {
-                // macOS Native Traffic Light Alignment Padding + Master Transport Toggle Button
-                HStack(spacing: 10) {
-                    Spacer().frame(width: 50) // Native traffic lights padding
-                    
-                    Button(action: { audio.toggleMasterTransport() }) {
-                        Label(
-                            audio.isAnyInstrumentPlaying ? "Master Pause" : "Master Play",
-                            systemImage: audio.isAnyInstrumentPlaying ? "pause.fill" : "play.fill"
-                        )
-                        .font(.system(size: 11, weight: .semibold))
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(audio.isAnyInstrumentPlaying ? .orange : .green)
-                }
+                Spacer().frame(width: 60) // Native macOS Traffic Lights alignment padding
 
                 Spacer()
 
@@ -64,7 +51,7 @@ struct ContentView: View {
                 .help("Toggle Settings Overlay")
             }
             .padding(.horizontal, 20)
-            .padding(.vertical, 10)
+            .padding(.vertical, 8)
             .background(Color(NSColor.windowBackgroundColor))
             .overlay(Divider(), alignment: .bottom)
 
@@ -74,11 +61,11 @@ struct ContentView: View {
                     // 1. LEFT COLUMN: Tanpura 1 & 2 Cards Stacked
                     VStack(spacing: 18) {
                         if let tanpura1 = audio.tanpura1 {
-                            TanpuraCardView(tanpura: tanpura1, title: "Tanpura 1")
+                            TanpuraCardView(tanpura: tanpura1, audio: audio, title: "Tanpura 1")
                         }
                         
                         if let tanpura2 = audio.tanpura2 {
-                            TanpuraCardView(tanpura: tanpura2, title: "Tanpura 2")
+                            TanpuraCardView(tanpura: tanpura2, audio: audio, title: "Tanpura 2")
                         }
                     }
 
@@ -126,6 +113,22 @@ struct ContentView: View {
                             .font(.subheadline)
                             .fontWeight(.medium)
 
+                        // Audio Output Selector
+                        if !audio.availableOutputDevices.isEmpty {
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text("Audio Output Device")
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
+                                Picker("", selection: $audio.selectedOutputDeviceID) {
+                                    ForEach(audio.availableOutputDevices) { device in
+                                        Text(device.name).tag(device.id)
+                                    }
+                                }
+                                .labelsHidden()
+                                .pickerStyle(.menu)
+                            }
+                        }
+
                         // Shared Tanpura Tempo Controller
                         VStack(spacing: 12) {
                             HStack {
@@ -167,17 +170,28 @@ struct MixerCardView: View {
     var body: some View {
         let isAntique = audio.isAntiqueThemeEnabled
         VStack(spacing: 16) {
+            // Header with Master Play/Stop Transport Button
             HStack {
                 Text("Master Mixer")
                     .font(isAntique ? .custom("Snell Roundhand", size: 20).weight(.bold) : .headline)
                     .foregroundColor(isAntique ? Color.orange : .primary)
                 Spacer()
+                
+                Button(action: { audio.toggleMasterTransport() }) {
+                    Label(
+                        audio.isAnyInstrumentPlaying ? "Master Stop" : "Master Play",
+                        systemImage: audio.isAnyInstrumentPlaying ? "square.fill" : "play.fill"
+                    )
+                    .font(.system(size: 11, weight: .semibold))
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(audio.isAnyInstrumentPlaying ? .red : (isAntique ? .orange : .green))
             }
 
             // System Master Volume Controller
             VStack(spacing: 6) {
                 HStack {
-                    Text("System Volume")
+                    Text("Master Volume")
                         .font(isAntique ? .custom("Baskerville-Italic", size: 14) : .caption)
                         .foregroundColor(isAntique ? Color.orange : .secondary)
                     Spacer()
@@ -195,6 +209,26 @@ struct MixerCardView: View {
             }
             .padding(10)
             .background(isAntique ? Color.black.opacity(0.2) : Color.gray.opacity(0.08), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+
+            // Audio Output Device Selector
+            if !audio.availableOutputDevices.isEmpty {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text("Audio Output")
+                            .font(isAntique ? .custom("Baskerville-Italic", size: 14) : .caption)
+                            .foregroundColor(isAntique ? Color.orange : .secondary)
+                        Spacer()
+                        Picker("", selection: $audio.selectedOutputDeviceID) {
+                            ForEach(audio.availableOutputDevices) { device in
+                                Text(device.name).tag(device.id)
+                            }
+                        }
+                        .labelsHidden()
+                        .pickerStyle(.menu)
+                    }
+                }
+                .padding(.horizontal, 4)
+            }
 
             Divider()
 
@@ -407,6 +441,7 @@ struct MasterPitchView: View {
 /// MARK: - Tanpura Card View (No Play Button)
 struct TanpuraCardView: View {
     @ObservedObject var tanpura: Tanpura
+    @ObservedObject var audio: AppAudioOrchestrator
     let title: String
     @State private var isSettingsExpanded: Bool = false
     @State private var delayTimer: Timer?
