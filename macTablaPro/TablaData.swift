@@ -53,6 +53,8 @@ struct TaalDefinition: Identifiable {
     // Key: `styleNum` (e.g., 1 for Pro Default, 2 for Variation 1)
     // Value: The full timeline sequence for that variation.
     var variations: [String: TablaStyleVariation] = [:]
+    /// Preserves original CSV dataset insertion order for style variations.
+    var orderedVariationNames: [String] = []
 }
 
 // MARK: - 2. The Variation/Style Container
@@ -184,6 +186,7 @@ class TablaDatabase {
                     id: styleNum,
                     name: styleName
                 )
+                taalCatalog[taalName]?.orderedVariationNames.append(styleName)
             }
             
             let seqNum = Int(row["seqNum"] ?? "0") ?? 0

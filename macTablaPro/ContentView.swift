@@ -293,7 +293,7 @@ struct MasterPitchView: View {
                 let displayData = getDisplayData(baseCents: audio.scaleOffsetCents, fineCents: audio.fineTuneCents)
                 
                 LiquidGlassDisplay(width: 170, height: 105, isAntique: isAntique) {
-                    ZStack(alignment: .topTrailing) {
+                    ZStack(alignment: .topLeading) {
                         Text(displayData.noteName)
                             .font(isAntique ?
                                 .system(size: 54, weight: .bold, design: .monospaced) :
@@ -307,7 +307,7 @@ struct MasterPitchView: View {
                                 .font(.system(size: 13, weight: .semibold, design: .monospaced))
                                 .foregroundColor(isAntique ? Color.yellow : (audio.fineTuneCents > 0 ? Color.green : Color.orange))
                                 .shadow(color: isAntique ? Color.yellow.opacity(0.8) : (audio.fineTuneCents > 0 ? Color.green : Color.orange).opacity(0.6), radius: 4)
-                                .padding([.top, .trailing], 12)
+                                .padding([.top, .leading], 12)
                         }
                     }
                 }
@@ -440,14 +440,14 @@ struct TanpuraCardView: View {
             }
 
             // String Pitch Selector & Off Control
-            HStack(spacing: 8) {
+            HStack(spacing: 6) {
                 // 1. Off Tag Button (Default Off)
                 Button(action: {
                     if tanpura.isPlaying {
                         tanpura.togglePlay()
                     }
                 }) {
-                    Text("Off").fontWeight(.medium).frame(minWidth: 35)
+                    Text("Off").fontWeight(.medium).frame(maxWidth: .infinity)
                 }
                 .buttonStyle(CustomTagButtonStyle(isSelected: !tanpura.isPlaying, isAntique: isAntique))
 
@@ -459,12 +459,14 @@ struct TanpuraCardView: View {
                             tanpura.togglePlay()
                         }
                     }) {
-                        Text(option.name).fontWeight(.medium).frame(minWidth: 35)
+                        Text(option.name).fontWeight(.medium).frame(maxWidth: .infinity)
                     }
                     .buttonStyle(CustomTagButtonStyle(isSelected: tanpura.isPlaying && tanpura.firstStringPitch == option.cents, isAntique: isAntique))
                 }
 
                 // 3. Overflow Menu for custom pitches
+                let customPitchName = stringPickerItems.first(where: { $0.cents == tanpura.firstStringPitch })?.name ?? "..."
+                let isCustomSelected = tanpura.isPlaying && !isQuickOptionSelected
                 Menu {
                     ForEach(stringPickerItems, id: \.self) { item in
                         Button(action: {
@@ -480,10 +482,10 @@ struct TanpuraCardView: View {
                         }
                     }
                 } label: {
-                    Text("...").fontWeight(.medium).frame(width: 35)
+                    Text(isCustomSelected ? customPitchName : "...").fontWeight(.medium).frame(maxWidth: .infinity)
                 }
                 .menuIndicator(.hidden)
-                .buttonStyle(CustomTagButtonStyle(isSelected: tanpura.isPlaying && !isQuickOptionSelected, isAntique: isAntique))
+                .buttonStyle(CustomTagButtonStyle(isSelected: isCustomSelected, isAntique: isAntique))
             }
 
             // RESTORED: Collapsible Settings Pane
@@ -665,15 +667,21 @@ struct TablaCardView: View {
                         .font(isAntique ? .custom("Baskerville-Italic", size: 14) : .caption)
                         .foregroundColor(isAntique ? Color.orange : .secondary)
                     Spacer()
+                    let sortedTaals = database.taalCatalog.values.sorted {
+                        if $0.matras != $1.matras {
+                            return $0.matras < $1.matras
+                        }
+                        return $0.name < $1.name
+                    }
                     Picker("", selection: $tabla.activeTaal) {
-                        ForEach(database.taalCatalog.keys.sorted(), id: \.self) { name in
-                            Text(name).tag(name)
+                        ForEach(sortedTaals, id: \.name) { taal in
+                            Text("\(taal.name) (\(Int(taal.matras)))").tag(taal.name)
                         }
                     }
                     .labelsHidden()
                     .pickerStyle(.menu)
                     .onChange(of: tabla.activeTaal) { newTaal in
-                        if let firstVar = database.taalCatalog[newTaal]?.variations.keys.sorted().first {
+                        if let firstVar = database.taalCatalog[newTaal]?.orderedVariationNames.first {
                             tabla.activeVariation = firstVar
                         }
                         tabla.clampTempoToAllowedRange()
@@ -686,7 +694,7 @@ struct TablaCardView: View {
                         .foregroundColor(isAntique ? Color.orange : .secondary)
                     Spacer()
                     Picker("", selection: $tabla.activeVariation) {
-                        let variations = database.taalCatalog[tabla.activeTaal]?.variations.keys.sorted() ?? []
+                        let variations = database.taalCatalog[tabla.activeTaal]?.orderedVariationNames ?? []
                         ForEach(variations, id: \.self) { variationName in
                             Text(variationName).tag(variationName)
                         }
