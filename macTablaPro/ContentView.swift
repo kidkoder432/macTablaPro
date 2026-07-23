@@ -44,9 +44,9 @@ struct ContentView: View {
 
                 Spacer()
 
-                Text("macTablaPro Studio")
-                    .font(.headline)
-                    .foregroundColor(.secondary)
+                Text(audio.isAntiqueThemeEnabled ? "Raagini & Tabla Digital" : "macTablaPro Studio")
+                    .font(audio.isAntiqueThemeEnabled ? .custom("Snell Roundhand", size: 22).weight(.bold) : .headline)
+                    .foregroundColor(audio.isAntiqueThemeEnabled ? Color.orange : .secondary)
 
                 Spacer()
 
@@ -165,57 +165,72 @@ struct MixerCardView: View {
     @ObservedObject var audio: AppAudioOrchestrator
 
     var body: some View {
+        let isAntique = audio.isAntiqueThemeEnabled
         VStack(spacing: 16) {
             HStack {
                 Text("Master Mixer")
-                    .font(.headline)
-                    .fontWeight(.semibold)
+                    .font(isAntique ? .custom("Snell Roundhand", size: 20).weight(.bold) : .headline)
+                    .foregroundColor(isAntique ? Color.orange : .primary)
                 Spacer()
             }
 
             // System Master Volume Controller
             VStack(spacing: 6) {
                 HStack {
-                    Text("System Volume").font(.caption).foregroundColor(.secondary)
+                    Text("System Volume")
+                        .font(isAntique ? .custom("Baskerville-Italic", size: 14) : .caption)
+                        .foregroundColor(isAntique ? Color.orange : .secondary)
                     Spacer()
-                    Text("\(Int(audio.masterVolume * 100))%").font(.caption).monospacedDigit().foregroundColor(.secondary)
+                    Text("\(Int(audio.masterVolume * 100))%")
+                        .font(.caption)
+                        .monospacedDigit()
+                        .foregroundColor(isAntique ? Color.yellow : .secondary)
                 }
                 HStack(spacing: 8) {
-                    Image(systemName: "speaker.fill").font(.caption).foregroundColor(.secondary)
+                    Image(systemName: "speaker.fill").font(.caption).foregroundColor(isAntique ? Color.orange : .secondary)
                     Slider(value: $audio.masterVolume, in: 0.0...1.0)
-                        .tint(.accentColor)
-                    Image(systemName: "speaker.wave.3.fill").font(.caption).foregroundColor(.secondary)
+                        .tint(isAntique ? .orange : .accentColor)
+                    Image(systemName: "speaker.wave.3.fill").font(.caption).foregroundColor(isAntique ? Color.orange : .secondary)
                 }
             }
             .padding(10)
-            .background(Color.gray.opacity(0.08), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .background(isAntique ? Color.black.opacity(0.2) : Color.gray.opacity(0.08), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
 
             Divider()
 
             VStack(spacing: 14) {
                 if let tanpura1 = audio.tanpura1 {
-                    MixerChannelRow(name: "Tanpura 1", instrument: tanpura1)
+                    MixerChannelRow(name: "Tanpura 1", instrument: tanpura1, isAntique: isAntique)
                 }
                 
                 if let tanpura2 = audio.tanpura2 {
-                    MixerChannelRow(name: "Tanpura 2", instrument: tanpura2)
+                    MixerChannelRow(name: "Tanpura 2", instrument: tanpura2, isAntique: isAntique)
                 }
 
                 if let tabla = audio.tabla {
-                    MixerChannelRow(name: "Tabla", instrument: tabla)
+                    MixerChannelRow(name: "Tabla", instrument: tabla, isAntique: isAntique)
                 }
             }
         }
         .padding(20)
         .frame(width: 300)
         .background(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(Color(NSColor.controlBackgroundColor))
-                .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(
+                    isAntique ?
+                    Color(NSColor.windowBackgroundColor).opacity(0.85) :
+                    Color(NSColor.controlBackgroundColor)
+                )
+                .shadow(color: isAntique ? Color.orange.opacity(0.15) : Color.black.opacity(0.05), radius: isAntique ? 6 : 2, x: 0, y: 1)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(
+                    isAntique ?
+                    LinearGradient(colors: [Color.orange.opacity(0.5), Color.yellow.opacity(0.3)], startPoint: .topLeading, endPoint: .bottomTrailing) :
+                    LinearGradient(colors: [Color.gray.opacity(0.2)], startPoint: .top, endPoint: .bottom),
+                    lineWidth: isAntique ? 1.5 : 1.0
+                )
         )
     }
 }
@@ -224,15 +239,16 @@ struct MixerCardView: View {
 struct MixerChannelRow: View {
     let name: String
     @ObservedObject var instrument: Instrument
+    var isAntique: Bool = false
     
     var body: some View {
         HStack(spacing: 8) {
             Button(action: { instrument.togglePlay() }) {
                 Text(name)
-                    .font(.caption)
+                    .font(isAntique ? .custom("Baskerville-Italic", size: 14).weight(.semibold) : .caption)
                     .frame(width: 70, alignment: .leading)
             }
-            .buttonStyle(CustomTagButtonStyle(isSelected: instrument.isPlaying))
+            .buttonStyle(CustomTagButtonStyle(isSelected: instrument.isPlaying, isAntique: isAntique))
 
             // Mute Toggle Button
             Button(action: { instrument.isMuted.toggle() }) {
@@ -259,37 +275,38 @@ struct MasterPitchView: View {
     @State private var repeatTimer: Timer?
     
     var body: some View {
+        let isAntique = audio.isAntiqueThemeEnabled
         VStack(spacing: 20) {
             Text("Master Tuning")
-                .font(.headline)
-                .foregroundColor(.secondary)
+                .font(isAntique ? .custom("Snell Roundhand", size: 22).weight(.bold) : .headline)
+                .foregroundColor(isAntique ? Color.orange : .secondary)
             
             // Giant Pitch Display with Chevrons
             HStack(spacing: 30) {
                 Button(action: { executeCoarsePitchStep(upwards: false) }) {
                     Image(systemName: "chevron.left")
                         .font(.system(size: 28, weight: .bold))
-                        .foregroundColor(.secondary)
+                        .foregroundColor(isAntique ? Color.orange : .secondary)
                 }
                 .buttonStyle(.plain)
                 
                 let displayData = getDisplayData(baseCents: audio.scaleOffsetCents, fineCents: audio.fineTuneCents)
                 
-                LiquidGlassDisplay(width: 170, height: 105, isAntique: audio.isAntiqueThemeEnabled) {
+                LiquidGlassDisplay(width: 170, height: 105, isAntique: isAntique) {
                     ZStack(alignment: .topTrailing) {
                         Text(displayData.noteName)
-                            .font(audio.isAntiqueThemeEnabled ?
+                            .font(isAntique ?
                                 .system(size: 54, weight: .bold, design: .monospaced) :
                                 .system(size: 54, weight: .bold, design: .rounded))
-                            .foregroundColor(audio.isAntiqueThemeEnabled ? Color.orange : .white)
-                            .shadow(color: audio.isAntiqueThemeEnabled ? Color.orange.opacity(0.8) : Color.cyan.opacity(0.4), radius: audio.isAntiqueThemeEnabled ? 8 : 6)
+                            .foregroundColor(isAntique ? Color.orange : .white)
+                            .shadow(color: isAntique ? Color.orange.opacity(0.8) : Color.cyan.opacity(0.4), radius: isAntique ? 8 : 6)
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                         
                         if let centsText = displayData.fineCentsString {
                             Text(centsText)
                                 .font(.system(size: 13, weight: .semibold, design: .monospaced))
-                                .foregroundColor(audio.isAntiqueThemeEnabled ? Color.yellow : (audio.fineTuneCents > 0 ? Color.green : Color.orange))
-                                .shadow(color: audio.isAntiqueThemeEnabled ? Color.yellow.opacity(0.8) : (audio.fineTuneCents > 0 ? Color.green : Color.orange).opacity(0.6), radius: 4)
+                                .foregroundColor(isAntique ? Color.yellow : (audio.fineTuneCents > 0 ? Color.green : Color.orange))
+                                .shadow(color: isAntique ? Color.yellow.opacity(0.8) : (audio.fineTuneCents > 0 ? Color.green : Color.orange).opacity(0.6), radius: 4)
                                 .padding([.top, .trailing], 12)
                         }
                     }
@@ -298,7 +315,7 @@ struct MasterPitchView: View {
                 Button(action: { executeCoarsePitchStep(upwards: true) }) {
                     Image(systemName: "chevron.right")
                         .font(.system(size: 28, weight: .bold))
-                        .foregroundColor(.secondary)
+                        .foregroundColor(isAntique ? Color.orange : .secondary)
                 }
                 .buttonStyle(.plain)
             }
@@ -307,13 +324,15 @@ struct MasterPitchView: View {
             HStack(spacing: 16) {
                 continuousAdjustmentButton(label: "♭", isIncrementing: false)
                     .font(.title2)
+                    .foregroundColor(isAntique ? Color.orange : .secondary)
                 
                 Slider(value: $audio.fineTuneCents, in: -100...100, step: 1.0)
-                    .tint(audio.fineTuneCents == 0 ? .gray : .accentColor)
+                    .tint(isAntique ? .orange : (audio.fineTuneCents == 0 ? .gray : .accentColor))
                     .frame(width: 200)
                 
                 continuousAdjustmentButton(label: "♯", isIncrementing: true)
                     .font(.title2)
+                    .foregroundColor(isAntique ? Color.orange : .secondary)
             }
         }
     }
@@ -404,11 +423,19 @@ struct TanpuraCardView: View {
     }
 
     var body: some View {
+        let isAntique = tanpura.orchestrator.isAntiqueThemeEnabled
         VStack(spacing: 16) {
-            HStack {
+            HStack(spacing: 8) {
+                if isAntique {
+                    Circle()
+                        .fill(tanpura.isPlaying ? Color.green : Color.red)
+                        .frame(width: 8, height: 8)
+                        .shadow(color: (tanpura.isPlaying ? Color.green : Color.red).opacity(0.8), radius: 4)
+                }
+                
                 Text(title)
-                    .font(.headline)
-                    .fontWeight(.semibold)
+                    .font(isAntique ? .custom("Snell Roundhand", size: 20).weight(.bold) : .headline)
+                    .foregroundColor(isAntique ? Color.orange : .primary)
                 Spacer()
             }
 
@@ -422,7 +449,7 @@ struct TanpuraCardView: View {
                 }) {
                     Text("Off").fontWeight(.medium).frame(minWidth: 35)
                 }
-                .buttonStyle(CustomTagButtonStyle(isSelected: !tanpura.isPlaying))
+                .buttonStyle(CustomTagButtonStyle(isSelected: !tanpura.isPlaying, isAntique: isAntique))
 
                 // 2. Note Tag Buttons (Pa, Ma, Ni)
                 ForEach(quickOptions, id: \.cents) { option in
@@ -434,7 +461,7 @@ struct TanpuraCardView: View {
                     }) {
                         Text(option.name).fontWeight(.medium).frame(minWidth: 35)
                     }
-                    .buttonStyle(CustomTagButtonStyle(isSelected: tanpura.isPlaying && tanpura.firstStringPitch == option.cents))
+                    .buttonStyle(CustomTagButtonStyle(isSelected: tanpura.isPlaying && tanpura.firstStringPitch == option.cents, isAntique: isAntique))
                 }
 
                 // 3. Overflow Menu for custom pitches
@@ -456,7 +483,7 @@ struct TanpuraCardView: View {
                     Text("...").fontWeight(.medium).frame(width: 35)
                 }
                 .menuIndicator(.hidden)
-                .buttonStyle(CustomTagButtonStyle(isSelected: tanpura.isPlaying && !isQuickOptionSelected))
+                .buttonStyle(CustomTagButtonStyle(isSelected: tanpura.isPlaying && !isQuickOptionSelected, isAntique: isAntique))
             }
 
             // RESTORED: Collapsible Settings Pane
@@ -464,32 +491,41 @@ struct TanpuraCardView: View {
                 VStack(alignment: .leading, spacing: 10) {
                     Text("Tempo: \(Int(tanpura.tempoBPM)) BPM")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(isAntique ? Color.orange : .secondary)
                         .padding(.top, 4)
 
                     HStack(spacing: 12) {
                         tempoAdjustmentButton(label: "minus.circle.fill", isIncrementing: false)
                         
                         Slider(value: $tanpura.tempoBPM, in: 60...140, step: 1.0)
-                            .tint(.accentColor)
+                            .tint(isAntique ? .orange : .accentColor)
                         
                         tempoAdjustmentButton(label: "plus.circle.fill", isIncrementing: true)
                     }
                 }
             }
             .font(.subheadline)
-            .tint(.secondary)
+            .tint(isAntique ? Color.orange : .secondary)
         }
         .padding(16)
         .frame(width: 280)
         .background(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(Color(NSColor.controlBackgroundColor))
-                .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(
+                    isAntique ?
+                    Color(NSColor.windowBackgroundColor).opacity(0.85) :
+                    Color(NSColor.controlBackgroundColor)
+                )
+                .shadow(color: isAntique ? Color.orange.opacity(0.15) : Color.black.opacity(0.05), radius: isAntique ? 6 : 2, x: 0, y: 1)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(
+                    isAntique ?
+                    LinearGradient(colors: [Color.orange.opacity(0.5), Color.yellow.opacity(0.3)], startPoint: .topLeading, endPoint: .bottomTrailing) :
+                    LinearGradient(colors: [Color.gray.opacity(0.2)], startPoint: .top, endPoint: .bottom),
+                    lineWidth: isAntique ? 1.5 : 1.0
+                )
         )
     }
 
@@ -524,6 +560,31 @@ struct TanpuraCardView: View {
 // MARK: - Custom Styles
 struct CustomTagButtonStyle: ButtonStyle {
     var isSelected: Bool
+    var isAntique: Bool = false
+    
+    private var backgroundColor: Color {
+        if isSelected {
+            return isAntique ? Color.orange : Color.accentColor
+        } else {
+            return isAntique ? Color.black.opacity(0.12) : Color.gray.opacity(0.15)
+        }
+    }
+    
+    private var strokeColor: Color {
+        if isAntique {
+            return isSelected ? Color.yellow.opacity(0.8) : Color.orange.opacity(0.3)
+        } else {
+            return Color.clear
+        }
+    }
+    
+    private var textColor: Color {
+        if isSelected {
+            return .white
+        } else {
+            return .primary
+        }
+    }
     
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
@@ -531,9 +592,14 @@ struct CustomTagButtonStyle: ButtonStyle {
             .padding(.horizontal, 8)
             .background(
                 RoundedRectangle(cornerRadius: 6, style: .continuous)
-                    .fill(isSelected ? Color.accentColor : Color.gray.opacity(0.15))
+                    .fill(backgroundColor)
             )
-            .foregroundColor(isSelected ? .white : .primary)
+            .overlay(
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .stroke(strokeColor, lineWidth: isAntique ? 1.0 : 0)
+            )
+            .foregroundColor(textColor)
+            .shadow(color: (isAntique && isSelected) ? Color.orange.opacity(0.6) : Color.clear, radius: 4)
             .opacity(configuration.isPressed ? 0.8 : 1.0)
             .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
             .animation(.easeOut(duration: 0.1), value: configuration.isPressed)
@@ -576,18 +642,28 @@ struct TablaCardView: View {
     }
 
     var body: some View {
+        let isAntique = tabla.orchestrator.isAntiqueThemeEnabled
         VStack(spacing: 16) {
-            HStack {
+            HStack(spacing: 8) {
+                if isAntique {
+                    Circle()
+                        .fill(tabla.isPlaying ? Color.green : Color.red)
+                        .frame(width: 8, height: 8)
+                        .shadow(color: (tabla.isPlaying ? Color.green : Color.red).opacity(0.8), radius: 4)
+                }
+                
                 Text("Tabla")
-                    .font(.headline)
-                    .fontWeight(.semibold)
+                    .font(isAntique ? .custom("Snell Roundhand", size: 20).weight(.bold) : .headline)
+                    .foregroundColor(isAntique ? Color.orange : .primary)
                 Spacer()
             }
 
             // Dropdown Pickers for Taal and Variation selection
             VStack(spacing: 8) {
                 HStack {
-                    Text("Taal").font(.caption).foregroundColor(.secondary)
+                    Text("Taal")
+                        .font(isAntique ? .custom("Baskerville-Italic", size: 14) : .caption)
+                        .foregroundColor(isAntique ? Color.orange : .secondary)
                     Spacer()
                     Picker("", selection: $tabla.activeTaal) {
                         ForEach(database.taalCatalog.keys.sorted(), id: \.self) { name in
@@ -605,7 +681,9 @@ struct TablaCardView: View {
                 }
                 
                 HStack {
-                    Text("Style").font(.caption).foregroundColor(.secondary)
+                    Text("Style")
+                        .font(isAntique ? .custom("Baskerville-Italic", size: 14) : .caption)
+                        .foregroundColor(isAntique ? Color.orange : .secondary)
                     Spacer()
                     Picker("", selection: $tabla.activeVariation) {
                         let variations = database.taalCatalog[tabla.activeTaal]?.variations.keys.sorted() ?? []
@@ -623,27 +701,27 @@ struct TablaCardView: View {
 
             // Central Matra Display and Play/Stop Control
             HStack(spacing: 20) {
-                LiquidGlassDisplay(width: 115, height: 75, isAntique: tabla.orchestrator.isAntiqueThemeEnabled) {
+                LiquidGlassDisplay(width: 115, height: 75, isAntique: isAntique) {
                     ZStack(alignment: .topLeading) {
                         if tabla.isPlaying {
                             let symbol = getTaalSymbol(matra: tabla.currentMatra, taal: database.taalCatalog[tabla.activeTaal])
                             if !symbol.isEmpty {
                                 Text(symbol)
-                                    .font(tabla.orchestrator.isAntiqueThemeEnabled ?
+                                    .font(isAntique ?
                                         .system(size: 15, weight: .bold, design: .monospaced) :
                                         .system(size: 15, weight: .bold, design: .rounded))
-                                    .foregroundColor(tabla.orchestrator.isAntiqueThemeEnabled ? Color.yellow : Color.cyan.opacity(0.9))
-                                    .shadow(color: tabla.orchestrator.isAntiqueThemeEnabled ? Color.yellow.opacity(0.8) : Color.cyan.opacity(0.6), radius: 4)
+                                    .foregroundColor(isAntique ? Color.yellow : Color.cyan.opacity(0.9))
+                                    .shadow(color: isAntique ? Color.yellow.opacity(0.8) : Color.cyan.opacity(0.6), radius: 4)
                                     .padding(.top, 8)
                                     .padding(.leading, 12)
                             }
                             
                             Text("\(tabla.currentMatra)")
-                                .font(tabla.orchestrator.isAntiqueThemeEnabled ?
+                                .font(isAntique ?
                                     .system(size: 38, weight: .bold, design: .monospaced) :
                                     .system(size: 38, weight: .bold, design: .rounded))
-                                .foregroundColor(tabla.orchestrator.isAntiqueThemeEnabled ? Color.orange : .white)
-                                .shadow(color: tabla.orchestrator.isAntiqueThemeEnabled ? Color.orange.opacity(0.8) : Color.white.opacity(0.7), radius: 8)
+                                .foregroundColor(isAntique ? Color.orange : .white)
+                                .shadow(color: isAntique ? Color.orange.opacity(0.8) : Color.white.opacity(0.7), radius: 8)
                                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                         }
                     }
@@ -654,8 +732,9 @@ struct TablaCardView: View {
                         .font(.title)
                         .foregroundColor(.white)
                         .frame(width: 50, height: 50)
-                        .background(tabla.isPlaying ? Color.red : Color.accentColor)
+                        .background(tabla.isPlaying ? Color.red : (isAntique ? Color.orange : Color.accentColor))
                         .clipShape(Circle())
+                        .shadow(color: isAntique ? Color.orange.opacity(0.5) : Color.clear, radius: 4)
                 }
                 .buttonStyle(.plain)
             }
@@ -663,19 +742,18 @@ struct TablaCardView: View {
             // Debugging Panel: Phonetic Bol Name Display
             HStack {
                 Text("Bol:")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                    .font(isAntique ? .custom("Baskerville-Italic", size: 14) : .caption)
+                    .foregroundColor(isAntique ? Color.orange : .secondary)
                 Text(tabla.isPlaying && !tabla.currentBolName.isEmpty ? tabla.currentBolName : "—")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                    .foregroundColor(.primary)
+                    .font(isAntique ? .custom("Snell Roundhand", size: 16).weight(.bold) : .subheadline)
+                    .foregroundColor(isAntique ? Color.yellow : .primary)
                 Spacer()
                 
                 // Sur Tabla Toggle Switch
                 Toggle("Sur Tabla", isOn: $tabla.useSurTabla)
                     .toggleStyle(.switch)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                    .font(isAntique ? .custom("Baskerville-Italic", size: 14) : .caption)
+                    .foregroundColor(isAntique ? Color.orange : .secondary)
             }
             .padding(.horizontal, 4)
 
@@ -685,43 +763,42 @@ struct TablaCardView: View {
 
                 HStack {
                     Text("\(tempoCategoryName(tier: tabla.currentTempoTier())) • \(Int(tabla.tempoBPM)) BPM")
-                        .font(.caption)
-                        .fontWeight(.medium)
-                        .foregroundColor(.accentColor)
+                        .font(isAntique ? .custom("Baskerville-Italic", size: 14).weight(.bold) : .caption)
+                        .foregroundColor(isAntique ? Color.orange : .accentColor)
                     Spacer()
                 }
 
                 Slider(value: $tabla.tempoBPM, in: tabla.allowedBPMRange(), step: 1.0)
-                    .tint(.accentColor)
+                    .tint(isAntique ? .orange : .accentColor)
 
                 Grid(horizontalSpacing: 8, verticalSpacing: 8) {
                     GridRow {
                         Button(action: { tabla.tempoBPM = max(10, tabla.tempoBPM - 5) }) {
                             Text("-5").font(.caption).fontWeight(.medium).frame(maxWidth: .infinity)
                         }
-                        .buttonStyle(CustomTagButtonStyle(isSelected: false))
+                        .buttonStyle(CustomTagButtonStyle(isSelected: false, isAntique: isAntique))
 
                         Button(action: { tabla.tempoBPM = max(10, tabla.tempoBPM - 1) }) {
                             Text("-").font(.caption).fontWeight(.medium).frame(maxWidth: .infinity)
                         }
-                        .buttonStyle(CustomTagButtonStyle(isSelected: false))
+                        .buttonStyle(CustomTagButtonStyle(isSelected: false, isAntique: isAntique))
 
                         Button(action: { tabla.tempoBPM = min(700, tabla.tempoBPM + 1) }) {
                             Text("+").font(.caption).fontWeight(.medium).frame(maxWidth: .infinity)
                         }
-                        .buttonStyle(CustomTagButtonStyle(isSelected: false))
+                        .buttonStyle(CustomTagButtonStyle(isSelected: false, isAntique: isAntique))
 
                         Button(action: { tabla.tempoBPM = min(700, tabla.tempoBPM + 5) }) {
                             Text("+5").font(.caption).fontWeight(.medium).frame(maxWidth: .infinity)
                         }
-                        .buttonStyle(CustomTagButtonStyle(isSelected: false))
+                        .buttonStyle(CustomTagButtonStyle(isSelected: false, isAntique: isAntique))
                     }
 
                     GridRow {
                         Button(action: { tabla.tempoBPM = max(10, tabla.tempoBPM / 2.0) }) {
                             Text("x/2").font(.caption).fontWeight(.medium).frame(maxWidth: .infinity)
                         }
-                        .buttonStyle(CustomTagButtonStyle(isSelected: false))
+                        .buttonStyle(CustomTagButtonStyle(isSelected: false, isAntique: isAntique))
                         
                         Spacer()
                         Spacer()
@@ -729,23 +806,32 @@ struct TablaCardView: View {
                         Button(action: { tabla.tempoBPM = min(700, tabla.tempoBPM * 2.0) }) {
                             Text("2x").font(.caption).fontWeight(.medium).frame(maxWidth: .infinity)
                         }
-                        .buttonStyle(CustomTagButtonStyle(isSelected: false))
+                        .buttonStyle(CustomTagButtonStyle(isSelected: false, isAntique: isAntique))
                     }
                 }
             }
             .font(.subheadline)
-            .tint(.secondary)
+            .tint(isAntique ? Color.orange : .secondary)
         }
         .padding(16)
         .frame(width: 320)
         .background(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(Color(NSColor.controlBackgroundColor))
-                .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(
+                    isAntique ?
+                    Color(NSColor.windowBackgroundColor).opacity(0.85) :
+                    Color(NSColor.controlBackgroundColor)
+                )
+                .shadow(color: isAntique ? Color.orange.opacity(0.15) : Color.black.opacity(0.05), radius: isAntique ? 6 : 2, x: 0, y: 1)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(
+                    isAntique ?
+                    LinearGradient(colors: [Color.orange.opacity(0.5), Color.yellow.opacity(0.3)], startPoint: .topLeading, endPoint: .bottomTrailing) :
+                    LinearGradient(colors: [Color.gray.opacity(0.2)], startPoint: .top, endPoint: .bottom),
+                    lineWidth: isAntique ? 1.5 : 1.0
+                )
         )
     }
 }
