@@ -30,6 +30,7 @@ class AppAudioOrchestrator: ObservableObject {
             tanpura2?.tempoBPM = sharedTanpuraBPM
         }
     }
+    @Published var isAntiqueThemeEnabled: Bool = false
     @Published var isInspectorPresented: Bool = false
     @Published var hasStartedFirstTime: Bool = false
     @Published var masterVolume: Double = 1.0 {

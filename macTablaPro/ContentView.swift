@@ -120,6 +120,12 @@ struct ContentView: View {
 
                         Divider()
 
+                        // Antique Electronic Box Theme Toggle
+                        Toggle("Antique Box Theme", isOn: $audio.isAntiqueThemeEnabled)
+                            .toggleStyle(.switch)
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+
                         // Shared Tanpura Tempo Controller
                         VStack(spacing: 12) {
                             HStack {
@@ -269,19 +275,21 @@ struct MasterPitchView: View {
                 
                 let displayData = getDisplayData(baseCents: audio.scaleOffsetCents, fineCents: audio.fineTuneCents)
                 
-                LiquidGlassDisplay(width: 170, height: 105) {
+                LiquidGlassDisplay(width: 170, height: 105, isAntique: audio.isAntiqueThemeEnabled) {
                     ZStack(alignment: .topTrailing) {
                         Text(displayData.noteName)
-                            .font(.system(size: 54, weight: .bold, design: .rounded))
-                            .foregroundColor(.white)
-                            .shadow(color: Color.cyan.opacity(0.4), radius: 6)
+                            .font(audio.isAntiqueThemeEnabled ?
+                                .system(size: 54, weight: .bold, design: .monospaced) :
+                                .system(size: 54, weight: .bold, design: .rounded))
+                            .foregroundColor(audio.isAntiqueThemeEnabled ? Color.orange : .white)
+                            .shadow(color: audio.isAntiqueThemeEnabled ? Color.orange.opacity(0.8) : Color.cyan.opacity(0.4), radius: audio.isAntiqueThemeEnabled ? 8 : 6)
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                         
                         if let centsText = displayData.fineCentsString {
                             Text(centsText)
                                 .font(.system(size: 13, weight: .semibold, design: .monospaced))
-                                .foregroundColor(audio.fineTuneCents > 0 ? Color.green : Color.orange)
-                                .shadow(color: (audio.fineTuneCents > 0 ? Color.green : Color.orange).opacity(0.6), radius: 4)
+                                .foregroundColor(audio.isAntiqueThemeEnabled ? Color.yellow : (audio.fineTuneCents > 0 ? Color.green : Color.orange))
+                                .shadow(color: audio.isAntiqueThemeEnabled ? Color.yellow.opacity(0.8) : (audio.fineTuneCents > 0 ? Color.green : Color.orange).opacity(0.6), radius: 4)
                                 .padding([.top, .trailing], 12)
                         }
                     }
@@ -615,23 +623,27 @@ struct TablaCardView: View {
 
             // Central Matra Display and Play/Stop Control
             HStack(spacing: 20) {
-                LiquidGlassDisplay(width: 115, height: 75) {
+                LiquidGlassDisplay(width: 115, height: 75, isAntique: tabla.orchestrator.isAntiqueThemeEnabled) {
                     ZStack(alignment: .topLeading) {
                         if tabla.isPlaying {
                             let symbol = getTaalSymbol(matra: tabla.currentMatra, taal: database.taalCatalog[tabla.activeTaal])
                             if !symbol.isEmpty {
                                 Text(symbol)
-                                    .font(.system(size: 15, weight: .bold, design: .rounded))
-                                    .foregroundColor(Color.cyan.opacity(0.9))
-                                    .shadow(color: Color.cyan.opacity(0.6), radius: 4)
+                                    .font(tabla.orchestrator.isAntiqueThemeEnabled ?
+                                        .system(size: 15, weight: .bold, design: .monospaced) :
+                                        .system(size: 15, weight: .bold, design: .rounded))
+                                    .foregroundColor(tabla.orchestrator.isAntiqueThemeEnabled ? Color.yellow : Color.cyan.opacity(0.9))
+                                    .shadow(color: tabla.orchestrator.isAntiqueThemeEnabled ? Color.yellow.opacity(0.8) : Color.cyan.opacity(0.6), radius: 4)
                                     .padding(.top, 8)
                                     .padding(.leading, 12)
                             }
                             
                             Text("\(tabla.currentMatra)")
-                                .font(.system(size: 38, weight: .bold, design: .rounded))
-                                .foregroundColor(.white)
-                                .shadow(color: Color.white.opacity(0.7), radius: 8)
+                                .font(tabla.orchestrator.isAntiqueThemeEnabled ?
+                                    .system(size: 38, weight: .bold, design: .monospaced) :
+                                    .system(size: 38, weight: .bold, design: .rounded))
+                                .foregroundColor(tabla.orchestrator.isAntiqueThemeEnabled ? Color.orange : .white)
+                                .shadow(color: tabla.orchestrator.isAntiqueThemeEnabled ? Color.orange.opacity(0.8) : Color.white.opacity(0.7), radius: 8)
                                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                         }
                     }
@@ -742,6 +754,7 @@ struct TablaCardView: View {
 struct LiquidGlassDisplay<Content: View>: View {
     let width: CGFloat
     let height: CGFloat
+    var isAntique: Bool = false
     let content: () -> Content
 
     var body: some View {
@@ -750,7 +763,9 @@ struct LiquidGlassDisplay<Content: View>: View {
             RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .fill(
                     LinearGradient(
-                        colors: [Color.black.opacity(0.85), Color(NSColor.darkGray).opacity(0.6)],
+                        colors: isAntique ?
+                            [Color.orange.opacity(0.35), Color.black.opacity(0.9)] :
+                            [Color.black.opacity(0.85), Color(NSColor.darkGray).opacity(0.6)],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
@@ -762,7 +777,9 @@ struct LiquidGlassDisplay<Content: View>: View {
                 .fill(.ultraThinMaterial)
                 .overlay(
                     LinearGradient(
-                        colors: [Color.black.opacity(0.5), Color.black.opacity(0.75)],
+                        colors: isAntique ?
+                            [Color.orange.opacity(0.2), Color.black.opacity(0.8)] :
+                            [Color.black.opacity(0.5), Color.black.opacity(0.75)],
                         startPoint: .top,
                         endPoint: .bottom
                     )
@@ -774,7 +791,7 @@ struct LiquidGlassDisplay<Content: View>: View {
                 .fill(
                     LinearGradient(
                         colors: [
-                            Color.white.opacity(0.22),
+                            Color.white.opacity(isAntique ? 0.3 : 0.22),
                             Color.white.opacity(0.05),
                             Color.clear
                         ],
@@ -788,11 +805,9 @@ struct LiquidGlassDisplay<Content: View>: View {
             RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .strokeBorder(
                     LinearGradient(
-                        colors: [
-                            Color.white.opacity(0.45),
-                            Color.white.opacity(0.1),
-                            Color.cyan.opacity(0.25)
-                        ],
+                        colors: isAntique ?
+                            [Color.yellow.opacity(0.65), Color.orange.opacity(0.4), Color.yellow.opacity(0.15)] :
+                            [Color.white.opacity(0.45), Color.white.opacity(0.1), Color.cyan.opacity(0.25)],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     ),
