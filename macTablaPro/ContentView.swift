@@ -673,7 +673,7 @@ struct CustomTagButtonStyle: ButtonStyle {
 // MARK: - Tabla Card View
 struct TablaCardView: View {
     @ObservedObject var tabla: Tabla
-    let database = TablaDatabase()
+    let database = TablaDatabase.shared
     
     @State private var isSettingsExpanded: Bool = false
 

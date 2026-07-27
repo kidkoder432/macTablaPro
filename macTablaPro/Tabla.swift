@@ -42,7 +42,7 @@ class Tabla: Instrument {
         super.init(id: id, name: name, orchestrator: orchestrator, voicePool: voicePool, registry: registry)
     }
 
-    private let taalDb = TablaDatabase().taalCatalog
+    private let taalDb = TablaDatabase.shared.taalCatalog
 
     /// Returns the allowed BPM range (min...max) for the currently selected Taal and Variation.
     func allowedBPMRange() -> ClosedRange<Double> {
@@ -74,7 +74,7 @@ class Tabla: Instrument {
         updateTimelinePosition()
     }
 
-    // MARK: - Mentor Stubs for Tempo & Tier Management
+    // MARK: - Tempo & Tier Management
 
     /// Maps the current raw tempoBPM to its corresponding Tempo Tier Index (0...4)
     /// Tier 0: 10-25 (Ati-Vilambit), Tier 1: 25-80 (Vilambit), Tier 2: 81-150 (Madhya),
@@ -89,7 +89,7 @@ class Tabla: Instrument {
         }
     }
 
-    /// STUB: Resolves the active timeline for the current Taal, Variation, and Tempo Tier.
+    /// Resolves the active timeline for the current Taal, Variation, and Tempo Tier.
     /// Implements fallback clamping if the current tier is unavailable in the variation's allowedTempos.
     func resolveActiveTimeline() -> [TablaStrokeEvent] {
         guard let taal = taalDb[activeTaal],
@@ -107,7 +107,7 @@ class Tabla: Instrument {
             return timeline
         }
 
-        // STUB: Fallback clamping to nearest available tier
+        // Fallback clamping to nearest available tier
         if let fallbackTier = variation.allowedTempos.sorted().min(by: {
             abs($0 - desiredTier) < abs($1 - desiredTier)
         }),

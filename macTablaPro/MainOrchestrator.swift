@@ -116,9 +116,8 @@ class AppAudioOrchestrator: ObservableObject {
         }
     }
 
-    // MARK: - Mentor Stubs: Settings Capture & Application
+    // MARK: Settings Capture & Application
 
-    /// STUB: Extracts current live state into a WorkstationSettings struct snapshot.
     func captureSettings() -> WorkstationSettings {
         var settings = WorkstationSettings()
         settings.scaleOffsetCents = self.scaleOffsetCents
@@ -148,7 +147,6 @@ class AppAudioOrchestrator: ObservableObject {
         return settings
     }
 
-    /// STUB: Restores live @Published parameters from a WorkstationSettings struct snapshot without interrupting playback.
     func applySettings(_ settings: WorkstationSettings) {
         self.scaleOffsetCents = settings.scaleOffsetCents
         self.fineTuneCents = settings.fineTuneCents
@@ -252,13 +250,31 @@ class AppAudioOrchestrator: ObservableObject {
         }
     }
                                                                                           
+    // MARK: - Mentor Stubs: Background Thread Resampling & Debouncing
+
+    private var resampleTask: Task<Void, Never>?
+
+    /// STUB: Offloads CPU-heavy sample resampling off the @MainActor thread to prevent UI lag.
+    /// Student Task: Implement task cancellation or debouncing when pitch changes rapidly.
+    func schedulePitchResample(targetCents: Double) {
+        // Cancel any pending/running resampling task to prevent stacking CPU work
+        resampleTask?.cancel()
+
+        let tablaRegistry = masterSampleRegistry.filter { key, _ in key.contains("Dayaan") || key.contains("Bayaan") }
+        let samples = Array(tablaRegistry.values)
+
+        resampleTask = Task.detached(priority: .userInitiated) {
+            guard !Task.isCancelled else { return }
+            OfflineAudioResampler.resampleBatch(
+                samples: samples,
+                targetPitchCents: targetCents
+            )
+        }
+    }
+
     private func updateMasterPitch() {
         let totalCents = scaleOffsetCents + fineTuneCents
-        let tablaRegistry = masterSampleRegistry.filter { key, _ in key.contains("Dayaan") || key.contains("Bayaan")}
-        OfflineAudioResampler.resampleBatch(
-            samples: Array(tablaRegistry.values),
-            targetPitchCents: totalCents
-        )
+        schedulePitchResample(targetCents: totalCents)
     }
 
     private func refreshAudioOutputDevices() {

@@ -87,6 +87,8 @@ struct TablaStrokeEvent: Identifiable {
 }
 
 class TablaDatabase {
+    static let shared = TablaDatabase()
+    
     // Master Dictionary: Quick lookup by Taal Name (e.g., "Teentaal")
     private(set) var taalCatalog: [String: TaalDefinition] = [:]
     
