@@ -107,6 +107,86 @@ class AppAudioOrchestrator: ObservableObject {
         
         updateMasterPitch()
         refreshAudioOutputDevices()
+
+        // Load persisted settings (or defaults) off main thread asynchronously
+        Task {
+            let loaded = await SettingsStorageService.shared.loadActiveSettings()
+            self.applySettings(loaded)
+            self.setupAutosavePipeline()
+        }
+    }
+
+    // MARK: - Mentor Stubs: Settings Capture & Application
+
+    /// STUB: Extracts current live state into a WorkstationSettings struct snapshot.
+    func captureSettings() -> WorkstationSettings {
+        var settings = WorkstationSettings()
+        settings.scaleOffsetCents = self.scaleOffsetCents
+        settings.fineTuneCents = self.fineTuneCents
+        settings.sharedTanpuraBPM = self.sharedTanpuraBPM
+        settings.masterVolume = self.masterVolume
+        settings.isAntiqueThemeEnabled = self.isAntiqueThemeEnabled
+
+        if let t1 = self.tanpura1 {
+            settings.tanpura1.volume = t1.volume
+            settings.tanpura1.isMuted = t1.isMuted
+            settings.tanpura1.firstStringPitch = t1.firstStringPitch
+        }
+        if let t2 = self.tanpura2 {
+            settings.tanpura2.volume = t2.volume
+            settings.tanpura2.isMuted = t2.isMuted
+            settings.tanpura2.firstStringPitch = t2.firstStringPitch
+        }
+        if let tb = self.tabla {
+            settings.tabla.activeTaal = tb.activeTaal
+            settings.tabla.activeVariation = tb.activeVariation
+            settings.tabla.tempoBPM = tb.tempoBPM
+            settings.tabla.volume = tb.volume
+            settings.tabla.isMuted = tb.isMuted
+            settings.tabla.useSurTabla = tb.useSurTabla
+        }
+        return settings
+    }
+
+    /// STUB: Restores live @Published parameters from a WorkstationSettings struct snapshot without interrupting playback.
+    func applySettings(_ settings: WorkstationSettings) {
+        self.scaleOffsetCents = settings.scaleOffsetCents
+        self.fineTuneCents = settings.fineTuneCents
+        self.sharedTanpuraBPM = settings.sharedTanpuraBPM
+        self.masterVolume = settings.masterVolume
+        self.isAntiqueThemeEnabled = settings.isAntiqueThemeEnabled
+
+        if let t1 = self.tanpura1 {
+            t1.volume = settings.tanpura1.volume
+            t1.isMuted = settings.tanpura1.isMuted
+            t1.firstStringPitch = settings.tanpura1.firstStringPitch
+        }
+        if let t2 = self.tanpura2 {
+            t2.volume = settings.tanpura2.volume
+            t2.isMuted = settings.tanpura2.isMuted
+            t2.firstStringPitch = settings.tanpura2.firstStringPitch
+        }
+        if let tb = self.tabla {
+            tb.activeTaal = settings.tabla.activeTaal
+            tb.activeVariation = settings.tabla.activeVariation
+            tb.tempoBPM = settings.tabla.tempoBPM
+            tb.volume = settings.tabla.volume
+            tb.isMuted = settings.tabla.isMuted
+            tb.useSurTabla = settings.tabla.useSurTabla
+        }
+    }
+
+    private func setupAutosavePipeline() {
+        objectWillChange
+            .debounce(for: .milliseconds(500), scheduler: RunLoop.main)
+            .sink { [weak self] _ in
+                guard let self = self else { return }
+                let current = self.captureSettings()
+                Task.detached(priority: .utility) {
+                    await SettingsStorageService.shared.saveActiveSettings(current)
+                }
+            }
+            .store(in: &cancellables)
     }
 
     private func preloadAllManifestAssets() {

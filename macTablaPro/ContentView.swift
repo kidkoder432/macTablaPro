@@ -27,7 +27,21 @@ struct ContentView: View {
         VStack(spacing: 0) {
             // MARK: - Master Header Bar (Integrated with macOS Traffic Lights)
             HStack(spacing: 16) {
-                Spacer().frame(width: 60) // Native macOS Traffic Lights alignment padding
+                // Presets Drawer Toggle Button (Left)
+                Button(action: {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                        audio.isPresetsPresented.toggle()
+                    }
+                }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "sidebar.left")
+                        Text("Presets")
+                    }
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(audio.isPresetsPresented ? .accentColor : .primary)
+                }
+                .buttonStyle(.plain)
+                .help("Toggle Presets Drawer")
 
                 Spacer()
 
@@ -37,26 +51,29 @@ struct ContentView: View {
 
                 Spacer()
 
-                // Settings Floating Panel Toggle Button
+                // Settings Floating Panel Toggle Button (Right)
                 Button(action: {
                     withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
                         audio.isInspectorPresented.toggle()
                     }
                 }) {
-                    Image(systemName: "slider.horizontal.3")
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(audio.isInspectorPresented ? .accentColor : .primary)
+                    HStack(spacing: 4) {
+                        Text("Settings")
+                        Image(systemName: "slider.horizontal.3")
+                    }
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(audio.isInspectorPresented ? .accentColor : .primary)
                 }
                 .buttonStyle(.plain)
-                .help("Toggle Settings Overlay")
+                .help("Toggle Settings Drawer")
             }
             .padding(.horizontal, 20)
             .padding(.vertical, 8)
             .background(Color(NSColor.windowBackgroundColor))
             .overlay(Divider(), alignment: .bottom)
 
-            // MARK: - Main Workspace (Zero-Scroll 3-Column Layout with Liquid Glass Overlay)
-            ZStack(alignment: .topTrailing) {
+            // MARK: - Main Workspace (Zero-Scroll 3-Column Layout with Split Glass Overlays)
+            ZStack(alignment: .top) {
                 HStack(alignment: .top, spacing: 24) {
                     // 1. LEFT COLUMN: Tanpura 1 & 2 Cards Stacked
                     VStack(spacing: 18) {
@@ -84,6 +101,15 @@ struct ContentView: View {
                 }
                 .padding(24)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+
+                // MARK: - Left Presets Drawer Overlay
+                if audio.isPresetsPresented {
+                    HStack {
+                        PresetsDrawerView(audio: audio)
+                            .transition(.move(edge: .leading).combined(with: .opacity))
+                        Spacer()
+                    }
+                }
 
                 // MARK: - Liquid Glass Translucent Overlay (Floating Settings Panel)
                 if audio.isInspectorPresented {
@@ -333,7 +359,7 @@ struct MasterPitchView: View {
                             .font(isAntique ?
                                 .system(size: 54, weight: .bold, design: .monospaced) :
                                 .system(size: 54, weight: .bold, design: .rounded))
-                            .foregroundColor(isAntique ? Color.orange : .white)
+                            .foregroundColor(isAntique ? Color.orange : .accentColor)
                             .shadow(color: isAntique ? Color.orange.opacity(0.8) : Color.cyan.opacity(0.4), radius: isAntique ? 8 : 6)
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                         
@@ -518,7 +544,7 @@ struct TanpuraCardView: View {
                         }
                     }
                 } label: {
-                    Text(isCustomSelected ? customPitchName : "...").fontWeight(.medium).frame(maxWidth: .infinity)
+                    Text("...").fontWeight(.medium).frame(maxWidth: .infinity)
                 }
                 .menuIndicator(.hidden)
                 .buttonStyle(CustomTagButtonStyle(isSelected: isCustomSelected, isAntique: isAntique))
@@ -949,5 +975,152 @@ struct LiquidGlassDisplay<Content: View>: View {
             content()
         }
         .frame(width: width, height: height)
+    }
+}
+
+// MARK: - Left Presets Translucent Glass Drawer View
+struct PresetsDrawerView: View {
+    @ObservedObject var audio: AppAudioOrchestrator
+    @State private var presetNames: [String] = []
+    @State private var newPresetName: String = ""
+    @State private var isShowingSaveField = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Text("Workstation Presets")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                Spacer()
+                Button(action: {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                        audio.isPresetsPresented = false
+                    }
+                }) {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.title3)
+                        .foregroundColor(.secondary)
+                }
+                .buttonStyle(.plain)
+            }
+
+            Divider()
+
+            // Presets List
+            if presetNames.isEmpty {
+                Text("No user presets saved yet.")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .padding(.vertical, 8)
+            } else {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 8) {
+                        ForEach(presetNames, id: \.self) { name in
+                            HStack {
+                                Text(name)
+                                    .font(.system(size: 13, weight: .medium))
+                                Spacer()
+                                Button(action: {
+                                    Task {
+                                        if let settings = await SettingsStorageService.shared.loadPreset(name: name) {
+                                            await SettingsStorageService.shared.saveActiveSettings(settings)
+                                            audio.applySettings(settings)
+                                        }
+                                    }
+                                }) {
+                                    Text("Load")
+                                        .font(.caption)
+                                }
+                                .buttonStyle(.borderedProminent)
+                                .controlSize(.small)
+
+                                Button(action: {
+                                    Task {
+                                        await SettingsStorageService.shared.deletePreset(name: name)
+                                        await refreshPresetsList()
+                                    }
+                                }) {
+                                    Image(systemName: "trash")
+                                        .font(.caption)
+                                        .foregroundColor(.red)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                            .padding(8)
+                            .background(Color(NSColor.controlBackgroundColor).opacity(0.5))
+                            .cornerRadius(8)
+                        }
+                    }
+                }
+                .frame(maxHeight: 250)
+            }
+
+            Divider()
+
+            // Save Preset Controls
+            if isShowingSaveField {
+                VStack(spacing: 8) {
+                    TextField("Preset Name", text: $newPresetName)
+                        .textFieldStyle(.roundedBorder)
+
+                    HStack {
+                        Button("Cancel") {
+                            isShowingSaveField = false
+                            newPresetName = ""
+                        }
+                        .buttonStyle(.plain)
+
+                        Spacer()
+
+                        Button("Save") {
+                            let snapshot = audio.captureSettings()
+                            let name = newPresetName
+                            Task {
+                                await SettingsStorageService.shared.savePreset(name: name, settings: snapshot)
+                                await refreshPresetsList()
+                                isShowingSaveField = false
+                                newPresetName = ""
+                            }
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .disabled(newPresetName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    }
+                }
+            } else {
+                Button(action: {
+                    isShowingSaveField = true
+                }) {
+                    HStack {
+                        Image(systemName: "plus.circle.fill")
+                        Text("Save Current as Preset")
+                    }
+                    .font(.system(size: 13, weight: .medium))
+                }
+                .buttonStyle(.bordered)
+            }
+        }
+        .padding(20)
+        .frame(width: 280)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(.ultraThinMaterial)
+                .shadow(color: Color.black.opacity(0.25), radius: 10, x: 2, y: 4)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color.white.opacity(0.2), lineWidth: 1)
+        )
+        .padding(.leading, 24)
+        .padding(.top, 12)
+        .onAppear {
+            Task {
+                await refreshPresetsList()
+            }
+        }
+    }
+
+    private func refreshPresetsList() async {
+        let list = await SettingsStorageService.shared.listPresetNames()
+        self.presetNames = list
     }
 }
