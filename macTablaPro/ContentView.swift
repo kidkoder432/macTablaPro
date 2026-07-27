@@ -387,9 +387,13 @@ struct MasterPitchView: View {
                     .font(.title2)
                     .foregroundColor(isAntique ? Color.orange : .secondary)
                 
-                Slider(value: $audio.fineTuneCents, in: -100...100, step: 1.0)
-                    .tint(isAntique ? .orange : (audio.fineTuneCents == 0 ? .gray : .accentColor))
-                    .frame(width: 200)
+                Slider(value: $audio.fineTuneCents, in: -100...100, step: 1.0) { isEditing in
+                    if !isEditing {
+                        audio.commitPitchChange()
+                    }
+                }
+                .tint(isAntique ? .orange : (audio.fineTuneCents == 0 ? .gray : .accentColor))
+                .frame(width: 200)
                 
                 continuousAdjustmentButton(label: "♯", isIncrementing: true)
                     .font(.title2)

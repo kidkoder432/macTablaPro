@@ -31,12 +31,8 @@ class AppAudioOrchestrator: ObservableObject {
         instruments.first(where: { $0.id == "tabla_main" }) as? Tabla
     }
     
-    @Published var scaleOffsetCents: Double = 100.0 {
-        didSet { updateMasterPitch() }
-    }
-    @Published var fineTuneCents: Double = 0.0 {
-        didSet { updateMasterPitch() }
-    }
+    @Published var scaleOffsetCents: Double = 100.0
+    @Published var fineTuneCents: Double = 0.0
     
     @Published var sharedTanpuraBPM: Double = 60.0 {
         didSet {
@@ -250,7 +246,14 @@ class AppAudioOrchestrator: ObservableObject {
         }
     }
                                                                                           
-    // MARK: - Mentor Stubs: Background Thread Resampling & Debouncing
+    // MARK: - Mentor Stubs: Mouse-Up Pitch Commit & Background Resampling
+
+    /// STUB: Fired on mouse-up (editing release) when dragging pitch sliders.
+    /// Student Task: Trigger background resampling and persist committed pitch settings.
+    func commitPitchChange() {
+        let totalCents = scaleOffsetCents + fineTuneCents
+        schedulePitchResample(targetCents: totalCents)
+    }
 
     private var resampleTask: Task<Void, Never>?
 
@@ -273,8 +276,7 @@ class AppAudioOrchestrator: ObservableObject {
     }
 
     private func updateMasterPitch() {
-        let totalCents = scaleOffsetCents + fineTuneCents
-        schedulePitchResample(targetCents: totalCents)
+        commitPitchChange()
     }
 
     private func refreshAudioOutputDevices() {
