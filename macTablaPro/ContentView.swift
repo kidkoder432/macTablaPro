@@ -787,30 +787,54 @@ struct TablaCardView: View {
                 }
             }
 
-            // Central Matra Display and Play/Stop Control
+            // Central Display and Play/Stop Control
             HStack(spacing: 20) {
-                LiquidGlassDisplay(width: 115, height: 75, isAntique: isAntique) {
-                    ZStack(alignment: .topLeading) {
-                        if tabla.isPlaying {
-                            let symbol = getTaalSymbol(matra: tabla.currentMatra, taal: database.taalCatalog[tabla.activeTaal])
-                            if !symbol.isEmpty {
-                                Text(symbol)
+                LiquidGlassDisplay(width: 140, height: 90, isAntique: isAntique) {
+                    ZStack {
+                        // 1. Top-Left: Taal Symbol (Sam 'X' or Taali/Khali)
+                        VStack {
+                            HStack {
+                                if tabla.isPlaying {
+                                    let symbol = getTaalSymbol(matra: tabla.currentMatra, taal: database.taalCatalog[tabla.activeTaal])
+                                    if !symbol.isEmpty {
+                                        Text(symbol)
+                                            .font(isAntique ?
+                                                .system(size: 13, weight: .bold, design: .monospaced) :
+                                                .system(size: 13, weight: .bold, design: .rounded))
+                                            .foregroundColor(isAntique ? Color.yellow : Color.cyan.opacity(0.9))
+                                            .shadow(color: isAntique ? Color.yellow.opacity(0.8) : Color.cyan.opacity(0.6), radius: 3)
+                                    }
+                                }
+                                Spacer()
+                                // 2. Top-Right: Tempo BPM Display
+                                Text("\(Int(tabla.tempoBPM)) BPM")
                                     .font(isAntique ?
-                                        .system(size: 15, weight: .bold, design: .monospaced) :
-                                        .system(size: 15, weight: .bold, design: .rounded))
-                                    .foregroundColor(isAntique ? Color.yellow : Color.cyan.opacity(0.9))
-                                    .shadow(color: isAntique ? Color.yellow.opacity(0.8) : Color.cyan.opacity(0.6), radius: 4)
-                                    .padding(.top, 8)
-                                    .padding(.leading, 12)
+                                        .system(size: 11, weight: .bold, design: .monospaced) :
+                                        .system(size: 11, weight: .semibold, design: .rounded))
+                                    .foregroundColor(isAntique ? Color.yellow : Color.cyan.opacity(0.95))
                             }
-                            
+                            Spacer()
+                            // 3. Bottom-Center: Laya Category Name (Ati-Vilambit, Vilambit, Madhya, Drut, Ati-Drut)
+                            Text(tempoCategoryName(tier: tabla.currentTempoTier()))
+                                .font(isAntique ?
+                                    .custom("Baskerville-Italic", size: 12).weight(.semibold) :
+                                    .system(size: 11, weight: .medium, design: .rounded))
+                                .foregroundColor(isAntique ? Color.orange : Color.white.opacity(0.85))
+                        }
+                        .padding(8)
+
+                        // 4. Center: Matra Beat Number
+                        if tabla.isPlaying {
                             Text("\(tabla.currentMatra)")
                                 .font(isAntique ?
                                     .system(size: 38, weight: .bold, design: .monospaced) :
                                     .system(size: 38, weight: .bold, design: .rounded))
                                 .foregroundColor(isAntique ? Color.orange : .white)
                                 .shadow(color: isAntique ? Color.orange.opacity(0.8) : Color.white.opacity(0.7), radius: 8)
-                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        } else {
+                            Text("OFF")
+                                .font(.system(size: 18, weight: .bold, design: .rounded))
+                                .foregroundColor(.secondary)
                         }
                     }
                 }
@@ -848,13 +872,6 @@ struct TablaCardView: View {
             // Permanently Visible Settings & Tempo Controls
             VStack(spacing: 12) {
                 Divider()
-
-                HStack {
-                    Text("\(tempoCategoryName(tier: tabla.currentTempoTier())) • \(Int(tabla.tempoBPM)) BPM")
-                        .font(isAntique ? .custom("Baskerville-Italic", size: 14).weight(.bold) : .caption)
-                        .foregroundColor(isAntique ? Color.orange : .accentColor)
-                    Spacer()
-                }
 
                 Slider(value: $tabla.tempoBPM, in: tabla.allowedBPMRange(), step: 1.0) { isEditing in
                     if !isEditing {
