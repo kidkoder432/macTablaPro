@@ -151,6 +151,7 @@ class AppAudioOrchestrator: ObservableObject {
     }
 
     func applySettings(_ settings: WorkstationSettings) {
+        isApplyingPreset = true
         self.scaleOffsetCents = settings.scaleOffsetCents
         self.fineTuneCents = settings.fineTuneCents
         self.sharedTanpuraBPM = settings.sharedTanpuraBPM
@@ -175,13 +176,21 @@ class AppAudioOrchestrator: ObservableObject {
             tb.isMuted = settings.tabla.isMuted
             tb.useSurTabla = settings.tabla.useSurTabla
         }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+            self.isApplyingPreset = false
+        }
     }
+
+    private var isApplyingPreset = false
 
     private func setupAutosavePipeline() {
         objectWillChange
             .debounce(for: .milliseconds(500), scheduler: RunLoop.main)
             .sink { [weak self] _ in
                 guard let self = self else { return }
+                if !self.isApplyingPreset && self.activePresetName != nil {
+                    self.activePresetName = nil
+                }
                 let current = self.captureSettings()
                 Task.detached(priority: .utility) {
                     await SettingsStorageService.shared.saveActiveSettings(current)

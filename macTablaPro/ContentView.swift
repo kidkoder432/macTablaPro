@@ -753,19 +753,42 @@ struct TablaCardView: View {
                         }
                         return $0.name < $1.name
                     }
-                    Picker("", selection: $tabla.activeTaal) {
+                    Menu {
                         ForEach(sortedTaals, id: \.name) { taal in
-                            Text("\(taal.name) (\(Int(taal.matras)))").tag(taal.name)
+                            Button(action: {
+                                if tabla.activeTaal != taal.name {
+                                    tabla.activeTaal = taal.name
+                                    if let firstVar = database.taalCatalog[taal.name]?.orderedVariationNames.first {
+                                        tabla.activeVariation = firstVar
+                                    }
+                                    tabla.clampTempoToAllowedRange()
+                                }
+                            }) {
+                                HStack {
+                                    Text("\(taal.name) (\(Int(taal.matras)))")
+                                    if tabla.activeTaal == taal.name {
+                                        Image(systemName: "checkmark")
+                                    }
+                                }
+                            }
                         }
-                    }
-                    .labelsHidden()
-                    .pickerStyle(.menu)
-                    .onChange(of: tabla.activeTaal) { newTaal in
-                        if let firstVar = database.taalCatalog[newTaal]?.orderedVariationNames.first {
-                            tabla.activeVariation = firstVar
+                    } label: {
+                        HStack(spacing: 4) {
+                            Text("\(tabla.activeTaal) (\(Int(database.taalCatalog[tabla.activeTaal]?.matras ?? 16)))")
+                                .font(.system(size: 12, weight: .semibold))
+                            Image(systemName: "chevron.up.chevron.down")
+                                .font(.system(size: 9))
                         }
-                        tabla.clampTempoToAllowedRange()
+                        .foregroundColor(isAntique ? Color.orange : Color.primary)
+                        .padding(.vertical, 4)
+                        .padding(.horizontal, 8)
+                        .background(
+                            RoundedRectangle(cornerRadius: 6)
+                                .fill(isAntique ? Color.black.opacity(0.3) : Color(NSColor.controlBackgroundColor))
+                        )
                     }
+                    .menuStyle(.borderlessButton)
+                    .fixedSize()
                 }
                 
                 HStack {
@@ -773,17 +796,40 @@ struct TablaCardView: View {
                         .font(isAntique ? .custom("Baskerville-Italic", size: 14) : .caption)
                         .foregroundColor(isAntique ? Color.orange : .secondary)
                     Spacer()
-                    Picker("", selection: $tabla.activeVariation) {
-                        let variations = database.taalCatalog[tabla.activeTaal]?.orderedVariationNames ?? []
+                    let variations = database.taalCatalog[tabla.activeTaal]?.orderedVariationNames ?? []
+                    Menu {
                         ForEach(variations, id: \.self) { variationName in
-                            Text(variationName).tag(variationName)
+                            Button(action: {
+                                if tabla.activeVariation != variationName {
+                                    tabla.activeVariation = variationName
+                                    tabla.clampTempoToAllowedRange()
+                                }
+                            }) {
+                                HStack {
+                                    Text(variationName)
+                                    if tabla.activeVariation == variationName {
+                                        Image(systemName: "checkmark")
+                                    }
+                                }
+                            }
                         }
+                    } label: {
+                        HStack(spacing: 4) {
+                            Text(tabla.activeVariation)
+                                .font(.system(size: 12, weight: .semibold))
+                            Image(systemName: "chevron.up.chevron.down")
+                                .font(.system(size: 9))
+                        }
+                        .foregroundColor(isAntique ? Color.orange : Color.primary)
+                        .padding(.vertical, 4)
+                        .padding(.horizontal, 8)
+                        .background(
+                            RoundedRectangle(cornerRadius: 6)
+                                .fill(isAntique ? Color.black.opacity(0.3) : Color(NSColor.controlBackgroundColor))
+                        )
                     }
-                    .labelsHidden()
-                    .pickerStyle(.menu)
-                    .onChange(of: tabla.activeVariation) { _ in
-                        tabla.clampTempoToAllowedRange()
-                    }
+                    .menuStyle(.borderlessButton)
+                    .fixedSize()
                 }
             }
 
