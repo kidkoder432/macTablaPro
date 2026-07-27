@@ -35,6 +35,7 @@ class Tabla: Instrument {
     @Published var activeVariation: String = "Pro Default"
     @Published var useSurTabla = false
     @Published var currentMatra: Int = 1
+    @Published var currentMatraSubStep: Int = 0
     @Published var currentBolName: String = ""
     @Published var currentStepIndex = 0
 
@@ -194,7 +195,12 @@ class Tabla: Instrument {
         self.currentStepIndex = safeIndex
 
         let event = timeline[safeIndex]
-        self.currentMatra = event.matra
+        if self.currentMatra == event.matra {
+            self.currentMatraSubStep += 1
+        } else {
+            self.currentMatra = event.matra
+            self.currentMatraSubStep = 1
+        }
         self.currentBolName = event.bolName ?? ""
 
         // Execute Left Hand (Bayan)

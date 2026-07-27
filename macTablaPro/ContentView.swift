@@ -789,52 +789,71 @@ struct TablaCardView: View {
 
             // Central Display and Play/Stop Control
             HStack(spacing: 20) {
-                LiquidGlassDisplay(width: 140, height: 90, isAntique: isAntique) {
+                LiquidGlassDisplay(width: 145, height: 95, isAntique: isAntique) {
                     ZStack {
-                        // 1. Top-Left: Taal Symbol (Sam 'X' or Taali/Khali)
+                        // 1. Top Bar: Symbol (Left), Sub-beat Dots (Center), BPM Number & Label (Right)
                         VStack {
-                            HStack {
+                            HStack(alignment: .top) {
+                                // Top-Left: Taal Symbol (Sam 'X' or Taali/Khali)
                                 if tabla.isPlaying {
                                     let symbol = getTaalSymbol(matra: tabla.currentMatra, taal: database.taalCatalog[tabla.activeTaal])
                                     if !symbol.isEmpty {
                                         Text(symbol)
                                             .font(isAntique ?
-                                                .system(size: 13, weight: .bold, design: .monospaced) :
-                                                .system(size: 13, weight: .bold, design: .rounded))
+                                                .system(size: 14, weight: .bold, design: .monospaced) :
+                                                .system(size: 14, weight: .bold, design: .rounded))
                                             .foregroundColor(isAntique ? Color.yellow : Color.cyan.opacity(0.9))
                                             .shadow(color: isAntique ? Color.yellow.opacity(0.8) : Color.cyan.opacity(0.6), radius: 3)
                                     }
                                 }
+                                
                                 Spacer()
-                                // 2. Top-Right: Tempo BPM Display
-                                Text("\(Int(tabla.tempoBPM)) BPM")
-                                    .font(isAntique ?
-                                        .system(size: 11, weight: .bold, design: .monospaced) :
-                                        .system(size: 11, weight: .semibold, design: .rounded))
-                                    .foregroundColor(isAntique ? Color.yellow : Color.cyan.opacity(0.95))
+
+                                // Top-Center: Quarter Matra Sub-Beat Dots (for Ati-Vilambit & Vilambit)
+                                if tabla.isPlaying && tabla.currentTempoTier() <= 1 && tabla.currentMatraSubStep > 0 {
+                                    let dotsCount = min(4, tabla.currentMatraSubStep)
+                                    Text(String(repeating: "• ", count: dotsCount).trimmingCharacters(in: .whitespaces))
+                                        .font(.system(size: 12, weight: .bold))
+                                        .foregroundColor(isAntique ? Color.yellow : Color.cyan)
+                                        .shadow(color: isAntique ? Color.yellow.opacity(0.8) : Color.cyan.opacity(0.6), radius: 3)
+                                }
+
+                                Spacer()
+
+                                // Top-Right: BPM Number with 'bpm' underneath
+                                VStack(alignment: .trailing, spacing: -2) {
+                                    Text("\(Int(tabla.tempoBPM))")
+                                        .font(isAntique ?
+                                            .system(size: 15, weight: .bold, design: .monospaced) :
+                                            .system(size: 15, weight: .bold, design: .rounded))
+                                        .foregroundColor(isAntique ? Color.yellow : Color.cyan.opacity(0.95))
+                                    Text("bpm")
+                                        .font(isAntique ?
+                                            .system(size: 9, weight: .semibold, design: .monospaced) :
+                                            .system(size: 9, weight: .semibold, design: .rounded))
+                                        .foregroundColor(isAntique ? Color.yellow.opacity(0.7) : Color.cyan.opacity(0.7))
+                                }
                             }
+                            
                             Spacer()
-                            // 3. Bottom-Center: Laya Category Name (Ati-Vilambit, Vilambit, Madhya, Drut, Ati-Drut)
+                            
+                            // Bottom-Center: Laya Category Name (Ati-Vilambit, Vilambit, Madhya, Drut, Ati-Drut)
                             Text(tempoCategoryName(tier: tabla.currentTempoTier()))
                                 .font(isAntique ?
-                                    .custom("Baskerville-Italic", size: 12).weight(.semibold) :
-                                    .system(size: 11, weight: .medium, design: .rounded))
+                                    .custom("Baskerville-Italic", size: 13).weight(.semibold) :
+                                    .system(size: 12, weight: .medium, design: .rounded))
                                 .foregroundColor(isAntique ? Color.orange : Color.white.opacity(0.85))
                         }
                         .padding(8)
 
-                        // 4. Center: Matra Beat Number
+                        // 2. Center: Larger Matra Beat Number (No "OFF" label)
                         if tabla.isPlaying {
                             Text("\(tabla.currentMatra)")
                                 .font(isAntique ?
-                                    .system(size: 38, weight: .bold, design: .monospaced) :
-                                    .system(size: 38, weight: .bold, design: .rounded))
+                                    .system(size: 44, weight: .bold, design: .monospaced) :
+                                    .system(size: 44, weight: .bold, design: .rounded))
                                 .foregroundColor(isAntique ? Color.orange : .white)
                                 .shadow(color: isAntique ? Color.orange.opacity(0.8) : Color.white.opacity(0.7), radius: 8)
-                        } else {
-                            Text("OFF")
-                                .font(.system(size: 18, weight: .bold, design: .rounded))
-                                .foregroundColor(.secondary)
                         }
                     }
                 }
