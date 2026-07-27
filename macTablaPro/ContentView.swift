@@ -761,7 +761,9 @@ struct TablaCardView: View {
                                     if let firstVar = database.taalCatalog[taal.name]?.orderedVariationNames.first {
                                         tabla.activeVariation = firstVar
                                     }
-                                    tabla.clampTempoToAllowedRange()
+                                    DispatchQueue.main.async {
+                                        tabla.clampTempoToAllowedRange()
+                                    }
                                 }
                             }) {
                                 HStack {
@@ -776,14 +778,24 @@ struct TablaCardView: View {
                         HStack(spacing: 4) {
                             Text("\(tabla.activeTaal) (\(Int(database.taalCatalog[tabla.activeTaal]?.matras ?? 16)))")
                                 .font(.system(size: 12, weight: .medium))
-                            Image(systemName: "chevron.down")
+                                .foregroundColor(isAntique ? Color.orange : .primary)
+                            Image(systemName: "chevron.up.chevron.down")
                                 .font(.system(size: 9, weight: .bold))
+                                .foregroundColor(isAntique ? Color.orange.opacity(0.8) : .secondary)
                         }
-                        .padding(.horizontal, 10)
+                        .padding(.horizontal, 8)
                         .padding(.vertical, 4)
+                        .background(
+                            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                .fill(isAntique ? Color.black.opacity(0.3) : Color(NSColor.controlBackgroundColor))
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                .stroke(isAntique ? Color.orange.opacity(0.4) : Color.gray.opacity(0.2), lineWidth: 1)
+                        )
                     }
+                    .menuStyle(.borderlessButton)
                     .menuIndicator(.hidden)
-                    .buttonStyle(CustomTagButtonStyle(isSelected: true, isAntique: isAntique))
                     .fixedSize()
                 }
                 
@@ -798,7 +810,9 @@ struct TablaCardView: View {
                             Button(action: {
                                 if tabla.activeVariation != variationName {
                                     tabla.activeVariation = variationName
-                                    tabla.clampTempoToAllowedRange()
+                                    DispatchQueue.main.async {
+                                        tabla.clampTempoToAllowedRange()
+                                    }
                                 }
                             }) {
                                 HStack {
@@ -813,14 +827,24 @@ struct TablaCardView: View {
                         HStack(spacing: 4) {
                             Text(tabla.activeVariation)
                                 .font(.system(size: 12, weight: .medium))
-                            Image(systemName: "chevron.down")
+                                .foregroundColor(isAntique ? Color.orange : .primary)
+                            Image(systemName: "chevron.up.chevron.down")
                                 .font(.system(size: 9, weight: .bold))
+                                .foregroundColor(isAntique ? Color.orange.opacity(0.8) : .secondary)
                         }
-                        .padding(.horizontal, 10)
+                        .padding(.horizontal, 8)
                         .padding(.vertical, 4)
+                        .background(
+                            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                .fill(isAntique ? Color.black.opacity(0.3) : Color(NSColor.controlBackgroundColor))
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                .stroke(isAntique ? Color.orange.opacity(0.4) : Color.gray.opacity(0.2), lineWidth: 1)
+                        )
                     }
+                    .menuStyle(.borderlessButton)
                     .menuIndicator(.hidden)
-                    .buttonStyle(CustomTagButtonStyle(isSelected: true, isAntique: isAntique))
                     .fixedSize()
                 }
             }
