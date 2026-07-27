@@ -775,19 +775,15 @@ struct TablaCardView: View {
                     } label: {
                         HStack(spacing: 4) {
                             Text("\(tabla.activeTaal) (\(Int(database.taalCatalog[tabla.activeTaal]?.matras ?? 16)))")
-                                .font(.system(size: 12, weight: .semibold))
-                            Image(systemName: "chevron.up.chevron.down")
-                                .font(.system(size: 9))
+                                .font(.system(size: 12, weight: .medium))
+                            Image(systemName: "chevron.down")
+                                .font(.system(size: 9, weight: .bold))
                         }
-                        .foregroundColor(isAntique ? Color.orange : Color.primary)
+                        .padding(.horizontal, 10)
                         .padding(.vertical, 4)
-                        .padding(.horizontal, 8)
-                        .background(
-                            RoundedRectangle(cornerRadius: 6)
-                                .fill(isAntique ? Color.black.opacity(0.3) : Color(NSColor.controlBackgroundColor))
-                        )
                     }
-                    .menuStyle(.borderlessButton)
+                    .menuIndicator(.hidden)
+                    .buttonStyle(CustomTagButtonStyle(isSelected: true, isAntique: isAntique))
                     .fixedSize()
                 }
                 
@@ -816,19 +812,15 @@ struct TablaCardView: View {
                     } label: {
                         HStack(spacing: 4) {
                             Text(tabla.activeVariation)
-                                .font(.system(size: 12, weight: .semibold))
-                            Image(systemName: "chevron.up.chevron.down")
-                                .font(.system(size: 9))
+                                .font(.system(size: 12, weight: .medium))
+                            Image(systemName: "chevron.down")
+                                .font(.system(size: 9, weight: .bold))
                         }
-                        .foregroundColor(isAntique ? Color.orange : Color.primary)
+                        .padding(.horizontal, 10)
                         .padding(.vertical, 4)
-                        .padding(.horizontal, 8)
-                        .background(
-                            RoundedRectangle(cornerRadius: 6)
-                                .fill(isAntique ? Color.black.opacity(0.3) : Color(NSColor.controlBackgroundColor))
-                        )
                     }
-                    .menuStyle(.borderlessButton)
+                    .menuIndicator(.hidden)
+                    .buttonStyle(CustomTagButtonStyle(isSelected: true, isAntique: isAntique))
                     .fixedSize()
                 }
             }
