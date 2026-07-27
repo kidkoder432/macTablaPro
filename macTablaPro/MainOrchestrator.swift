@@ -44,11 +44,17 @@ class AppAudioOrchestrator: ObservableObject {
     @Published var isPresetsPresented: Bool = false
     @Published var isInspectorPresented: Bool = false
     @Published var hasStartedFirstTime: Bool = false
+    @Published var activePresetName: String? = nil
+
+    private var isUpdatingVolumeFromHardware = false
+
     @Published var masterVolume: Double = 1.0 {
         didSet {
             masterMixer.outputVolume = Float(masterVolume)
             engine.mainMixerNode.outputVolume = 1
-            setSystemMasterVolume(Float(masterVolume))
+            if !isUpdatingVolumeFromHardware {
+                setSystemMasterVolume(Float(masterVolume))
+            }
         }
     }
 
@@ -103,6 +109,7 @@ class AppAudioOrchestrator: ObservableObject {
         
         updateMasterPitch()
         refreshAudioOutputDevices()
+        setupSystemVolumeListener()
 
         // Load persisted settings (or defaults) off main thread asynchronously
         Task {
@@ -246,10 +253,9 @@ class AppAudioOrchestrator: ObservableObject {
         }
     }
                                                                                           
-    // MARK: - Mentor Stubs: Mouse-Up Pitch Commit & Background Resampling
+    // MARK: - Mouse-Up Pitch Commit & Background Resampling
 
-    /// STUB: Fired on mouse-up (editing release) when dragging pitch sliders.
-    /// Student Task: Trigger background resampling and persist committed pitch settings.
+    /// Fired on mouse-up (editing release) when dragging pitch sliders.
     func commitPitchChange() {
         let totalCents = scaleOffsetCents + fineTuneCents
         schedulePitchResample(targetCents: totalCents)
@@ -257,8 +263,7 @@ class AppAudioOrchestrator: ObservableObject {
 
     private var resampleTask: Task<Void, Never>?
 
-    /// STUB: Offloads CPU-heavy sample resampling off the @MainActor thread to prevent UI lag.
-    /// Student Task: Implement task cancellation or debouncing when pitch changes rapidly.
+    /// Offloads CPU-heavy sample resampling off the @MainActor thread to prevent UI lag.
     func schedulePitchResample(targetCents: Double) {
         // Cancel any pending/running resampling task to prevent stacking CPU work
         resampleTask?.cancel()
@@ -386,6 +391,34 @@ class AppAudioOrchestrator: ObservableObject {
                 mElement: kAudioObjectPropertyElementMain
             )
             AudioObjectSetPropertyData(defaultOutputDeviceID, &volAddress, 0, nil, volSize, &vol)
+        }
+    }
+
+    private func setupSystemVolumeListener() {
+        var defaultOutputDeviceID = AudioDeviceID(0)
+        var propertySize = UInt32(MemoryLayout<AudioDeviceID>.size)
+        var address = AudioObjectPropertyAddress(
+            mSelector: kAudioHardwarePropertyDefaultOutputDevice,
+            mScope: kAudioObjectPropertyScopeGlobal,
+            mElement: kAudioObjectPropertyElementMain
+        )
+
+        guard AudioObjectGetPropertyData(AudioObjectID(kAudioObjectSystemObject), &address, 0, nil, &propertySize, &defaultOutputDeviceID) == noErr else { return }
+
+        var volAddress = AudioObjectPropertyAddress(
+            mSelector: kAudioHardwareServiceDeviceProperty_VirtualMainVolume,
+            mScope: kAudioDevicePropertyScopeOutput,
+            mElement: kAudioObjectPropertyElementMain
+        )
+
+        AudioObjectAddPropertyListenerBlock(defaultOutputDeviceID, &volAddress, DispatchQueue.main) { [weak self] _, _ in
+            guard let self = self else { return }
+            let hardwareVol = Double(self.getSystemMasterVolume())
+            if abs(self.masterVolume - hardwareVol) > 0.01 {
+                self.isUpdatingVolumeFromHardware = true
+                self.masterVolume = hardwareVol
+                self.isUpdatingVolumeFromHardware = false
+            }
         }
     }
 }

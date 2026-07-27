@@ -229,8 +229,15 @@ struct MixerCardView: View {
                 }
                 HStack(spacing: 8) {
                     Image(systemName: "speaker.fill").font(.caption).foregroundColor(isAntique ? Color.orange : .secondary)
-                    Slider(value: $audio.masterVolume, in: 0.0...1.0)
-                        .tint(isAntique ? .orange : .accentColor)
+                    Slider(value: $audio.masterVolume, in: 0.0...1.0) { isEditing in
+                        if !isEditing {
+                            let snapshot = audio.captureSettings()
+                            Task.detached(priority: .utility) {
+                                await SettingsStorageService.shared.saveActiveSettings(snapshot)
+                            }
+                        }
+                    }
+                    .tint(isAntique ? .orange : .accentColor)
                     Image(systemName: "speaker.wave.3.fill").font(.caption).foregroundColor(isAntique ? Color.orange : .secondary)
                 }
             }
@@ -321,8 +328,15 @@ struct MixerChannelRow: View {
             .help(instrument.isMuted ? "Unmute channel" : "Mute channel")
 
             // Volume Slider
-            Slider(value: $instrument.volume, in: 0.0...1.0)
-                .tint((instrument.isPlaying && !instrument.isMuted) ? .accentColor : .gray)
+            Slider(value: $instrument.volume, in: 0.0...1.0) { isEditing in
+                if !isEditing {
+                    let snapshot = instrument.orchestrator.captureSettings()
+                    Task.detached(priority: .utility) {
+                        await SettingsStorageService.shared.saveActiveSettings(snapshot)
+                    }
+                }
+            }
+            .tint((instrument.isPlaying && !instrument.isMuted) ? .accentColor : .gray)
         }
     }
 }
@@ -842,8 +856,15 @@ struct TablaCardView: View {
                     Spacer()
                 }
 
-                Slider(value: $tabla.tempoBPM, in: tabla.allowedBPMRange(), step: 1.0)
-                    .tint(isAntique ? .orange : .accentColor)
+                Slider(value: $tabla.tempoBPM, in: tabla.allowedBPMRange(), step: 1.0) { isEditing in
+                    if !isEditing {
+                        let snapshot = tabla.orchestrator.captureSettings()
+                        Task.detached(priority: .utility) {
+                            await SettingsStorageService.shared.saveActiveSettings(snapshot)
+                        }
+                    }
+                }
+                .tint(isAntique ? .orange : .accentColor)
 
                 Grid(horizontalSpacing: 8, verticalSpacing: 8) {
                     GridRow {
@@ -1020,39 +1041,57 @@ struct PresetsDrawerView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 8) {
                         ForEach(presetNames, id: \.self) { name in
-                            HStack {
-                                Text(name)
-                                    .font(.system(size: 13, weight: .medium))
-                                Spacer()
+                            let isActive = (audio.activePresetName == name)
+                            HStack(spacing: 8) {
                                 Button(action: {
                                     Task {
                                         if let settings = await SettingsStorageService.shared.loadPreset(name: name) {
                                             await SettingsStorageService.shared.saveActiveSettings(settings)
                                             audio.applySettings(settings)
+                                            audio.activePresetName = name
                                         }
                                     }
                                 }) {
-                                    Text("Load")
-                                        .font(.caption)
+                                    HStack {
+                                        Image(systemName: isActive ? "checkmark.circle.fill" : "circle")
+                                            .foregroundColor(isActive ? (audio.isAntiqueThemeEnabled ? .orange : .accentColor) : .secondary)
+                                        Text(name)
+                                            .font(.system(size: 13, weight: isActive ? .bold : .medium))
+                                            .foregroundColor(isActive ? .primary : .secondary)
+                                        Spacer()
+                                    }
+                                    .padding(.vertical, 6)
+                                    .padding(.horizontal, 10)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .fill(isActive ?
+                                                (audio.isAntiqueThemeEnabled ? Color.orange.opacity(0.25) : Color.accentColor.opacity(0.2)) :
+                                                Color(NSColor.controlBackgroundColor).opacity(0.4)
+                                            )
+                                    )
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .stroke(isActive ? (audio.isAntiqueThemeEnabled ? Color.orange : Color.accentColor) : Color.clear, lineWidth: 1.5)
+                                    )
                                 }
-                                .buttonStyle(.borderedProminent)
-                                .controlSize(.small)
+                                .buttonStyle(.plain)
 
                                 Button(action: {
                                     Task {
                                         await SettingsStorageService.shared.deletePreset(name: name)
+                                        if audio.activePresetName == name {
+                                            audio.activePresetName = nil
+                                        }
                                         await refreshPresetsList()
                                     }
                                 }) {
                                     Image(systemName: "trash")
                                         .font(.caption)
-                                        .foregroundColor(.red)
+                                        .foregroundColor(.red.opacity(0.8))
                                 }
                                 .buttonStyle(.plain)
+                                .help("Delete Preset")
                             }
-                            .padding(8)
-                            .background(Color(NSColor.controlBackgroundColor).opacity(0.5))
-                            .cornerRadius(8)
                         }
                     }
                 }
@@ -1081,6 +1120,7 @@ struct PresetsDrawerView: View {
                             let name = newPresetName
                             Task {
                                 await SettingsStorageService.shared.savePreset(name: name, settings: snapshot)
+                                audio.activePresetName = name
                                 await refreshPresetsList()
                                 isShowingSaveField = false
                                 newPresetName = ""
