@@ -77,8 +77,8 @@ let tanpuraManifest: [PitchedSample] = [
 class Tanpura: Instrument {
     @Published var firstStringPitch: Double = 700.0
     
-    override init(orchestrator: AppAudioOrchestrator, voicePool: VoicePool, registry: [String: PitchedSample]) {
-        super.init(orchestrator: orchestrator, voicePool: voicePool, registry: registry)
+    override init(id: String, name: String, orchestrator: AppAudioOrchestrator, voicePool: VoicePool, registry: [String: PitchedSample]) {
+        super.init(id: id, name: name, orchestrator: orchestrator, voicePool: voicePool, registry: registry)
     }
     
     override internal func executeSequenceTick(stepIndex: Int, time: AVAudioTime?) -> Double {

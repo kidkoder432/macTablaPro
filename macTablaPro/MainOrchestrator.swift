@@ -18,10 +18,18 @@ class AppAudioOrchestrator: ObservableObject {
     // The single, master database of loaded audio data in RAM
     private var masterSampleRegistry: [String: PitchedSample] = [:]
 
-    // 2. The Active Instruments
-    @Published var tanpura1: Tanpura!
-    @Published var tanpura2: Tanpura!
-    @Published var tabla: Tabla!
+    // 2. Centralized Instrument Collection & Registry
+    @Published var instruments: [Instrument] = []
+
+    var tanpura1: Tanpura! {
+        instruments.first(where: { $0.id == "tanpura_1" }) as? Tanpura
+    }
+    var tanpura2: Tanpura! {
+        instruments.first(where: { $0.id == "tanpura_2" }) as? Tanpura
+    }
+    var tabla: Tabla! {
+        instruments.first(where: { $0.id == "tabla_main" }) as? Tabla
+    }
     
     @Published var scaleOffsetCents: Double = 100.0 {
         didSet { updateMasterPitch() }
@@ -37,12 +45,13 @@ class AppAudioOrchestrator: ObservableObject {
         }
     }
     @Published var isAntiqueThemeEnabled: Bool = false
+    @Published var isPresetsPresented: Bool = false
     @Published var isInspectorPresented: Bool = false
     @Published var hasStartedFirstTime: Bool = false
     @Published var masterVolume: Double = 1.0 {
         didSet {
             masterMixer.outputVolume = Float(masterVolume)
-            engine.mainMixerNode.outputVolume = Float(masterVolume)
+            engine.mainMixerNode.outputVolume = 1
             setSystemMasterVolume(Float(masterVolume))
         }
     }
@@ -55,19 +64,10 @@ class AppAudioOrchestrator: ObservableObject {
     private var activeInstrumentsSnapshot: Set<ObjectIdentifier> = []
 
     var isAnyInstrumentPlaying: Bool {
-        return (tanpura1?.isPlaying ?? false) || (tanpura2?.isPlaying ?? false) || (tabla?.isPlaying ?? false)
+        return instruments.contains(where: { $0.isPlaying })
     }
 
     func toggleMasterTransport() {
-        if !hasStartedFirstTime {
-            hasStartedFirstTime = true
-            activeInstrumentsSnapshot.insert(ObjectIdentifier(tanpura1))
-            activeInstrumentsSnapshot.insert(ObjectIdentifier(tabla))
-            if let t1 = tanpura1, !t1.isPlaying { t1.togglePlay() }
-            if let tb = tabla, !tb.isPlaying { tb.togglePlay() }
-            return
-        }
-        
         if isAnyInstrumentPlaying {
             stopAllWorkstationAudio()
         } else {
@@ -87,15 +87,17 @@ class AppAudioOrchestrator: ObservableObject {
 
         // Step 4: Isolate instrument registries using filtered slices of the master cache
         let tanpuraRegistry = masterSampleRegistry.filter { $0.key.contains("Tanpura_") }
-        
-        // Step 5: Instantiate your concrete child instruments
-        self.tanpura1 = Tanpura(orchestrator: self, voicePool: self.voicePool, registry: tanpuraRegistry)
-        self.tanpura2 = Tanpura(orchestrator: self, voicePool: self.voicePool, registry: tanpuraRegistry)
-        self.tanpura1.tempoBPM = self.sharedTanpuraBPM
-        self.tanpura2.tempoBPM = self.sharedTanpuraBPM
-        
         let tablaRegistry = masterSampleRegistry.filter { $0.key.contains("Bayaan_") || $0.key.contains("Dayaan_") }
-        self.tabla = Tabla(orchestrator: self, voicePool: self.voicePool, registry: tablaRegistry)
+
+        // Step 5: Instantiate concrete child instruments into unified registry
+        let t1 = Tanpura(id: "tanpura_1", name: "Tanpura 1", orchestrator: self, voicePool: self.voicePool, registry: tanpuraRegistry)
+        let t2 = Tanpura(id: "tanpura_2", name: "Tanpura 2", orchestrator: self, voicePool: self.voicePool, registry: tanpuraRegistry)
+        t1.tempoBPM = self.sharedTanpuraBPM
+        t2.tempoBPM = self.sharedTanpuraBPM
+
+        let tb = Tabla(id: "tabla_main", name: "Tabla", orchestrator: self, voicePool: self.voicePool, registry: tablaRegistry)
+
+        self.instruments = [t1, t2, tb]
         
         setupChildSubscriptions()
         let sysVol = getSystemMasterVolume()
@@ -236,15 +238,12 @@ class AppAudioOrchestrator: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
 
     private func setupChildSubscriptions() {
-        tanpura1.objectWillChange
-            .sink { [weak self] _ in self?.objectWillChange.send() }
-            .store(in: &cancellables)
-        tanpura2.objectWillChange
-            .sink { [weak self] _ in self?.objectWillChange.send() }
-            .store(in: &cancellables)
-        tabla.objectWillChange
-            .sink { [weak self] _ in self?.objectWillChange.send() }
-            .store(in: &cancellables)
+        cancellables.removeAll()
+        for instrument in instruments {
+            instrument.objectWillChange
+                .sink { [weak self] _ in self?.objectWillChange.send() }
+                .store(in: &cancellables)
+        }
     }
 
     private func getSystemMasterVolume() -> Float {

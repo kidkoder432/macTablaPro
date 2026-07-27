@@ -38,6 +38,10 @@ class Tabla: Instrument {
     @Published var currentBolName: String = ""
     @Published var currentStepIndex = 0
 
+    override init(id: String, name: String, orchestrator: AppAudioOrchestrator, voicePool: VoicePool, registry: [String: PitchedSample]) {
+        super.init(id: id, name: name, orchestrator: orchestrator, voicePool: voicePool, registry: registry)
+    }
+
     private let taalDb = TablaDatabase().taalCatalog
 
     /// Returns the allowed BPM range (min...max) for the currently selected Taal and Variation.

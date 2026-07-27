@@ -3,7 +3,10 @@ import AVFoundation
 import Combine
 
 @MainActor
-class Instrument: ObservableObject {
+class Instrument: ObservableObject, Identifiable {
+    let id: String
+    let name: String
+    
     @Published var isPlaying = false
     @Published var isMuted = false
     @Published var tempoBPM: Double = 100.0
@@ -20,7 +23,9 @@ class Instrument: ObservableObject {
     // 👈 Hold a weak or unowned reference to your master orchestrator container
     internal unowned let orchestrator: AppAudioOrchestrator
     
-    init(orchestrator: AppAudioOrchestrator, voicePool: VoicePool, registry: [String: PitchedSample]) {
+    init(id: String, name: String, orchestrator: AppAudioOrchestrator, voicePool: VoicePool, registry: [String: PitchedSample]) {
+        self.id = id
+        self.name = name
         self.orchestrator = orchestrator
         self.voicePool = voicePool
         self.sampleRegistry = registry
