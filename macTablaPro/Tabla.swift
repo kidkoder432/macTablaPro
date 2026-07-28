@@ -126,10 +126,11 @@ class Tabla: Instrument {
     /// Ati-Vilambit (0): 16, Vilambit (1): 16, Madhya (2): 8, Drut (3): 4, Ati-Drut (4): 2
     func subdivisionsPerBeat(forTier tier: Int) -> Int {
         switch tier {
-        case 0, 1: return 16
-        case 2: return 8
-        case 3: return 4
-        default: return 2
+        case 0: return 64
+        case 1: return 32
+        case 2: return 16
+        case 3: return 8
+        default: return 4
         }
     }
 
@@ -140,7 +141,7 @@ class Tabla: Instrument {
         return totalMatras * subs
     }
 
-    /// Transitions playback seamlessly to a new timeline, maintaining matra position
+    /// Transitions playback seamlessly to a new timeline, maintaining exact fractional matra position
     func updateTimelinePosition() {
         if isPlaying {
             let totalPulses = totalPulsesInCycle()
