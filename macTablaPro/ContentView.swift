@@ -723,6 +723,32 @@ struct TablaCardView: View {
         return ""
     }
 
+    private var sortedTaalList: [TaalDefinition] {
+        database.taalCatalog.values.sorted {
+            if $0.matras != $1.matras {
+                return $0.matras < $1.matras
+            }
+            return $0.name < $1.name
+        }
+    }
+
+    private func matraDisplayString(for matras: Double) -> String {
+        if matras.truncatingRemainder(dividingBy: 1) == 0 {
+            return "\(Int(matras))"
+        } else {
+            return String(format: "%.2f", matras)
+        }
+    }
+
+    private var subBeatDotsText: String {
+        let activeDots = (tabla.currentMatraSubStep % 4) + 1
+        return String(repeating: "· ", count: activeDots).trimmingCharacters(in: .whitespaces)
+    }
+
+    private var activeTaalSymbol: String {
+        getTaalSymbol(matra: tabla.currentMatra, taal: database.taalCatalog[tabla.activeTaal])
+    }
+
     var body: some View {
         let isAntique = tabla.orchestrator.isAntiqueThemeEnabled
         VStack(spacing: 16) {
@@ -747,14 +773,8 @@ struct TablaCardView: View {
                         .font(isAntique ? .custom("Baskerville-Italic", size: 14) : .caption)
                         .foregroundColor(isAntique ? Color.orange : .secondary)
                     Spacer()
-                    let sortedTaals = database.taalCatalog.values.sorted {
-                        if $0.matras != $1.matras {
-                            return $0.matras < $1.matras
-                        }
-                        return $0.name < $1.name
-                    }
                     Menu {
-                        ForEach(sortedTaals, id: \.name) { taal in
+                        ForEach(sortedTaalList, id: \.name) { taal in
                             Button(action: {
                                 if tabla.activeTaal != taal.name {
                                     tabla.activeTaal = taal.name
@@ -765,8 +785,7 @@ struct TablaCardView: View {
                                 }
                             }) {
                                 HStack {
-                                    let matraStr = taal.matras.formatted(.number.precision(.fractionLength(0...2)))
-                                    Text("\(taal.name) (\(matraStr))")
+                                    Text("\(taal.name) (\(matraDisplayString(for: taal.matras)))")
                                     if tabla.activeTaal == taal.name {
                                         Image(systemName: "checkmark")
                                     }
@@ -775,9 +794,7 @@ struct TablaCardView: View {
                         }
                     } label: {
                         HStack(spacing: 4) {
-                            let matraStr = (database.taalCatalog[tabla.activeTaal]?.matras ?? 16.0).formatted(.number.precision(.fractionLength(0...2)))
-
-                            Text("\(tabla.activeTaal) (\(matraStr))")
+                            Text("\(tabla.activeTaal) (\(matraDisplayString(for: database.taalCatalog[tabla.activeTaal]?.matras ?? 16.0)))")
                                 .font(.system(size: 12, weight: .medium))
                                 .foregroundColor(isAntique ? Color.orange : .primary)
                             Image(systemName: "chevron.up.chevron.down")
@@ -805,9 +822,8 @@ struct TablaCardView: View {
                         .font(isAntique ? .custom("Baskerville-Italic", size: 14) : .caption)
                         .foregroundColor(isAntique ? Color.orange : .secondary)
                     Spacer()
-                    let variations = database.taalCatalog[tabla.activeTaal]?.orderedVariationNames ?? []
                     Menu {
-                        ForEach(variations, id: \.self) { variationName in
+                        ForEach(database.taalCatalog[tabla.activeTaal]?.orderedVariationNames ?? [], id: \.self) { variationName in
                             Button(action: {
                                 if tabla.activeVariation != variationName {
                                     tabla.activeVariation = variationName
@@ -858,24 +874,20 @@ struct TablaCardView: View {
                         VStack {
                             HStack(alignment: .top) {
                                 // Top-Left: Taal Symbol (Sam 'X' or Taali/Khali)
-                                if tabla.isPlaying {
-                                    let symbol = getTaalSymbol(matra: tabla.currentMatra, taal: database.taalCatalog[tabla.activeTaal])
-                                    if !symbol.isEmpty {
-                                        Text(symbol)
-                                            .font(isAntique ?
-                                                .system(size: 14, weight: .bold, design: .monospaced) :
-                                                .system(size: 14, weight: .bold, design: .rounded))
-                                            .foregroundColor(isAntique ? Color.yellow : Color.cyan.opacity(0.9))
-                                            .shadow(color: isAntique ? Color.yellow.opacity(0.8) : Color.cyan.opacity(0.6), radius: 3)
-                                    }
+                                if tabla.isPlaying && !activeTaalSymbol.isEmpty {
+                                    Text(activeTaalSymbol)
+                                        .font(isAntique ?
+                                            .system(size: 14, weight: .bold, design: .monospaced) :
+                                            .system(size: 14, weight: .bold, design: .rounded))
+                                        .foregroundColor(isAntique ? Color.yellow : Color.cyan.opacity(0.9))
+                                        .shadow(color: isAntique ? Color.yellow.opacity(0.8) : Color.cyan.opacity(0.6), radius: 3)
                                 }
                                 
                                 Spacer()
 
                                 // Top-Center: Quarter-Matra Sub-Clock Dots (STRICTLY for Ati-Vilambit, Tier 0)
                                 if tabla.isPlaying && tabla.currentTempoTier() == 0 {
-                                    let activeDots = (tabla.currentMatraSubStep % 4) + 1
-                                    Text(String(repeating: "· ", count: activeDots).trimmingCharacters(in: .whitespaces))
+                                    Text(subBeatDotsText)
                                         .font(.system(size: 15, weight: .bold, design: .monospaced))
                                         .foregroundColor(isAntique ? Color.yellow : Color.cyan)
                                         .shadow(color: isAntique ? Color.yellow.opacity(0.8) : Color.cyan.opacity(0.7), radius: 3)
