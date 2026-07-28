@@ -170,6 +170,9 @@ class TablaDatabase {
         
         let csv = try CSV<Named>(url: url)
         
+        // Dictionary tracking running beat position per timeline key (e.g. "Teentaal_Default_0")
+        var accumulatedBeats: [String: Double] = [:]
+        
         for row in csv.rows {
             guard let taalName = row["taalName"]?.trimmingCharacters(in: .whitespaces),
                   taalCatalog[taalName] != nil else { continue }
@@ -204,49 +207,52 @@ class TablaDatabase {
             let originalBolName = row["bolName"]
             
             let targetKey = rightSample ?? leftSample ?? ""
-            let baseStartBeat = max(0.0, Double(matra - 1))
+            
+            // Calculate starting beat fraction for this CSV row
+            let firstTier = validTiers[0]
+            let firstKey = "\(taalName)_\(styleName)_\(firstTier)"
+            let rowStartBeat = accumulatedBeats[firstKey] ?? max(0.0, Double(matra - 1))
             
             if let recipe = compoundBolTuningMap[targetKey] {
                 let duration1 = totalDuration * recipe.ratio1
                 let duration2 = totalDuration * recipe.ratio2
                 
-                // Event 1 (First sub-stroke)
                 let event1 = TablaStrokeEvent(
                     seqNum: seqNum,
                     matra: matra,
-                    startBeatFraction: baseStartBeat,
+                    startBeatFraction: rowStartBeat,
                     durationFraction: duration1,
                     leftSampleName: recipe.left1,
                     rightSampleName: recipe.right1,
                     leftVolume: leftVol,
                     rightVolume: rightVol,
-                    bolName: originalBolName // Keeps original compound name for UI!
+                    bolName: originalBolName
                 )
                 
-                // Event 2 (Second sub-stroke at offset baseStartBeat + duration1)
                 let event2 = TablaStrokeEvent(
                     seqNum: seqNum,
                     matra: matra,
-                    startBeatFraction: baseStartBeat + duration1,
+                    startBeatFraction: rowStartBeat + duration1,
                     durationFraction: duration2,
                     leftSampleName: recipe.left2,
                     rightSampleName: recipe.right2,
                     leftVolume: leftVol,
                     rightVolume: rightVol,
-                    bolName: nil // Prevents duplicate UI label
+                    bolName: nil
                 )
                 
                 for tempoTier in validTiers {
+                    let timelineKey = "\(taalName)_\(styleName)_\(tempoTier)"
                     taalCatalog[taalName]?.variations[styleName]?.allowedTempos.insert(tempoTier)
                     taalCatalog[taalName]?.variations[styleName]?.timelinesByTempoTier[tempoTier, default: []].append(event1)
                     taalCatalog[taalName]?.variations[styleName]?.timelinesByTempoTier[tempoTier, default: []].append(event2)
+                    accumulatedBeats[timelineKey] = rowStartBeat + totalDuration
                 }
             } else {
-                // Standard single-stroke event
                 let event = TablaStrokeEvent(
                     seqNum: seqNum,
                     matra: matra,
-                    startBeatFraction: baseStartBeat,
+                    startBeatFraction: rowStartBeat,
                     durationFraction: totalDuration,
                     leftSampleName: (leftSample == nil || leftSample!.isEmpty) ? nil : leftSample,
                     rightSampleName: (rightSample == nil || rightSample!.isEmpty) ? nil : rightSample,
@@ -256,8 +262,10 @@ class TablaDatabase {
                 )
                 
                 for tempoTier in validTiers {
+                    let timelineKey = "\(taalName)_\(styleName)_\(tempoTier)"
                     taalCatalog[taalName]?.variations[styleName]?.allowedTempos.insert(tempoTier)
                     taalCatalog[taalName]?.variations[styleName]?.timelinesByTempoTier[tempoTier, default: []].append(event)
+                    accumulatedBeats[timelineKey] = rowStartBeat + totalDuration
                 }
             }
         }
