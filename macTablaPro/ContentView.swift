@@ -1123,10 +1123,21 @@ struct PresetsDrawerView: View {
     @State private var isShowingSaveField = false
 
     var filteredPresets: [ITablaProPreset] {
+        let baseList = presetsList.sorted { $0.PresetName.localizedStandardCompare($1.PresetName) == .orderedAscending }
         if searchFilter.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            return presetsList
+            return baseList
         }
-        return presetsList.filter { $0.PresetName.localizedCaseInsensitiveContains(searchFilter) }
+        return baseList.filter { $0.PresetName.localizedCaseInsensitiveContains(searchFilter) }
+    }
+
+    private func presetTooltipText(for preset: ITablaProPreset) -> String {
+        """
+        🎵 Preset: \(preset.PresetName)
+        • Pitch: \(preset.PitchName)
+        • Tanpura 1: \(preset.Tanpura1FirstString) (\(Int(preset.Tanpura1Gain * 100))%)
+        • Tanpura 2: \(preset.Tanpura2FirstString) (\(Int(preset.Tanpura2Gain * 100))%)
+        • Tabla: \(preset.TaalName) - \(preset.StyleName) (\(Int(preset.Tempo)) BPM)
+        """
     }
 
     var body: some View {
@@ -1196,7 +1207,7 @@ struct PresetsDrawerView: View {
                                 }
                                 .buttonStyle(.plain)
 
-                                // Apply Preset Button
+                                // Apply Preset Button with Hover Tooltip & Right-Click Context Menu
                                 Button(action: {
                                     audio.applyPreset(preset)
                                     Task {
@@ -1227,6 +1238,15 @@ struct PresetsDrawerView: View {
                                     )
                                 }
                                 .buttonStyle(.plain)
+                                .help(presetTooltipText(for: preset))
+                                .contextMenu {
+                                    Text("🎵 \(preset.PresetName)").font(.headline)
+                                    Divider()
+                                    Text("Pitch: \(preset.PitchName)")
+                                    Text("Tanpura 1: \(preset.Tanpura1FirstString) (\(Int(preset.Tanpura1Gain * 100))%)")
+                                    Text("Tanpura 2: \(preset.Tanpura2FirstString) (\(Int(preset.Tanpura2Gain * 100))%)")
+                                    Text("Tabla: \(preset.TaalName) (\(preset.StyleName)) @ \(Int(preset.Tempo)) BPM")
+                                }
 
                                 // Delete Preset Button
                                 Button(action: {
