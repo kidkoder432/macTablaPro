@@ -122,45 +122,38 @@ class Tabla: Instrument {
 
     private var lastExecutedTier: Int = -1
 
-    /// Finds the step index in a new timeline that matches the given matra (beat number).
-    /// If currentMatra exceeds the max matra of the new timeline, resets to Sam (1).
-    /// Jumps to the first sub-stroke of the target matra for a clean, accented start.
-    func findMatchingStepIndex(
-        forMatra matra: Int,
-        inTimeline timeline: [TablaStrokeEvent]
-    ) -> Int {
-        guard !timeline.isEmpty else { return 0 }
-        let maxMatra = timeline.map({ $0.matra }).max() ?? 1
-        
-        // Overflow Rule: If currentMatra exceeds maxMatra of the new timeline, reset to Sam (1)
-        let targetMatra = (matra > maxMatra) ? 1 : matra
-        
-        if let matchIndex = timeline.firstIndex(where: { $0.matra >= targetMatra }) {
-            return matchIndex
+    /// Subdivisions per beat according to Tempo Tier:
+    /// Ati-Vilambit (0): 16, Vilambit (1): 16, Madhya (2): 8, Drut (3): 4, Ati-Drut (4): 2
+    func subdivisionsPerBeat(forTier tier: Int) -> Int {
+        switch tier {
+        case 0, 1: return 16
+        case 2: return 8
+        case 3: return 4
+        default: return 2
         }
-        return 0
+    }
+
+    /// Total pulses in full Taal cycle for current tempo tier
+    private func totalPulsesInCycle() -> Int {
+        let totalMatras = Int(taalDb[activeTaal]?.matras ?? 16)
+        let subs = subdivisionsPerBeat(forTier: currentTempoTier())
+        return totalMatras * subs
     }
 
     /// Transitions playback seamlessly to a new timeline, maintaining matra position
-    /// or resetting to Sam (1) if matra exceeded maxMatra.
     func updateTimelinePosition() {
         if isPlaying {
-            let newTimeline = resolveActiveTimeline()
-            let matchingStep = findMatchingStepIndex(forMatra: currentMatra, inTimeline: newTimeline)
-            let steps = newTimeline.isEmpty ? 1 : newTimeline.count
-            clock.start(stepsCount: steps, startingAtStep: matchingStep)
+            let totalPulses = totalPulsesInCycle()
+            let subs = subdivisionsPerBeat(forTier: currentTempoTier())
+            let startingPulse = ((currentMatra - 1) * subs) % totalPulses
+            clock.start(stepsCount: totalPulses, startingAtStep: startingPulse)
         }
-    }
-
-    private func getTimelineCount() -> Int {
-        let timeline = resolveActiveTimeline()
-        return timeline.isEmpty ? 1 : timeline.count
     }
 
     func restartClockIfPlaying() {
         if isPlaying {
-            let steps = getTimelineCount()
-            clock.start(stepsCount: steps)
+            let totalPulses = totalPulsesInCycle()
+            clock.start(stepsCount: totalPulses)
         }
     }
 
@@ -172,8 +165,8 @@ class Tabla: Instrument {
             currentMatraSubStep = 0
             currentBolName = ""
             lastExecutedTier = currentTempoTier()
-            let steps = getTimelineCount()
-            clock.start(stepsCount: steps)
+            let totalPulses = totalPulsesInCycle()
+            clock.start(stepsCount: totalPulses)
         } else {
             clock.stop()
         }
@@ -186,36 +179,53 @@ class Tabla: Instrument {
             updateTimelinePosition()
         }
 
+        let subs = subdivisionsPerBeat(forTier: activeTier)
+        let stepFraction = 1.0 / Double(subs)
+        
+        // Calculate current matra (1-indexed) and sub-pulse index within beat
+        let pulseWithinBeat = stepIndex % subs
+        let calculatedMatra = (stepIndex / subs) + 1
+        self.currentMatra = calculatedMatra
+        
+        // Quarter-matra index (0, 1, 2, 3) mapped from pulse position
+        self.currentMatraSubStep = (pulseWithinBeat * 4) / subs
+        
         let timeline = resolveActiveTimeline()
         guard !timeline.isEmpty else {
-            return 1.0  // Safe fallback if no timeline is loaded
+            return stepFraction
         }
 
-        // Defend against out-of-bounds index
-        let safeIndex = stepIndex % timeline.count
-        self.currentStepIndex = safeIndex
-
-        let event = timeline[safeIndex]
-        if self.currentMatra != event.matra {
-            self.currentMatra = event.matra
-            self.currentMatraSubStep = 0
-        } else {
-            self.currentMatraSubStep = (self.currentMatraSubStep + 1) % 4
+        // Calculate accumulated beat offset in sequence timeline to match against CSV events
+        let pulseBeatTime = Double(stepIndex) * stepFraction
+        var accumulatedTime = 0.0
+        
+        var matchingEvent: TablaStrokeEvent? = nil
+        for event in timeline {
+            if abs(accumulatedTime - pulseBeatTime) < 0.0001 {
+                matchingEvent = event
+                break
+            }
+            accumulatedTime += event.durationFraction
+            if accumulatedTime > pulseBeatTime + 0.0001 {
+                break
+            }
         }
-        self.currentBolName = event.bolName ?? ""
+
+        guard let event = matchingEvent else {
+            return stepFraction
+        }
+
+        self.currentBolName = event.bolName ?? self.currentBolName
 
         // Execute Left Hand (Bayan)
         if let leftSample = event.leftSampleName,
             let sampleToPlay = sampleRegistry["Bayaan_" + leftSample] {
-            print("Playing sample " + leftSample)
             _ = self.voicePool.play(
                 sample: sampleToPlay,
                 targetPitchCents: 0,
                 volume: Double(event.leftVolume) * self.effectiveVolume,
                 time: time
             )
-        } else {
-            print("Failed to play sample \(event.leftSampleName ?? "nil")")
         }
 
         // Execute Right Hand (Dayan)
@@ -233,7 +243,6 @@ class Tabla: Instrument {
 
         if let bol = event.rightSampleName {
             let sampleString = "Dayaan_" + tablaPitch + "_" + surString + bol
-            print("Loading sample " + sampleString)
             if let sampleToPlay = sampleRegistry[sampleString] {
                 _ = self.voicePool.play(
                     sample: sampleToPlay,
@@ -242,15 +251,9 @@ class Tabla: Instrument {
                     volume: Double(event.rightVolume) * self.effectiveVolume,
                     time: time
                 )
-            } else {
-                print("🛑 Failed to load sample: \(sampleString)")
             }
         }
 
-        print(
-            "🥁 Played step \(safeIndex) (Matra \(event.matra) - \(event.bolName ?? "Rest")) - Waiting \(event.durationFraction) beats."
-        )
-
-        return event.durationFraction
+        return stepFraction
     }
 }
