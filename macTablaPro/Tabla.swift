@@ -136,17 +136,18 @@ class Tabla: Instrument {
 
     /// Total pulses in full Taal cycle for current tempo tier
     private func totalPulsesInCycle() -> Int {
-        let totalMatras = Int(taalDb[activeTaal]?.matras ?? 16)
-        let subs = subdivisionsPerBeat(forTier: currentTempoTier())
-        return totalMatras * subs
+        let totalMatras = taalDb[activeTaal]?.matras ?? 16.0
+        let subs = Double(subdivisionsPerBeat(forTier: currentTempoTier()))
+        return Int(round(totalMatras * subs))
     }
 
     /// Transitions playback seamlessly to a new timeline, maintaining exact fractional matra position
     func updateTimelinePosition() {
         if isPlaying {
             let totalPulses = totalPulsesInCycle()
-            let subs = subdivisionsPerBeat(forTier: currentTempoTier())
-            let startingPulse = ((currentMatra - 1) * subs) % totalPulses
+            let subs = Double(subdivisionsPerBeat(forTier: currentTempoTier()))
+            let currentBeatPos = Double(currentMatra - 1) + (Double(currentMatraSubStep) / 4.0)
+            let startingPulse = Int(round(currentBeatPos * subs)) % (totalPulses > 0 ? totalPulses : 1)
             clock.start(stepsCount: totalPulses, startingAtStep: startingPulse)
         }
     }
@@ -158,19 +159,22 @@ class Tabla: Instrument {
         }
     }
 
-    override func togglePlay() {
-        isPlaying.toggle()
-        if isPlaying {
-            currentStepIndex = 0
-            currentMatra = 1
-            currentMatraSubStep = 0
-            currentBolName = ""
-            lastExecutedTier = currentTempoTier()
-            let totalPulses = totalPulsesInCycle()
-            clock.start(stepsCount: totalPulses)
-        } else {
-            clock.stop()
-        }
+    override func startPlay() {
+        guard !isPlaying else { return }
+        isPlaying = true
+        currentStepIndex = 0
+        currentMatra = 1
+        currentMatraSubStep = 0
+        currentBolName = ""
+        lastExecutedTier = currentTempoTier()
+        let totalPulses = totalPulsesInCycle()
+        clock.start(stepsCount: totalPulses)
+    }
+
+    override func stopPlay() {
+        guard isPlaying else { return }
+        isPlaying = false
+        clock.stop()
     }
 
     override internal func executeSequenceTick(stepIndex: Int, time: AVAudioTime?) -> Double {
