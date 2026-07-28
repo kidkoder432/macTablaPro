@@ -164,17 +164,54 @@ class Tabla: Instrument {
         }
     }
 
+    private var subBeatClockTask: Task<Void, Never>?
+
+    private func startSubBeatClock() {
+        subBeatClockTask?.cancel()
+        subBeatClockTask = Task {
+            var subIndex = 0
+            var lastMatra = self.currentMatra
+            while !Task.isCancelled {
+                let startNano = DispatchTime.now().uptimeNanoseconds
+                await MainActor.run {
+                    if self.currentMatra != lastMatra {
+                        lastMatra = self.currentMatra
+                        subIndex = 0
+                    } else {
+                        subIndex = (subIndex + 1) % 4
+                    }
+                    self.currentMatraSubStep = subIndex
+                }
+                
+                let bpm = max(10.0, self.tempoBPM)
+                let quarterBeatSec = (60.0 / bpm) * 0.25
+                let targetNanos = UInt64(quarterBeatSec * 1_000_000_000)
+                let elapsedNanos = DispatchTime.now().uptimeNanoseconds - startNano
+                let sleepNanos = targetNanos > elapsedNanos ? (targetNanos - elapsedNanos) : 0
+                try? await Task.sleep(nanoseconds: sleepNanos)
+            }
+        }
+    }
+
+    private func stopSubBeatClock() {
+        subBeatClockTask?.cancel()
+        subBeatClockTask = nil
+    }
+
     override func togglePlay() {
         isPlaying.toggle()
         if isPlaying {
             currentStepIndex = 0
             currentMatra = 1
+            currentMatraSubStep = 0
             currentBolName = ""
             lastExecutedTier = currentTempoTier()
             let steps = getTimelineCount()
             clock.start(stepsCount: steps)
+            startSubBeatClock()
         } else {
             clock.stop()
+            stopSubBeatClock()
         }
     }
 
@@ -195,12 +232,7 @@ class Tabla: Instrument {
         self.currentStepIndex = safeIndex
 
         let event = timeline[safeIndex]
-        if self.currentMatra != event.matra {
-            self.currentMatra = event.matra
-            self.currentMatraSubStep = 0
-        } else {
-            self.currentMatraSubStep = (self.currentMatraSubStep + 1) % 4
-        }
+        self.currentMatra = event.matra
         self.currentBolName = event.bolName ?? ""
 
         // Execute Left Hand (Bayan)

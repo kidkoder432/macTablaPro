@@ -872,13 +872,11 @@ struct TablaCardView: View {
                                 
                                 Spacer()
 
-                                // Top-Center: Quarter-Matra Dots Text Box (STRICTLY for Ati-Vilambit, Tier 0)
+                                // Top-Center: Quarter-Matra Sub-Clock Dots (STRICTLY for Ati-Vilambit, Tier 0)
                                 if tabla.isPlaying && tabla.currentTempoTier() == 0 {
                                     let activeDots = (tabla.currentMatraSubStep % 4) + 1
-                                    Text(String(repeating: ". ", count: activeDots).trimmingCharacters(in: .whitespaces))
-                                        .font(isAntique ?
-                                            .system(size: 14, weight: .bold, design: .monospaced) :
-                                            .system(size: 14, weight: .bold, design: .rounded))
+                                    Text(String(repeating: "· ", count: activeDots).trimmingCharacters(in: .whitespaces))
+                                        .font(.system(size: 15, weight: .bold, design: .monospaced))
                                         .foregroundColor(isAntique ? Color.yellow : Color.cyan)
                                         .shadow(color: isAntique ? Color.yellow.opacity(0.8) : Color.cyan.opacity(0.7), radius: 3)
                                 }
