@@ -969,7 +969,7 @@ struct TablaCardView: View {
 
                 Slider(value: $tabla.tempoBPM, in: tabla.allowedBPMRange(), step: 1.0) { isEditing in
                     if !isEditing {
-                        let snapshot = tabla.orchestrator.captureSettings()
+                        let snapshot = tabla.orchestrator.capturePreset()
                         Task.detached(priority: .utility) {
                             await SettingsStorageService.shared.saveActiveSettings(snapshot)
                         }
