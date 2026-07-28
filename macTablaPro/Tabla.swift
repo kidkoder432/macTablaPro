@@ -195,23 +195,11 @@ class Tabla: Instrument {
             return stepFraction
         }
 
-        // Calculate accumulated beat offset in sequence timeline to match against CSV events
+        // Calculate beat offset in sequence timeline to match against CSV events
         let pulseBeatTime = Double(stepIndex) * stepFraction
-        var accumulatedTime = 0.0
+        let halfStep = stepFraction * 0.5
         
-        var matchingEvent: TablaStrokeEvent? = nil
-        for event in timeline {
-            if abs(accumulatedTime - pulseBeatTime) < 0.0001 {
-                matchingEvent = event
-                break
-            }
-            accumulatedTime += event.durationFraction
-            if accumulatedTime > pulseBeatTime + 0.0001 {
-                break
-            }
-        }
-
-        guard let event = matchingEvent else {
+        guard let event = timeline.first(where: { abs($0.startBeatFraction - pulseBeatTime) < halfStep }) else {
             return stepFraction
         }
 

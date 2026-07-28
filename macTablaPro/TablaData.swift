@@ -28,8 +28,8 @@ let compoundBolTuningMap: [String: SubStrokeRecipe] = [
         ratio2: 0.50, left2: "Ka", right2: nil
     ),
     "Tra": SubStrokeRecipe(
-        ratio1: 0.2, left1: nil, right1: "Ti",
-        ratio2: 0.8, left2: nil, right2: "Ra"
+        ratio1: 0.25, left1: nil, right1: "Ti",
+        ratio2: 0.75, left2: nil, right2: "Ra"
     ),
     "TiTaL": SubStrokeRecipe(
         ratio1: 0.50, left1: nil, right1: "TiL",
@@ -75,6 +75,7 @@ struct TablaStrokeEvent: Identifiable {
     let id = UUID()
     let seqNum: Int             // The order in the sequence (1, 2, 3...)
     let matra: Int              // The beat index this stroke falls inside
+    let startBeatFraction: Double // Absolute beat timestamp relative to Sam (e.g. 0.0, 0.25, 0.5)
     let durationFraction: Double // How long this stroke lasts (e.g., 1.0, 0.5, 0.25)
     
     let leftSampleName: String?  // e.g., "Ge-OP"
@@ -202,15 +203,19 @@ class TablaDatabase {
             let rightVol = Float(row["volRight"] ?? "1.0") ?? 1.0
             let originalBolName = row["bolName"]
             
-            // Check if right or left sample is a compound bol registered in tuning map
             let targetKey = rightSample ?? leftSample ?? ""
+            let baseStartBeat = max(0.0, Double(matra - 1))
             
             if let recipe = compoundBolTuningMap[targetKey] {
+                let duration1 = totalDuration * recipe.ratio1
+                let duration2 = totalDuration * recipe.ratio2
+                
                 // Event 1 (First sub-stroke)
                 let event1 = TablaStrokeEvent(
                     seqNum: seqNum,
                     matra: matra,
-                    durationFraction: totalDuration * recipe.ratio1,
+                    startBeatFraction: baseStartBeat,
+                    durationFraction: duration1,
                     leftSampleName: recipe.left1,
                     rightSampleName: recipe.right1,
                     leftVolume: leftVol,
@@ -218,11 +223,12 @@ class TablaDatabase {
                     bolName: originalBolName // Keeps original compound name for UI!
                 )
                 
-                // Event 2 (Second sub-stroke)
+                // Event 2 (Second sub-stroke at offset baseStartBeat + duration1)
                 let event2 = TablaStrokeEvent(
                     seqNum: seqNum,
                     matra: matra,
-                    durationFraction: totalDuration * recipe.ratio2,
+                    startBeatFraction: baseStartBeat + duration1,
+                    durationFraction: duration2,
                     leftSampleName: recipe.left2,
                     rightSampleName: recipe.right2,
                     leftVolume: leftVol,
@@ -240,6 +246,7 @@ class TablaDatabase {
                 let event = TablaStrokeEvent(
                     seqNum: seqNum,
                     matra: matra,
+                    startBeatFraction: baseStartBeat,
                     durationFraction: totalDuration,
                     leftSampleName: (leftSample == nil || leftSample!.isEmpty) ? nil : leftSample,
                     rightSampleName: (rightSample == nil || rightSample!.isEmpty) ? nil : rightSample,
@@ -255,11 +262,11 @@ class TablaDatabase {
             }
         }
         
-        // 3. Final Pass: Sort each tier's timeline perfectly by sequence number
+        // 3. Final Pass: Sort each tier's timeline perfectly by startBeatFraction
         for (taalName, _) in taalCatalog {
             for (styleName, variation) in taalCatalog[taalName]!.variations {
                 for (tier, timeline) in variation.timelinesByTempoTier {
-                    taalCatalog[taalName]?.variations[styleName]?.timelinesByTempoTier[tier] = timeline.sorted(by: { $0.seqNum < $1.seqNum })
+                    taalCatalog[taalName]?.variations[styleName]?.timelinesByTempoTier[tier] = timeline.sorted(by: { $0.startBeatFraction < $1.startBeatFraction })
                 }
             }
         }
