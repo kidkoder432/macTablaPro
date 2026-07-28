@@ -195,11 +195,11 @@ class Tabla: Instrument {
         self.currentStepIndex = safeIndex
 
         let event = timeline[safeIndex]
-        if self.currentMatra == event.matra {
-            self.currentMatraSubStep += 1
-        } else {
+        if self.currentMatra != event.matra {
             self.currentMatra = event.matra
-            self.currentMatraSubStep = 1
+            self.currentMatraSubStep = 0
+        } else {
+            self.currentMatraSubStep = (self.currentMatraSubStep + 1) % 4
         }
         self.currentBolName = event.bolName ?? ""
 

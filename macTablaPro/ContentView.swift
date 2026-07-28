@@ -872,25 +872,15 @@ struct TablaCardView: View {
                                 
                                 Spacer()
 
-                                // Top-Center: 4 Evenly Spaced Quarter-Matra Dots (STRICTLY for Ati-Vilambit, Tier 0)
+                                // Top-Center: Quarter-Matra Dots Text Box (STRICTLY for Ati-Vilambit, Tier 0)
                                 if tabla.isPlaying && tabla.currentTempoTier() == 0 {
-                                    HStack(spacing: 4) {
-                                        ForEach(1...4, id: \.self) { dotIndex in
-                                            Circle()
-                                                .fill(
-                                                    dotIndex <= ((tabla.currentMatraSubStep - 1) % 4 + 1)
-                                                    ? (isAntique ? Color.yellow : Color.cyan)
-                                                    : (isAntique ? Color.yellow.opacity(0.2) : Color.white.opacity(0.15))
-                                                )
-                                                .frame(width: 4, height: 4)
-                                                .shadow(
-                                                    color: dotIndex <= ((tabla.currentMatraSubStep - 1) % 4 + 1)
-                                                    ? (isAntique ? Color.yellow.opacity(0.8) : Color.cyan.opacity(0.8))
-                                                    : .clear,
-                                                    radius: 2
-                                                )
-                                        }
-                                    }
+                                    let activeDots = (tabla.currentMatraSubStep % 4) + 1
+                                    Text(String(repeating: ". ", count: activeDots).trimmingCharacters(in: .whitespaces))
+                                        .font(isAntique ?
+                                            .system(size: 14, weight: .bold, design: .monospaced) :
+                                            .system(size: 14, weight: .bold, design: .rounded))
+                                        .foregroundColor(isAntique ? Color.yellow : Color.cyan)
+                                        .shadow(color: isAntique ? Color.yellow.opacity(0.8) : Color.cyan.opacity(0.7), radius: 3)
                                 }
 
                                 Spacer()
