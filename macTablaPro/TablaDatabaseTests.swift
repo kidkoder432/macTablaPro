@@ -64,6 +64,12 @@ final class TablaDatabaseTests: XCTestCase {
                             if !allWavFileNames.contains(rightKeySur) && !allWavFileNames.contains(rightKeyTip) && !allWavFileNames.contains("Dayaan_C#_" + right) {
                                 missingAssets.append("Missing Right Sample: '\(rightKeyTip)' or '\(rightKeySur)' [Taal: \(taalName), Style: \(styleName), Tier: \(tierIndex), Matra: \(event.matra)]")
                             }
+                            
+                            let Gskey = "Dayaan_G#_" + right
+                            if (!allWavFileNames.contains(Gskey)) {
+                                missingAssets.append("Missing Right Sample: '\(Gskey)' [Taal: \(taalName), Style: \(styleName), Tier: \(tierIndex), Matra: \(event.matra)]")
+                            }
+                            
                         }
                     }
                 }
@@ -99,64 +105,5 @@ final class TablaDatabaseTests: XCTestCase {
             return
         }
         XCTAssertEqual(saSample.absolutePitch, 1300.0, "❌ Tanpura_C#3_Sa pitch corrupted")
-    }
-
-    // MARK: - 4. DSP Varispeed Latency and Timing Diagnostics
-    
-    func testVarispeedLatencyDiagnostics() throws {
-        let engine = AVAudioEngine()
-        let varispeedNode = AVAudioUnitVarispeed()
-        engine.attach(varispeedNode)
-        
-        print("\n=== 📊 AVAudioUnitVarispeed Latency Profile ===")
-        let rates: [Float] = [1.0, 1.05946, 1.25, 1.5, 1.5874, 2.0]
-        for rate in rates {
-            varispeedNode.rate = rate
-            // Read latency in seconds
-            let latencySec = varispeedNode.latency
-            let latencyMs = latencySec * 1000.0
-            print("Rate: \(String(format: "%.5f", rate)) | Latency: \(String(format: "%.6f", latencySec))s (\(String(format: "%.3f", latencyMs))ms)")
-        }
-        print("============================================\n")
-        
-        print("=== ⏱️ Sequential Playback Trigger Overhead ===")
-        // Measure execution time gap between triggering two player nodes sequentially
-        let player1 = AVAudioPlayerNode()
-        let player2 = AVAudioPlayerNode()
-        engine.attach(player1)
-        engine.attach(player2)
-        
-        let startHost = mach_absolute_time()
-        player1.play()
-        let player1TriggeredHost = mach_absolute_time()
-        player2.play()
-        let player2TriggeredHost = mach_absolute_time()
-        
-        let info = try XCTUnwrap(Bundle.main.urls(forResourcesWithExtension: "wav", subdirectory: nil)).isEmpty ? mach_timebase_info() : mach_timebase_info()
-        var timebase = info
-        mach_timebase_info(&timebase)
-        
-        let gapTicks = player2TriggeredHost - player1TriggeredHost
-        let gapNs = Double(gapTicks) * Double(timebase.numer) / Double(timebase.denom)
-        let gapMs = gapNs / 1e6
-        print("Sequential play() gap: \(String(format: "%.6f", gapMs))ms")
-        print("==============================================\n")
-        
-        // Formats check
-        print("=== 📁 Bundle Audio Asset Formats ===")
-        let wavURLs: [URL] = Bundle.main.urls(forResourcesWithExtension: "wav", subdirectory: nil) ?? []
-        for url in wavURLs.prefix(5) {
-            if let file = try? AVAudioFile(forReading: url) {
-                print("File: \(url.lastPathComponent) | Format: \(file.fileFormat.sampleRate)Hz, \(file.fileFormat.channelCount)ch, FormatID: \(file.fileFormat.commonFormat.rawValue)")
-            }
-        }
-        print("======================================\n")
-        
-        XCTAssert(true)
-    }
-
-    func testCustomStateAssertionsStub() throws {
-        // Implement your custom domain assertions here
-        XCTAssertTrue(true)
     }
 }

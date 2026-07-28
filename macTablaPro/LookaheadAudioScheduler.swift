@@ -26,7 +26,7 @@ class LookaheadAudioScheduler {
         self.tickCallback = onTick
     }
 
-    // MARK: - 1. Time Conversion Helpers (STUBS FOR YOU TO IMPLEMENT)
+    // MARK: - 1. Time Conversion Helpers
 
     /// Converts a time interval in seconds to CPU mach_absolute_time host ticks.
     func secondsToHostTicks(_ seconds: Double) -> UInt64 {
@@ -45,7 +45,7 @@ class LookaheadAudioScheduler {
         return ns / 1e9
     }
 
-    // MARK: - 2. Ahead-of-Time Loop (STUBS FOR YOU TO IMPLEMENT)
+    // MARK: - 2. Ahead-of-Time Loop
 
     /// Starts the ahead-of-time lookahead scheduler loop.
     /// - Parameters:

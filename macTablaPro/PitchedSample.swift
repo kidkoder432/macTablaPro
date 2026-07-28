@@ -12,7 +12,7 @@ enum BufferError: Error {
     case e(String)
 }
 
-class PitchedSample {
+nonisolated final class PitchedSample: @unchecked Sendable {
     var fileName: String
     var absolutePitch: Double
     var role = ""

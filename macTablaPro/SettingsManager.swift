@@ -8,13 +8,13 @@ import Combine
 
 // MARK: - 1. Strongly Typed Codable State Models
 
-struct TanpuraSettings: Codable, Equatable {
+nonisolated struct TanpuraSettings: Codable, Equatable, Sendable {
     var volume: Double = 1.0
     var isMuted: Bool = false
     var firstStringPitch: Double = 700.0
 }
 
-struct TablaSettings: Codable, Equatable {
+nonisolated struct TablaSettings: Codable, Equatable, Sendable {
     var activeTaal: String = "Teentaal"
     var activeVariation: String = "Pro Default"
     var tempoBPM: Double = 100.0
@@ -23,7 +23,7 @@ struct TablaSettings: Codable, Equatable {
     var useSurTabla: Bool = false
 }
 
-struct WorkstationSettings: Codable, Equatable {
+nonisolated struct WorkstationSettings: Codable, Equatable, Sendable {
     var scaleOffsetCents: Double = 100.0
     var fineTuneCents: Double = 0.0
     var sharedTanpuraBPM: Double = 60.0
@@ -67,8 +67,8 @@ actor SettingsStorageService {
 
     func loadActiveSettings() -> WorkstationSettings {
         guard fileManager.fileExists(atPath: activeSettingsURL.path),
-              let data = try? Data(contentsOf: activeSettingsURL),
-              let decoded = try? JSONDecoder().decode(WorkstationSettings.self, from: data) else {
+            let data = try? Data(contentsOf: activeSettingsURL),
+            let decoded = try? JSONDecoder().decode(WorkstationSettings.self, from: data) else {
             let defaults = WorkstationSettings()
             saveActiveSettings(defaults)
             return defaults
@@ -116,7 +116,7 @@ actor SettingsStorageService {
     func loadPreset(name: String) -> WorkstationSettings? {
         let presetURL = presetsDirectoryURL.appendingPathComponent("\(name).json")
         guard let data = try? Data(contentsOf: presetURL),
-              let decoded = try? JSONDecoder().decode(WorkstationSettings.self, from: data) else {
+            let decoded = try? JSONDecoder().decode(WorkstationSettings.self, from: data) else {
             return nil
         }
         return decoded

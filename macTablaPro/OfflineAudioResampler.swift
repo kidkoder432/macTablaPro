@@ -18,7 +18,7 @@ enum ResamplingError: Error {
 }
 
 /// High-performance offline PCM buffer resampler using AVAudioConverter.
-enum OfflineAudioResampler {
+nonisolated enum OfflineAudioResampler {
 
     /// Resamples a source PCM buffer to a new target pitch specified in cents.
     ///
@@ -26,7 +26,7 @@ enum OfflineAudioResampler {
     ///   - sourceBuffer: The original PCM buffer loaded from disk (e.g. at base pitch).
     ///   - centsOffset: Relative pitch shift in cents (e.g., +200.0 for +2 semitones, -100.0 for -1 semitone).
     /// - Returns: A newly allocated `AVAudioPCMBuffer` containing the resampled PCM data, or `nil` if conversion fails.
-    static func resample(
+    nonisolated static func resample(
         sourceBuffer: AVAudioPCMBuffer,
         centsOffset: Double
     ) throws -> AVAudioPCMBuffer? {
@@ -134,7 +134,7 @@ enum OfflineAudioResampler {
     /// - Parameters:
     ///   - samples: The list of active samples to update.
     ///   - targetPitchCents: Total desired pitch (Master pitch + fine tune).
-    static func resampleBatch(
+    nonisolated static func resampleBatch(
         samples: [PitchedSample],
         targetPitchCents: Double
     ) {

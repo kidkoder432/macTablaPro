@@ -758,9 +758,7 @@ struct TablaCardView: View {
                             Button(action: {
                                 if tabla.activeTaal != taal.name {
                                     tabla.activeTaal = taal.name
-                                    if let firstVar = database.taalCatalog[taal.name]?.orderedVariationNames.first {
-                                        tabla.activeVariation = firstVar
-                                    }
+                                    tabla.activeVariation = "Pro Default"
                                     DispatchQueue.main.async {
                                         tabla.clampTempoToAllowedRange()
                                     }
@@ -780,7 +778,7 @@ struct TablaCardView: View {
                                 .font(.system(size: 12, weight: .medium))
                                 .foregroundColor(isAntique ? Color.orange : .primary)
                             Image(systemName: "chevron.up.chevron.down")
-                                .font(.system(size: 9, weight: .bold))
+                                .font(.system(size: 10, weight: .bold))
                                 .foregroundColor(isAntique ? Color.orange.opacity(0.8) : .secondary)
                         }
                         .padding(.horizontal, 8)
