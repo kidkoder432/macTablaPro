@@ -114,84 +114,107 @@ class AppAudioOrchestrator: ObservableObject {
         // Load persisted settings (or defaults) off main thread asynchronously
         Task {
             let loaded = await SettingsStorageService.shared.loadActiveSettings()
-            self.applySettings(loaded)
+            self.applyPreset(loaded)
             self.setupAutosavePipeline()
         }
     }
 
     // MARK: Settings Capture & Application
 
-    func captureSettings() -> WorkstationSettings {
-        var settings = WorkstationSettings()
-        settings.scaleOffsetCents = self.scaleOffsetCents
-        settings.fineTuneCents = self.fineTuneCents
-        settings.sharedTanpuraBPM = self.sharedTanpuraBPM
-        settings.masterVolume = self.masterVolume
-        settings.isAntiqueThemeEnabled = self.isAntiqueThemeEnabled
+    private var activePresetBase: ITablaProPreset? = nil
+
+    func capturePreset(name: String? = nil) -> ITablaProPreset {
+        var preset = activePresetBase ?? ITablaProPreset.defaultPreset
+        preset.PresetName = name ?? activePresetName ?? preset.PresetName
+        preset.PitchName = ITablaProPreset.scaleOffsetCentsToPitchName(self.scaleOffsetCents)
+        preset.FineTuneCents = self.fineTuneCents
+        preset.Tempo = self.tabla?.tempoBPM ?? preset.Tempo
+
+        if let tb = self.tabla {
+            preset.TablaOn = tb.isPlaying
+            preset.TablaGain = tb.volume
+            preset.TaalName = tb.activeTaal
+            preset.StyleName = tb.activeVariation
+            preset.UseSurTabla = tb.useSurTabla
+        }
 
         if let t1 = self.tanpura1 {
-            settings.tanpura1.volume = t1.volume
-            settings.tanpura1.isMuted = t1.isMuted
-            settings.tanpura1.firstStringPitch = t1.firstStringPitch
+            preset.Tanpura1On = t1.isPlaying
+            preset.Tanpura1Gain = t1.volume
+            preset.Tanpura1FirstString = ITablaProPreset.centsToStringName(t1.firstStringPitch)
         }
+
         if let t2 = self.tanpura2 {
-            settings.tanpura2.volume = t2.volume
-            settings.tanpura2.isMuted = t2.isMuted
-            settings.tanpura2.firstStringPitch = t2.firstStringPitch
+            preset.Tanpura2On = t2.isPlaying
+            preset.Tanpura2Gain = t2.volume
+            preset.Tanpura2FirstString = ITablaProPreset.centsToStringName(t2.firstStringPitch)
         }
-        if let tb = self.tabla {
-            settings.tabla.activeTaal = tb.activeTaal
-            settings.tabla.activeVariation = tb.activeVariation
-            settings.tabla.tempoBPM = tb.tempoBPM
-            settings.tabla.volume = tb.volume
-            settings.tabla.isMuted = tb.isMuted
-            settings.tabla.useSurTabla = tb.useSurTabla
-        }
-        return settings
+
+        return preset
     }
 
-    func applySettings(_ settings: WorkstationSettings) {
+    func applyPreset(_ preset: ITablaProPreset) {
         isApplyingPreset = true
-        self.scaleOffsetCents = settings.scaleOffsetCents
-        self.fineTuneCents = settings.fineTuneCents
-        self.sharedTanpuraBPM = settings.sharedTanpuraBPM
-        self.masterVolume = settings.masterVolume
-        self.isAntiqueThemeEnabled = settings.isAntiqueThemeEnabled
+        activePresetBase = preset
+        activePresetName = preset.PresetName
+
+        self.scaleOffsetCents = ITablaProPreset.pitchNameToScaleOffsetCents(preset.PitchName)
+        self.fineTuneCents = preset.FineTuneCents
+
+        if let tb = self.tabla {
+            tb.activeTaal = preset.TaalName
+            tb.activeVariation = preset.StyleName
+            tb.tempoBPM = preset.Tempo
+            tb.volume = preset.TablaGain
+            tb.useSurTabla = preset.UseSurTabla
+        }
 
         if let t1 = self.tanpura1 {
-            t1.volume = settings.tanpura1.volume
-            t1.isMuted = settings.tanpura1.isMuted
-            t1.firstStringPitch = settings.tanpura1.firstStringPitch
+            t1.volume = preset.Tanpura1Gain
+            t1.firstStringPitch = ITablaProPreset.stringNameToCents(preset.Tanpura1FirstString)
         }
+
         if let t2 = self.tanpura2 {
-            t2.volume = settings.tanpura2.volume
-            t2.isMuted = settings.tanpura2.isMuted
-            t2.firstStringPitch = settings.tanpura2.firstStringPitch
+            t2.volume = preset.Tanpura2Gain
+            t2.firstStringPitch = ITablaProPreset.stringNameToCents(preset.Tanpura2FirstString)
         }
-        if let tb = self.tabla {
-            tb.activeTaal = settings.tabla.activeTaal
-            tb.activeVariation = settings.tabla.activeVariation
-            tb.tempoBPM = settings.tabla.tempoBPM
-            tb.volume = settings.tabla.volume
-            tb.isMuted = settings.tabla.isMuted
-            tb.useSurTabla = settings.tabla.useSurTabla
-        }
+
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
             self.isApplyingPreset = false
         }
     }
 
     private var isApplyingPreset = false
+    private var lastMusicalSnapshot: (Double, Double, Double, Double, String, String, Double)? = nil
 
     private func setupAutosavePipeline() {
         objectWillChange
             .debounce(for: .milliseconds(500), scheduler: RunLoop.main)
             .sink { [weak self] _ in
                 guard let self = self else { return }
+
+                let currentSnapshot = (
+                    self.scaleOffsetCents,
+                    self.fineTuneCents,
+                    self.tanpura1?.firstStringPitch ?? 700.0,
+                    self.tanpura2?.firstStringPitch ?? 1200.0,
+                    self.tabla?.activeTaal ?? "",
+                    self.tabla?.activeVariation ?? "",
+                    self.tabla?.tempoBPM ?? 100.0
+                )
+
                 if !self.isApplyingPreset && self.activePresetName != nil {
-                    self.activePresetName = nil
+                    if let last = self.lastMusicalSnapshot,
+                       (last.0 != currentSnapshot.0 || last.1 != currentSnapshot.1 ||
+                        last.2 != currentSnapshot.2 || last.3 != currentSnapshot.3 ||
+                        last.4 != currentSnapshot.4 || last.5 != currentSnapshot.5 ||
+                        last.6 != currentSnapshot.6) {
+                        self.activePresetName = nil
+                    }
                 }
-                let current = self.captureSettings()
+                self.lastMusicalSnapshot = currentSnapshot
+
+                let current = self.capturePreset()
                 Task.detached(priority: .utility) {
                     await SettingsStorageService.shared.saveActiveSettings(current)
                 }

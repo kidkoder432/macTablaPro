@@ -231,7 +231,7 @@ struct MixerCardView: View {
                     Image(systemName: "speaker.fill").font(.caption).foregroundColor(isAntique ? Color.orange : .secondary)
                     Slider(value: $audio.masterVolume, in: 0.0...1.0) { isEditing in
                         if !isEditing {
-                            let snapshot = audio.captureSettings()
+                            let snapshot = audio.capturePreset()
                             Task.detached(priority: .utility) {
                                 await SettingsStorageService.shared.saveActiveSettings(snapshot)
                             }
@@ -330,7 +330,7 @@ struct MixerChannelRow: View {
             // Volume Slider
             Slider(value: $instrument.volume, in: 0.0...1.0) { isEditing in
                 if !isEditing {
-                    let snapshot = instrument.orchestrator.captureSettings()
+                    let snapshot = instrument.orchestrator.capturePreset()
                     Task.detached(priority: .utility) {
                         await SettingsStorageService.shared.saveActiveSettings(snapshot)
                     }
@@ -1105,12 +1105,20 @@ struct LiquidGlassDisplay<Content: View>: View {
 // MARK: - Left Presets Translucent Glass Drawer View
 struct PresetsDrawerView: View {
     @ObservedObject var audio: AppAudioOrchestrator
-    @State private var presetNames: [String] = []
+    @State private var presetsList: [ITablaProPreset] = []
+    @State private var searchFilter: String = ""
     @State private var newPresetName: String = ""
     @State private var isShowingSaveField = false
 
+    var filteredPresets: [ITablaProPreset] {
+        if searchFilter.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return presetsList
+        }
+        return presetsList.filter { $0.PresetName.localizedCaseInsensitiveContains(searchFilter) }
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 14) {
             HStack {
                 Text("Workstation Presets")
                     .font(.headline)
@@ -1128,39 +1136,72 @@ struct PresetsDrawerView: View {
                 .buttonStyle(.plain)
             }
 
+            // Search Bar Filter
+            HStack {
+                Image(systemName: "magnifyingglass")
+                    .foregroundColor(.secondary)
+                    .font(.caption)
+                TextField("Filter presets...", text: $searchFilter)
+                    .textFieldStyle(.plain)
+                    .font(.caption)
+                if !searchFilter.isEmpty {
+                    Button(action: { searchFilter = "" }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 5)
+            .background(Color(NSColor.controlBackgroundColor).opacity(0.5), in: RoundedRectangle(cornerRadius: 8))
+
             Divider()
 
-            // Presets List
-            if presetNames.isEmpty {
-                Text("No user presets saved yet.")
+            // Presets Scroll List
+            if filteredPresets.isEmpty {
+                Text("No matching presets found.")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                     .padding(.vertical, 8)
             } else {
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 8) {
-                        ForEach(presetNames, id: \.self) { name in
-                            let isActive = (audio.activePresetName == name)
-                            HStack(spacing: 8) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        ForEach(filteredPresets) { preset in
+                            let isActive = (audio.activePresetName == preset.PresetName)
+                            HStack(spacing: 6) {
+                                // Favorite Star Toggle
                                 Button(action: {
                                     Task {
-                                        if let settings = await SettingsStorageService.shared.loadPreset(name: name) {
-                                            await SettingsStorageService.shared.saveActiveSettings(settings)
-                                            audio.applySettings(settings)
-                                            audio.activePresetName = name
-                                        }
+                                        await SettingsStorageService.shared.toggleFavorite(presetName: preset.PresetName)
+                                        await refreshPresetsList()
+                                    }
+                                }) {
+                                    Image(systemName: preset.IsFavorite ? "star.fill" : "star")
+                                        .font(.caption)
+                                        .foregroundColor(preset.IsFavorite ? .yellow : .secondary.opacity(0.5))
+                                }
+                                .buttonStyle(.plain)
+
+                                // Apply Preset Button
+                                Button(action: {
+                                    audio.applyPreset(preset)
+                                    Task {
+                                        await SettingsStorageService.shared.saveActiveSettings(preset)
                                     }
                                 }) {
                                     HStack {
                                         Image(systemName: isActive ? "checkmark.circle.fill" : "circle")
                                             .foregroundColor(isActive ? (audio.isAntiqueThemeEnabled ? .orange : .accentColor) : .secondary)
-                                        Text(name)
+                                        Text(preset.PresetName)
                                             .font(.system(size: 13, weight: isActive ? .bold : .medium))
                                             .foregroundColor(isActive ? .primary : .secondary)
+                                            .lineLimit(1)
                                         Spacer()
                                     }
-                                    .padding(.vertical, 6)
-                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 5)
+                                    .padding(.horizontal, 8)
                                     .background(
                                         RoundedRectangle(cornerRadius: 8)
                                             .fill(isActive ?
@@ -1175,18 +1216,19 @@ struct PresetsDrawerView: View {
                                 }
                                 .buttonStyle(.plain)
 
+                                // Delete Preset Button
                                 Button(action: {
                                     Task {
-                                        await SettingsStorageService.shared.deletePreset(name: name)
-                                        if audio.activePresetName == name {
+                                        await SettingsStorageService.shared.deletePreset(name: preset.PresetName)
+                                        if audio.activePresetName == preset.PresetName {
                                             audio.activePresetName = nil
                                         }
                                         await refreshPresetsList()
                                     }
                                 }) {
                                     Image(systemName: "trash")
-                                        .font(.caption)
-                                        .foregroundColor(.red.opacity(0.8))
+                                        .font(.caption2)
+                                        .foregroundColor(.red.opacity(0.7))
                                 }
                                 .buttonStyle(.plain)
                                 .help("Delete Preset")
@@ -1194,12 +1236,12 @@ struct PresetsDrawerView: View {
                         }
                     }
                 }
-                .frame(maxHeight: 250)
+                .frame(maxHeight: 280)
             }
 
             Divider()
 
-            // Save Preset Controls
+            // Save Custom Preset Field
             if isShowingSaveField {
                 VStack(spacing: 8) {
                     TextField("Preset Name", text: $newPresetName)
@@ -1215,10 +1257,10 @@ struct PresetsDrawerView: View {
                         Spacer()
 
                         Button("Save") {
-                            let snapshot = audio.captureSettings()
-                            let name = newPresetName
+                            let name = newPresetName.trimmingCharacters(in: .whitespacesAndNewlines)
+                            let snapshot = audio.capturePreset(name: name)
                             Task {
-                                await SettingsStorageService.shared.savePreset(name: name, settings: snapshot)
+                                await SettingsStorageService.shared.savePreset(snapshot)
                                 audio.activePresetName = name
                                 await refreshPresetsList()
                                 isShowingSaveField = false
@@ -1237,13 +1279,49 @@ struct PresetsDrawerView: View {
                         Image(systemName: "plus.circle.fill")
                         Text("Save Current as Preset")
                     }
-                    .font(.system(size: 13, weight: .medium))
+                    .font(.system(size: 12, weight: .medium))
                 }
                 .buttonStyle(.bordered)
             }
+
+            // Finder & Reset Utility Buttons
+            HStack(spacing: 8) {
+                Button(action: {
+                    Task {
+                        await SettingsStorageService.shared.openPresetsFolderInFinder()
+                    }
+                }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "folder.fill")
+                        Text("Reveal in Finder")
+                    }
+                    .font(.system(size: 11, weight: .regular))
+                }
+                .buttonStyle(.plain)
+                .foregroundColor(.secondary)
+                .help("Open Application Support folder containing presets.json to share")
+
+                Spacer()
+
+                Button(action: {
+                    Task {
+                        await SettingsStorageService.shared.resetPresetsToDefault()
+                        await refreshPresetsList()
+                    }
+                }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "arrow.counterclockwise")
+                        Text("Reset Defaults")
+                    }
+                    .font(.system(size: 11, weight: .regular))
+                }
+                .buttonStyle(.plain)
+                .foregroundColor(.orange.opacity(0.8))
+                .help("Restore factory presets.json from app bundle")
+            }
         }
-        .padding(20)
-        .frame(width: 280)
+        .padding(16)
+        .frame(width: 300)
         .background(
             RoundedRectangle(cornerRadius: 16)
                 .fill(.ultraThinMaterial)
@@ -1263,7 +1341,7 @@ struct PresetsDrawerView: View {
     }
 
     private func refreshPresetsList() async {
-        let list = await SettingsStorageService.shared.listPresetNames()
-        self.presetNames = list
+        let container = await SettingsStorageService.shared.loadAllPresetsContainer()
+        self.presetsList = container.objects
     }
 }

@@ -5,6 +5,7 @@
 
 import Foundation
 import Combine
+import AppKit
 
 // MARK: - 1. Strongly Typed Codable State Models
 
@@ -55,75 +56,127 @@ actor SettingsStorageService {
         appSupportURL.appendingPathComponent("active_settings.json")
     }
 
-    private var presetsDirectoryURL: URL {
-        let dir = appSupportURL.appendingPathComponent("Presets", isDirectory: true)
-        if !fileManager.fileExists(atPath: dir.path) {
-            try? fileManager.createDirectory(at: dir, withIntermediateDirectories: true)
-        }
-        return dir
+    var userPresetsFileURL: URL {
+        appSupportURL.appendingPathComponent("presets.json")
     }
 
-    // MARK: Active Settings Operations
+    init() {
+        ensureUserPresetsExist()
+    }
 
-    func loadActiveSettings() -> WorkstationSettings {
+    // MARK: - Initial Bundle Copy & Setup
+
+    nonisolated private func ensureUserPresetsExist() {
+        let fm = FileManager.default
+        let urls = fm.urls(for: .applicationSupportDirectory, in: .userDomainMask)
+        let dir = urls[0].appendingPathComponent("macTablaPro", isDirectory: true)
+        if !fm.fileExists(atPath: dir.path) {
+            try? fm.createDirectory(at: dir, withIntermediateDirectories: true)
+        }
+        let presetsURL = dir.appendingPathComponent("presets.json")
+        if !fm.fileExists(atPath: presetsURL.path) {
+            if let bundledURL = Bundle.main.url(forResource: "presets", withExtension: "json") {
+                try? fm.copyItem(at: bundledURL, to: presetsURL)
+                print("📁 Copied bundled presets.json to Application Support.")
+            }
+        }
+    }
+
+    func resetPresetsToDefault() {
+        if fileManager.fileExists(atPath: userPresetsFileURL.path) {
+            try? fileManager.removeItem(at: userPresetsFileURL)
+        }
+        ensureUserPresetsExist()
+    }
+
+    func openPresetsFolderInFinder() {
+        ensureUserPresetsExist()
+        let fileURL = userPresetsFileURL
+        let parentURL = appSupportURL
+        Task { @MainActor in
+            NSWorkspace.shared.selectFile(fileURL.path, inFileViewerRootedAtPath: parentURL.path)
+        }
+    }
+
+    // MARK: - Active Settings Operations
+
+    func loadActiveSettings() -> ITablaProPreset {
         guard fileManager.fileExists(atPath: activeSettingsURL.path),
             let data = try? Data(contentsOf: activeSettingsURL),
-            let decoded = try? JSONDecoder().decode(WorkstationSettings.self, from: data) else {
-            let defaults = WorkstationSettings()
+            let decoded = try? JSONDecoder().decode(ITablaProPreset.self, from: data) else {
+            let defaults = ITablaProPreset.defaultPreset
             saveActiveSettings(defaults)
             return defaults
         }
         return decoded
     }
 
-    func saveActiveSettings(_ settings: WorkstationSettings) {
+    func saveActiveSettings(_ preset: ITablaProPreset) {
         do {
             let encoder = JSONEncoder()
             encoder.outputFormatting = .prettyPrinted
-            let data = try encoder.encode(settings)
+            let data = try encoder.encode(preset)
             try data.write(to: activeSettingsURL, options: .atomic)
         } catch {
             print("❌ Background I/O Failure: Failed to write active settings: \(error)")
         }
     }
 
-    // MARK: Presets Operations
+    // MARK: - Presets Container Operations (presets.json)
 
-    func listPresetNames() -> [String] {
-        guard let files = try? fileManager.contentsOfDirectory(atPath: presetsDirectoryURL.path) else {
-            return []
+    func loadAllPresetsContainer() -> ITablaProPresetsContainer {
+        ensureUserPresetsExist()
+        guard fileManager.fileExists(atPath: userPresetsFileURL.path),
+            let data = try? Data(contentsOf: userPresetsFileURL),
+            let container = try? JSONDecoder().decode(ITablaProPresetsContainer.self, from: data) else {
+            return ITablaProPresetsContainer(keys: [], objects: [])
         }
-        return files
-            .filter { $0.hasSuffix(".json") }
-            .map { String($0.dropLast(5)) }
-            .sorted()
+        return container
     }
 
-    func savePreset(name: String, settings: WorkstationSettings) {
-        let sanitizeName = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !sanitizeName.isEmpty else { return }
-        let presetURL = presetsDirectoryURL.appendingPathComponent("\(sanitizeName).json")
+    func savePresetsContainer(_ container: ITablaProPresetsContainer) {
         do {
             let encoder = JSONEncoder()
             encoder.outputFormatting = .prettyPrinted
-            let data = try encoder.encode(settings)
-            try data.write(to: presetURL, options: .atomic)
+            let data = try encoder.encode(container)
+            try data.write(to: userPresetsFileURL, options: .atomic)
         } catch {
-            print("❌ Background I/O Failure: Failed to save preset '\(name)': \(error)")
+            print("❌ Background I/O Failure: Failed to write presets.json: \(error)")
         }
     }
 
-    func loadPreset(name: String) -> WorkstationSettings? {
-        let presetURL = presetsDirectoryURL.appendingPathComponent("\(name).json")
-        guard let data = try? Data(contentsOf: presetURL),
-            let decoded = try? JSONDecoder().decode(WorkstationSettings.self, from: data) else {
-            return nil
+    func loadPreset(name: String) -> ITablaProPreset? {
+        let container = loadAllPresetsContainer()
+        return container.objects.first(where: { $0.PresetName == name })
+    }
+
+    func savePreset(_ preset: ITablaProPreset) {
+        var container = loadAllPresetsContainer()
+        if let index = container.objects.firstIndex(where: { $0.PresetName == preset.PresetName }) {
+            container.objects[index] = preset
+        } else {
+            container.objects.append(preset)
+            if container.keys != nil {
+                container.keys?.append(preset.PresetName)
+            } else {
+                container.keys = container.objects.map { $0.PresetName }
+            }
         }
-        return decoded
+        savePresetsContainer(container)
+    }
+
+    func toggleFavorite(presetName: String) {
+        var container = loadAllPresetsContainer()
+        if let index = container.objects.firstIndex(where: { $0.PresetName == presetName }) {
+            container.objects[index].IsFavorite.toggle()
+            savePresetsContainer(container)
+        }
     }
 
     func deletePreset(name: String) {
-        let presetURL = presetsDirectoryURL.appendingPathComponent("\(name).json")
-        try? fileManager.removeItem(at: presetURL)
+        var container = loadAllPresetsContainer()
+        container.objects.removeAll(where: { $0.PresetName == name })
+        container.keys?.removeAll(where: { $0 == name })
+        savePresetsContainer(container)
     }
 }
