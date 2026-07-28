@@ -167,25 +167,19 @@ class AppAudioOrchestrator: ObservableObject {
             tb.tempoBPM = preset.Tempo
             tb.volume = preset.TablaGain
             tb.useSurTabla = preset.UseSurTabla
-            if preset.TablaOn != tb.isPlaying {
-                tb.togglePlay()
-            }
+            tb.startPlay()
         }
 
         if let t1 = self.tanpura1 {
             t1.volume = preset.Tanpura1Gain
             t1.firstStringPitch = ITablaProPreset.stringNameToCents(preset.Tanpura1FirstString)
-            if preset.Tanpura1On != t1.isPlaying {
-                t1.togglePlay()
-            }
+            t1.startPlay()
         }
 
         if let t2 = self.tanpura2 {
             t2.volume = preset.Tanpura2Gain
             t2.firstStringPitch = ITablaProPreset.stringNameToCents(preset.Tanpura2FirstString)
-            if preset.Tanpura2On != t2.isPlaying {
-                t2.togglePlay()
-            }
+            t2.startPlay()
         }
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {

@@ -34,13 +34,23 @@ class Instrument: ObservableObject, Identifiable {
         
     }
     
+    func startPlay() {
+        guard !isPlaying else { return }
+        isPlaying = true
+        clock.start(stepsCount: 5)
+    }
+
+    func stopPlay() {
+        guard isPlaying else { return }
+        isPlaying = false
+        clock.stop()
+    }
+
     func togglePlay() {
-        isPlaying.toggle()
         if isPlaying {
-            clock.start(stepsCount: 5)
+            stopPlay()
         } else {
-            clock.stop()
-//            voicePool.stopAll()
+            startPlay()
         }
     }
     
