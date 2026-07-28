@@ -765,7 +765,8 @@ struct TablaCardView: View {
                                 }
                             }) {
                                 HStack {
-                                    Text("\(taal.name) (\(Int(taal.matras)))")
+                                    let matraStr = taal.matras.formatted(.number.precision(.fractionLength(0...2)))
+                                    Text("\(taal.name) (\(matraStr))")
                                     if tabla.activeTaal == taal.name {
                                         Image(systemName: "checkmark")
                                     }
@@ -774,7 +775,9 @@ struct TablaCardView: View {
                         }
                     } label: {
                         HStack(spacing: 4) {
-                            Text("\(tabla.activeTaal) (\(Int(database.taalCatalog[tabla.activeTaal]?.matras ?? 16)))")
+                            let matraStr = (database.taalCatalog[tabla.activeTaal]?.matras ?? 16.0).formatted(.number.precision(.fractionLength(0...2)))
+
+                            Text("\(tabla.activeTaal) (\(matraStr))")
                                 .font(.system(size: 12, weight: .medium))
                                 .foregroundColor(isAntique ? Color.orange : .primary)
                             Image(systemName: "chevron.up.chevron.down")
@@ -869,13 +872,25 @@ struct TablaCardView: View {
                                 
                                 Spacer()
 
-                                // Top-Center: Quarter Matra Sub-Beat Dots (for Ati-Vilambit & Vilambit)
-                                if tabla.isPlaying && tabla.currentTempoTier() <= 1 && tabla.currentMatraSubStep > 0 {
-                                    let dotsCount = min(4, tabla.currentMatraSubStep)
-                                    Text(String(repeating: "• ", count: dotsCount).trimmingCharacters(in: .whitespaces))
-                                        .font(.system(size: 12, weight: .bold))
-                                        .foregroundColor(isAntique ? Color.yellow : Color.cyan)
-                                        .shadow(color: isAntique ? Color.yellow.opacity(0.8) : Color.cyan.opacity(0.6), radius: 3)
+                                // Top-Center: 4 Evenly Spaced Quarter-Matra Dots (STRICTLY for Ati-Vilambit, Tier 0)
+                                if tabla.isPlaying && tabla.currentTempoTier() == 0 {
+                                    HStack(spacing: 4) {
+                                        ForEach(1...4, id: \.self) { dotIndex in
+                                            Circle()
+                                                .fill(
+                                                    dotIndex <= ((tabla.currentMatraSubStep - 1) % 4 + 1)
+                                                    ? (isAntique ? Color.yellow : Color.cyan)
+                                                    : (isAntique ? Color.yellow.opacity(0.2) : Color.white.opacity(0.15))
+                                                )
+                                                .frame(width: 4, height: 4)
+                                                .shadow(
+                                                    color: dotIndex <= ((tabla.currentMatraSubStep - 1) % 4 + 1)
+                                                    ? (isAntique ? Color.yellow.opacity(0.8) : Color.cyan.opacity(0.8))
+                                                    : .clear,
+                                                    radius: 2
+                                                )
+                                        }
+                                    }
                                 }
 
                                 Spacer()
