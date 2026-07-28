@@ -164,38 +164,6 @@ class Tabla: Instrument {
         }
     }
 
-    private var subBeatClockTask: Task<Void, Never>?
-
-    private func startSubBeatClock() {
-        subBeatClockTask?.cancel()
-        subBeatClockTask = Task {
-            var lastMatra = self.currentMatra
-            while !Task.isCancelled {
-                let startNano = DispatchTime.now().uptimeNanoseconds
-                await MainActor.run {
-                    if self.currentMatra != lastMatra {
-                        lastMatra = self.currentMatra
-                        self.currentMatraSubStep = 0
-                    } else {
-                        self.currentMatraSubStep = (self.currentMatraSubStep + 1) % 4
-                    }
-                }
-                
-                let bpm = max(10.0, self.tempoBPM)
-                let quarterBeatSec = (60.0 / bpm) * 0.25
-                let targetNanos = UInt64(quarterBeatSec * 1_000_000_000)
-                let elapsedNanos = DispatchTime.now().uptimeNanoseconds - startNano
-                let sleepNanos = targetNanos > elapsedNanos ? (targetNanos - elapsedNanos) : 0
-                try? await Task.sleep(nanoseconds: sleepNanos)
-            }
-        }
-    }
-
-    private func stopSubBeatClock() {
-        subBeatClockTask?.cancel()
-        subBeatClockTask = nil
-    }
-
     override func togglePlay() {
         isPlaying.toggle()
         if isPlaying {
@@ -206,10 +174,8 @@ class Tabla: Instrument {
             lastExecutedTier = currentTempoTier()
             let steps = getTimelineCount()
             clock.start(stepsCount: steps)
-            startSubBeatClock()
         } else {
             clock.stop()
-            stopSubBeatClock()
         }
     }
 
@@ -233,6 +199,8 @@ class Tabla: Instrument {
         if self.currentMatra != event.matra {
             self.currentMatra = event.matra
             self.currentMatraSubStep = 0
+        } else {
+            self.currentMatraSubStep = (self.currentMatraSubStep + 1) % 4
         }
         self.currentBolName = event.bolName ?? ""
 
