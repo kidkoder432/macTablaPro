@@ -169,18 +169,16 @@ class Tabla: Instrument {
     private func startSubBeatClock() {
         subBeatClockTask?.cancel()
         subBeatClockTask = Task {
-            var subIndex = 0
             var lastMatra = self.currentMatra
             while !Task.isCancelled {
                 let startNano = DispatchTime.now().uptimeNanoseconds
                 await MainActor.run {
                     if self.currentMatra != lastMatra {
                         lastMatra = self.currentMatra
-                        subIndex = 0
+                        self.currentMatraSubStep = 0
                     } else {
-                        subIndex = (subIndex + 1) % 4
+                        self.currentMatraSubStep = (self.currentMatraSubStep + 1) % 4
                     }
-                    self.currentMatraSubStep = subIndex
                 }
                 
                 let bpm = max(10.0, self.tempoBPM)
@@ -232,7 +230,10 @@ class Tabla: Instrument {
         self.currentStepIndex = safeIndex
 
         let event = timeline[safeIndex]
-        self.currentMatra = event.matra
+        if self.currentMatra != event.matra {
+            self.currentMatra = event.matra
+            self.currentMatraSubStep = 0
+        }
         self.currentBolName = event.bolName ?? ""
 
         // Execute Left Hand (Bayan)
