@@ -163,11 +163,11 @@ extension ITablaProPreset {
         case "Ni Komal": return 1000.0
         case "Ni": return 1100.0
         case "Sa": return 1200.0
-        case "High Re Komal": return 1300.0
-        case "High Re": return 1400.0
-        case "High Ga Komal": return 1500.0
-        case "High Ga": return 1600.0
-        case "High Ma": return 1700.0
+        case "Re Higher Komal": return 1300.0
+        case "Re Higher": return 1400.0
+        case "Ga Higher Komal": return 1500.0
+        case "Ga Higher": return 1600.0
+        case "Ma Higher": return 1700.0
         default: return 700.0
         }
     }
@@ -189,11 +189,11 @@ extension ITablaProPreset {
         case 1000: return "Ni Komal"
         case 1100: return "Ni"
         case 1200: return "Sa"
-        case 1300: return "High Re Komal"
-        case 1400: return "High Re"
-        case 1500: return "High Ga Komal"
-        case 1600: return "High Ga"
-        case 1700: return "High Ma"
+        case 1300: return "Re Higher Komal"
+        case 1400: return "Re Higher"
+        case 1500: return "Ga Higher Komal"
+        case 1600: return "Ga Higher"
+        case 1700: return "Ma Higher"
         default: return "Pa"
         }
     }

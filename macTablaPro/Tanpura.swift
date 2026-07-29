@@ -128,7 +128,7 @@ class Tanpura: Instrument {
             
             if let sampleToPlay = sampleRegistry["Tanpura_" + sampleName] {
                 print("Playing sample: \(sampleToPlay.fileName) at pitch \(totalInstrumentTuning + step.pitch)")
-                self.voicePool.play(
+                let _ = self.voicePool.play(
                     sample: sampleToPlay,
                     // 👈 Apply the master workspace combined pitch dynamically!
                     targetPitchCents: totalInstrumentTuning + step.pitch,

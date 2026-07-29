@@ -5,7 +5,7 @@
 //  Created for Offline Buffer Resampling Engine
 //
 
-import AVFoundation
+@preconcurrency import AVFoundation
 import Foundation
 
 enum ResamplingError: Error {

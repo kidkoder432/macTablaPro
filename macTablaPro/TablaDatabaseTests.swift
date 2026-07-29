@@ -3,6 +3,7 @@ import AVFoundation
 
 @testable import macTablaPro
 
+@MainActor
 final class TablaDatabaseTests: XCTestCase {
 
     var database: TablaDatabase!

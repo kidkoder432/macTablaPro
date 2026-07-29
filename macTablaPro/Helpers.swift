@@ -15,11 +15,11 @@ let tanpuraNotes: [String: Double] = [
 
     // --- Higher Octave ---
     "Sa": 1200.0,  // Middle Sa
-    "High Re Komal": 1300.0,
-    "High Re": 1400.0,
-    "High Ga Komal": 1500.0,
-    "High Ga": 1600.0,
-    "High Ma": 1700.0,
+    "Re Higher Komal": 1300.0,
+    "Re Higher": 1400.0,
+    "Ga Higher Komal": 1500.0,
+    "Ga Higher": 1600.0,
+    "Ma Higher": 1700.0,
 ]
 
 enum TanpuraSeqElem {
