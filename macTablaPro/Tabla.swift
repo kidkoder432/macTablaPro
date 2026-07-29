@@ -190,13 +190,14 @@ class Tabla: Instrument {
         // Calculate current matra (1-indexed) and sub-pulse index within beat
         let pulseWithinBeat = stepIndex % subs
         let calculatedMatra = (stepIndex / subs) + 1
-        self.currentMatra = calculatedMatra
-        
-        // Quarter-matra index (0, 1, 2, 3) mapped from pulse position
-        self.currentMatraSubStep = (pulseWithinBeat * 4) / subs
+        let subStep = (pulseWithinBeat * 4) / subs
         
         let timeline = resolveActiveTimeline()
         guard !timeline.isEmpty else {
+            Task { @MainActor in
+                self.currentMatra = calculatedMatra
+                self.currentMatraSubStep = subStep
+            }
             return stepFraction
         }
 
@@ -205,10 +206,21 @@ class Tabla: Instrument {
         let halfStep = stepFraction * 0.5
         
         guard let event = timeline.first(where: { abs($0.startBeatFraction - pulseBeatTime) < halfStep }) else {
+            Task { @MainActor in
+                self.currentMatra = calculatedMatra
+                self.currentMatraSubStep = subStep
+            }
             return stepFraction
         }
 
-        self.currentBolName = event.bolName ?? self.currentBolName
+        let newBol = event.bolName
+        Task { @MainActor in
+            self.currentMatra = calculatedMatra
+            self.currentMatraSubStep = subStep
+            if let b = newBol {
+                self.currentBolName = b
+            }
+        }
 
         // Execute Left Hand (Bayan)
         if let leftSample = event.leftSampleName,

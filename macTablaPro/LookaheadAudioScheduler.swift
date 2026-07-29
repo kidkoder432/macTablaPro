@@ -7,19 +7,20 @@
 
 import AVFoundation
 import Darwin
+import AVFoundation
+import Darwin
 import Foundation
 
-@MainActor
 class LookaheadAudioScheduler {
     private var schedulerTask: Task<Void, Never>?
     private let tickCallback: (Int, AVAudioTime) -> Double
-    private let getBPM: () -> Double
+    private let getBPM: @Sendable () -> Double
 
     /// The lookahead window duration in seconds (100ms)
     let lookaheadWindowSec: Double = 0.100
 
     init(
-        getBPM: @escaping () -> Double,
+        getBPM: @escaping @Sendable () -> Double,
         onTick: @escaping (Int, AVAudioTime) -> Double
     ) {
         self.getBPM = getBPM
@@ -67,12 +68,10 @@ class LookaheadAudioScheduler {
                     if Task.isCancelled {
                         return
                     }
-                    let durationFraction = await MainActor.run {
-                        tickCallback(
-                            stepIndex,
-                            AVAudioTime(hostTime: currentTicks)
-                        )
-                    }
+                    let durationFraction = tickCallback(
+                        stepIndex,
+                        AVAudioTime(hostTime: currentTicks)
+                    )
                     let safeFraction =
                         durationFraction > 0 ? durationFraction : 1.0
 

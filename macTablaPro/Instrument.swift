@@ -30,7 +30,18 @@ class Instrument: ObservableObject, Identifiable {
         self.voicePool = voicePool
         self.sampleRegistry = registry
         
-        self.clock = LookaheadAudioScheduler(getBPM: { [weak self] in return self?.tempoBPM ?? 100.0 }, onTick: self.executeSequenceTick)
+        self.clock = LookaheadAudioScheduler(
+            getBPM: { [weak self] in
+                MainActor.assumeIsolated {
+                    self?.tempoBPM ?? 100.0
+                }
+            },
+            onTick: { [weak self] stepIndex, time in
+                MainActor.assumeIsolated {
+                    self?.executeSequenceTick(stepIndex: stepIndex, time: time) ?? 1.0
+                }
+            }
+        )
         
     }
     
