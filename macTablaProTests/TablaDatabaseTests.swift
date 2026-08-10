@@ -42,7 +42,7 @@ final class TablaDatabaseTests: XCTestCase {
     func testSampleRegistryAssetCoverage() throws {
         var missingAssets: [String] = []
         var totalEventsTested = 0
-
+        print(allWavFileNames)
         for (taalName, taalDef) in database.taalCatalog {
             for (styleName, variation) in taalDef.variations {
                 for (tierIndex, timeline) in variation.timelinesByTempoTier {
@@ -57,20 +57,22 @@ final class TablaDatabaseTests: XCTestCase {
                             }
                         }
 
-                        // Test Dayan (Right hand) - Check default pitch C#
+                        // Test Dayan (Right hand) - Check default pitch C# (Sur and Tip variants individually)
                         if let right = event.rightSampleName {
                             let rightKeySur = "Dayaan_C#_Sur_" + right
                             let rightKeyTip = "Dayaan_C#_Tip_" + right
                             
-                            if !allWavFileNames.contains(rightKeySur) && !allWavFileNames.contains(rightKeyTip) && !allWavFileNames.contains("Dayaan_C#_" + right) {
-                                missingAssets.append("Missing Right Sample: '\(rightKeyTip)' or '\(rightKeySur)' [Taal: \(taalName), Style: \(styleName), Tier: \(tierIndex), Matra: \(event.matra)]")
+                            if !allWavFileNames.contains(rightKeySur) {
+                                missingAssets.append("Missing Right Sur Sample: '\(rightKeySur)' [Taal: \(taalName), Style: \(styleName), Tier: \(tierIndex), Matra: \(event.matra)]")
+                            }
+                            if !allWavFileNames.contains(rightKeyTip) {
+                                missingAssets.append("Missing Right Tip Sample: '\(rightKeyTip)' [Taal: \(taalName), Style: \(styleName), Tier: \(tierIndex), Matra: \(event.matra)]")
                             }
                             
                             let Gskey = "Dayaan_G#_" + right
-                            if (!allWavFileNames.contains(Gskey)) {
-                                missingAssets.append("Missing Right Sample: '\(Gskey)' [Taal: \(taalName), Style: \(styleName), Tier: \(tierIndex), Matra: \(event.matra)]")
+                            if !allWavFileNames.contains(Gskey) {
+                                missingAssets.append("Missing Right G# Sample: '\(Gskey)' [Taal: \(taalName), Style: \(styleName), Tier: \(tierIndex), Matra: \(event.matra)]")
                             }
-                            
                         }
                     }
                 }
@@ -107,4 +109,24 @@ final class TablaDatabaseTests: XCTestCase {
         }
         XCTAssertEqual(saSample.absolutePitch, 1300.0, "❌ Tanpura_C#3_Sa pitch corrupted")
     }
+
+    // MARK: - 4. Dual Drum Compound Bol Resolution
+    func testDualDrumCompoundBolResolution() throws {
+        guard let ektaal = database.taalCatalog["Ektaal"] else {
+            XCTFail("❌ Ektaal missing from database catalog")
+            return
+        }
+        
+        var foundEvent = false
+        for (_, variation) in ektaal.variations {
+            for (_, timeline) in variation.timelinesByTempoTier {
+                if timeline.contains(where: { $0.leftSampleName == "Ge-B" && $0.rightSampleName == "TinMed" }) {
+                    foundEvent = true
+                    break
+                }
+            }
+        }
+        XCTAssertTrue(foundEvent, "❌ Onset event for Ge-S + TinMed should exist with left=Ge and right=TinMed")
+    }
 }
+

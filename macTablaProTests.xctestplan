@@ -1,0 +1,30 @@
+{
+  "configurations" : [
+    {
+      "id" : "BBC5706D-6B18-425B-8054-74D5A7DF9047",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "performanceAntipatternCheckerEnabled" : true,
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:macTablaPro.xcodeproj",
+      "identifier" : "41EBFEC63006E94F0013DADD",
+      "name" : "macTablaPro"
+    }
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : true,
+      "target" : {
+        "containerPath" : "container:macTablaPro.xcodeproj",
+        "identifier" : "41C814F63011360100F7B13A",
+        "name" : "macTablaProTests"
+      }
+    }
+  ],
+  "version" : 1
+}

@@ -16,8 +16,8 @@ struct SubStrokeRecipe {
 /// Value: Recipe specifying duration split ratios and single-stroke sample names.
 let compoundBolTuningMap: [String: SubStrokeRecipe] = [
     "KDa": SubStrokeRecipe(
-        ratio1: 0.25, left1: "Ka", right1: nil,
-        ratio2: 0.75, left2: nil, right2: "Din"
+        ratio1: 0.125, left1: "Ka", right1: nil,
+        ratio2: 0.875, left2: nil, right2: "Din"
     ),
     "TaKa": SubStrokeRecipe(
         ratio1: 0.50, left1: nil, right1: "Ta",
@@ -34,6 +34,10 @@ let compoundBolTuningMap: [String: SubStrokeRecipe] = [
     "TiTaL": SubStrokeRecipe(
         ratio1: 0.50, left1: nil, right1: "TiL",
         ratio2: 0.50, left2: nil, right2: "TTaL"
+    ),
+    "Ge-S": SubStrokeRecipe(
+        ratio1: 2/3, left1: "Ge-B", right1: nil,
+        ratio2: 1/3, left2: "Ge-T60", right2: nil
     )
 ]
 
@@ -206,24 +210,36 @@ class TablaDatabase {
             let rightVol = Float(row["volRight"] ?? "1.0") ?? 1.0
             let originalBolName = row["bolName"]
             
-            let targetKey = rightSample ?? leftSample ?? ""
+            var recipe: SubStrokeRecipe? = nil
+            var recipeKey: String? = nil
+            
+            if let left = leftSample, !left.isEmpty, let r = compoundBolTuningMap[left] {
+                recipe = r
+                recipeKey = left
+            } else if let right = rightSample, !right.isEmpty, let r = compoundBolTuningMap[right] {
+                recipe = r
+                recipeKey = right
+            }
             
             // Calculate starting beat fraction for this CSV row
             let firstTier = validTiers[0]
             let firstKey = "\(taalName)_\(styleName)_\(firstTier)"
             let rowStartBeat = accumulatedBeats[firstKey] ?? max(0.0, Double(matra - 1))
             
-            if let recipe = compoundBolTuningMap[targetKey] {
+            if let recipe = recipe {
                 let duration1 = totalDuration * recipe.ratio1
                 let duration2 = totalDuration * recipe.ratio2
+                
+                let effectiveLeft1 = recipe.left1 ?? (leftSample != recipeKey && leftSample?.isEmpty == false ? leftSample : nil)
+                let effectiveRight1 = recipe.right1 ?? (rightSample != recipeKey && rightSample?.isEmpty == false ? rightSample : nil)
                 
                 let event1 = TablaStrokeEvent(
                     seqNum: seqNum,
                     matra: matra,
                     startBeatFraction: rowStartBeat,
                     durationFraction: duration1,
-                    leftSampleName: recipe.left1,
-                    rightSampleName: recipe.right1,
+                    leftSampleName: effectiveLeft1,
+                    rightSampleName: effectiveRight1,
                     leftVolume: leftVol,
                     rightVolume: rightVol,
                     bolName: originalBolName
