@@ -31,15 +31,11 @@ class Instrument: ObservableObject, Identifiable {
         self.sampleRegistry = registry
         
         self.clock = LookaheadAudioScheduler(
-            getBPM: { [weak self] in
-                MainActor.assumeIsolated {
-                    self?.tempoBPM ?? 100.0
-                }
+            getBPM: { @MainActor [weak self] in
+                self?.tempoBPM ?? 100.0
             },
-            onTick: { [weak self] stepIndex, time in
-                MainActor.assumeIsolated {
-                    self?.executeSequenceTick(stepIndex: stepIndex, time: time) ?? 1.0
-                }
+            onTick: { @MainActor [weak self] stepIndex, time in
+                self?.executeSequenceTick(stepIndex: stepIndex, time: time) ?? 1.0
             }
         )
         
@@ -65,7 +61,6 @@ class Instrument: ObservableObject, Identifiable {
         }
     }
     
-    @discardableResult
     internal func executeSequenceTick(stepIndex: Int, time: AVAudioTime?) -> Double {
         print("Not implemented!")
         return 1.0

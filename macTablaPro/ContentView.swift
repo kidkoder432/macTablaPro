@@ -74,9 +74,9 @@ struct ContentView: View {
 
             // MARK: - Main Workspace (Zero-Scroll 3-Column Layout with Split Glass Overlays)
             ZStack(alignment: .top) {
-                HStack(alignment: .top, spacing: 24) {
-                    // 1. LEFT COLUMN: Tanpura 1 & 2 Cards Stacked
-                    VStack(spacing: 18) {
+                HStack(alignment: .top, spacing: 20) {
+                    // 1. LEFT COLUMN: Tanpura 1 & 2 Cards Stacked + Swar Mandal Underneath
+                    VStack(spacing: 14) {
                         if let tanpura1 = audio.tanpura1 {
                             TanpuraCardView(tanpura: tanpura1, audio: audio, title: "Tanpura 1")
                         }
@@ -84,22 +84,30 @@ struct ContentView: View {
                         if let tanpura2 = audio.tanpura2 {
                             TanpuraCardView(tanpura: tanpura2, audio: audio, title: "Tanpura 2")
                         }
+                        
+                        if let swarMandal = audio.swarMandal {
+                            SwarMandalView(swarMandal: swarMandal)
+                        }
                     }
+                    .frame(width: 340)
 
                     // 2. CENTER COLUMN: Master Pitch (Top) + Tabla Controls (Center)
-                    VStack(spacing: 20) {
+                    VStack(spacing: 14) {
                         MasterPitchView(audio: audio)
                         
                         if let tabla = audio.tabla {
                             TablaCardView(tabla: tabla)
                         }
                     }
-                    .frame(maxWidth: .infinity)
+                    .frame(width: 340)
 
                     // 3. RIGHT COLUMN: Master Mixer Hub (ALWAYS VISIBLE!)
-                    MixerCardView(audio: audio)
+                    VStack(spacing: 14) {
+                        MixerCardView(audio: audio)
+                    }
+                    .frame(width: 340)
                 }
-                .padding(24)
+                .padding(20)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
 
                 // MARK: - Left Presets Drawer Overlay
@@ -278,10 +286,14 @@ struct MixerCardView: View {
                 if let tabla = audio.tabla {
                     MixerChannelRow(name: "Tabla", instrument: tabla, isAntique: isAntique)
                 }
+                
+                if let swarMandal = audio.swarMandal {
+                    MixerChannelRow(name: "Swar Mandal", instrument: swarMandal, isAntique: isAntique)
+                }
             }
         }
         .padding(20)
-        .frame(width: 300)
+        .frame(width: 340)
         .background(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .fill(
@@ -590,7 +602,7 @@ struct TanpuraCardView: View {
             .tint(isAntique ? Color.orange : .secondary)
         }
         .padding(16)
-        .frame(width: 280)
+        .frame(width: 340)
         .background(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .fill(
@@ -1020,7 +1032,7 @@ struct TablaCardView: View {
             .tint(isAntique ? Color.orange : .secondary)
         }
         .padding(16)
-        .frame(width: 320)
+        .frame(width: 340)
         .background(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .fill(

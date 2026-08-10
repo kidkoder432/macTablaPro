@@ -30,6 +30,9 @@ class AppAudioOrchestrator: ObservableObject {
     var tabla: Tabla! {
         instruments.first(where: { $0.id == "tabla_main" }) as? Tabla
     }
+    var swarMandal: SwarMandal! {
+        instruments.first(where: { $0.id == "swar_mandal" }) as? SwarMandal
+    }
     
     @Published var scaleOffsetCents: Double = 100.0
     @Published var fineTuneCents: Double = 0.0
@@ -82,7 +85,7 @@ class AppAudioOrchestrator: ObservableObject {
         preloadAllManifestAssets()
 
         // Step 2: Spin up a shared pool of voices
-        self.voicePool = VoicePool(engine, 64)
+        self.voicePool = VoicePool(engine, 256)
 
         // Step 3: Wire up the hardware signal graph
         setupAudioGraph()
@@ -90,6 +93,7 @@ class AppAudioOrchestrator: ObservableObject {
         // Step 4: Isolate instrument registries using filtered slices of the master cache
         let tanpuraRegistry = masterSampleRegistry.filter { $0.key.contains("Tanpura_") }
         let tablaRegistry = masterSampleRegistry.filter { $0.key.contains("Bayaan_") || $0.key.contains("Dayaan_") }
+        let swarMandalRegistry = masterSampleRegistry.filter { $0.key.contains("SwarMandal_") }
 
         // Step 5: Instantiate concrete child instruments into unified registry
         let t1 = Tanpura(id: "tanpura_1", name: "Tanpura 1", orchestrator: self, voicePool: self.voicePool, registry: tanpuraRegistry)
@@ -98,8 +102,9 @@ class AppAudioOrchestrator: ObservableObject {
         t2.tempoBPM = self.sharedTanpuraBPM
 
         let tb = Tabla(id: "tabla_main", name: "Tabla", orchestrator: self, voicePool: self.voicePool, registry: tablaRegistry)
+        let sm = SwarMandal(id: "swar_mandal", name: "Swar Mandal", orchestrator: self, voicePool: self.voicePool, registry: swarMandalRegistry)
 
-        self.instruments = [t1, t2, tb]
+        self.instruments = [t1, t2, tb, sm]
         
         setupChildSubscriptions()
         let sysVol = getSystemMasterVolume()
@@ -194,6 +199,21 @@ class AppAudioOrchestrator: ObservableObject {
             }
         }
 
+        if let sm = self.swarMandal {
+            sm.volume = preset.SwarMandalGain ?? 0.25
+            if let durationSec = preset.SwarMandalLoopDuration, let opt = SwarMandalLoopOption(rawValue: durationSec) {
+                sm.loopOption = opt
+            }
+            if let notes = preset.SwarMandalNotes?.nsObjects {
+                sm.updateNotesFromPreset(notes)
+            }
+            if preset.SwarMandalOn ?? false {
+                sm.startPlay()
+            } else {
+                sm.stopPlay()
+            }
+        }
+
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
             self.isApplyingPreset = false
         }
@@ -238,7 +258,7 @@ class AppAudioOrchestrator: ObservableObject {
     }
 
     private func preloadAllManifestAssets() {
-        let totalManifest: [PitchedSample] = tanpuraManifest + tablaManifest
+        let totalManifest: [PitchedSample] = tanpuraManifest + tablaManifest + swarMandalManifest
         for sample in totalManifest {
             if masterSampleRegistry[sample.fileName] != nil {
                 print("⚠️ Centralized Audio Core Warning: Duplicate asset key '\(sample.fileName)' detected! Overwriting existing entry.")
