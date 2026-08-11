@@ -20,11 +20,68 @@ let stringPickerItems: [PickerNote] = Array(tanpuraNotes.keys)
     .sorted(by: { (tanpuraNotes[$0] ?? 0.0) < (tanpuraNotes[$1] ?? 0.0) })
     .map { PickerNote(name: $0, cents: tanpuraNotes[$0] ?? -1.0) }
 
+// MARK: - macOS Liquid Glass AppKit Bridge & View Modifiers
+
+struct VisualEffectView: NSViewRepresentable {
+    var material: NSVisualEffectView.Material = .underWindowBackground
+    var blendingMode: NSVisualEffectView.BlendingMode = .behindWindow
+
+    func makeNSView(context: Context) -> NSVisualEffectView {
+        let view = NSVisualEffectView()
+        view.material = material
+        view.blendingMode = blendingMode
+        view.state = .active
+        return view
+    }
+
+    func updateNSView(_ nsView: NSVisualEffectView, context: Context) {
+        nsView.material = material
+        nsView.blendingMode = blendingMode
+    }
+}
+
+struct LiquidGlassCardModifier: ViewModifier {
+    var isAntique: Bool = false
+    var cornerRadius: CGFloat = 18
+
+    func body(content: Content) -> some View {
+        content
+            .background(
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(.ultraThinMaterial)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .stroke(
+                        LinearGradient(
+                            colors: isAntique ?
+                                [Color.orange.opacity(0.55), Color.orange.opacity(0.2)] :
+                                [Color.white.opacity(0.45), Color.white.opacity(0.12)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1
+                    )
+            )
+            .shadow(color: Color.black.opacity(isAntique ? 0.25 : 0.18), radius: 14, x: 0, y: 6)
+    }
+}
+
+extension View {
+    func liquidGlassCard(isAntique: Bool = false, cornerRadius: CGFloat = 18) -> some View {
+        self.modifier(LiquidGlassCardModifier(isAntique: isAntique, cornerRadius: cornerRadius))
+    }
+}
+
 struct ContentView: View {
     @StateObject private var audio = AppAudioOrchestrator()
 
     var body: some View {
-        VStack(spacing: 0) {
+        ZStack {
+            VisualEffectView(material: .underWindowBackground, blendingMode: .behindWindow)
+                .ignoresSafeArea()
+
+            VStack(spacing: 0) {
             // MARK: - Master Header Bar (Integrated with macOS Traffic Lights)
             HStack(spacing: 16) {
                 // Presets Drawer Toggle Button (Left)
@@ -179,12 +236,7 @@ struct ContentView: View {
                     }
                     .padding(20)
                     .frame(width: 280)
-                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .stroke(Color.white.opacity(0.2), lineWidth: 1)
-                    )
-                    .shadow(color: Color.black.opacity(0.15), radius: 12, x: -2, y: 4)
+                    .liquidGlassCard(isAntique: audio.isAntiqueThemeEnabled, cornerRadius: 20)
                     .padding(.trailing, 24)
                     .padding(.top, 24)
                 }
@@ -192,8 +244,7 @@ struct ContentView: View {
                 // MARK: - Launch Blurry Loading Overlay
                 if audio.isAppLoading {
                     ZStack {
-                        Rectangle()
-                            .fill(.ultraThinMaterial)
+                        VisualEffectView(material: .fullScreenUI, blendingMode: .behindWindow)
                             .ignoresSafeArea()
                         
                         VStack(spacing: 16) {
@@ -206,15 +257,14 @@ struct ContentView: View {
                                 .foregroundColor(.primary)
                         }
                         .padding(28)
-                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18))
-                        .shadow(color: .black.opacity(0.3), radius: 15, x: 0, y: 8)
+                        .liquidGlassCard(isAntique: audio.isAntiqueThemeEnabled, cornerRadius: 22)
                     }
                     .transition(.opacity)
                 }
             }
         }
+        }
         .frame(minWidth: 1050, idealWidth: 1150, minHeight: 650)
-        .background(Color(NSColor.windowBackgroundColor))
     }
 }
 
@@ -315,24 +365,7 @@ struct MixerCardView: View {
         }
         .padding(20)
         .frame(width: 340)
-        .background(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(
-                    isAntique ?
-                    Color(NSColor.windowBackgroundColor).opacity(0.85) :
-                    Color(NSColor.controlBackgroundColor)
-                )
-                .shadow(color: isAntique ? Color.orange.opacity(0.15) : Color.black.opacity(0.05), radius: isAntique ? 6 : 2, x: 0, y: 1)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .stroke(
-                    isAntique ?
-                    LinearGradient(colors: [Color.orange.opacity(0.5), Color.yellow.opacity(0.3)], startPoint: .topLeading, endPoint: .bottomTrailing) :
-                    LinearGradient(colors: [Color.gray.opacity(0.2)], startPoint: .top, endPoint: .bottom),
-                    lineWidth: isAntique ? 1.5 : 1.0
-                )
-        )
+        .liquidGlassCard(isAntique: isAntique, cornerRadius: 18)
     }
 }
 
@@ -444,9 +477,11 @@ struct MasterPitchView: View {
                 
                 continuousAdjustmentButton(label: "♯", isIncrementing: true)
                     .font(.title2)
-                    .foregroundColor(isAntique ? Color.orange : .secondary)
             }
         }
+        .padding(16)
+        .frame(width: 340)
+        .liquidGlassCard(isAntique: isAntique, cornerRadius: 18)
     }
     
     private func executeCoarsePitchStep(upwards: Bool) {
@@ -624,24 +659,7 @@ struct TanpuraCardView: View {
         }
         .padding(16)
         .frame(width: 340)
-        .background(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(
-                    isAntique ?
-                    Color(NSColor.windowBackgroundColor).opacity(0.85) :
-                    Color(NSColor.controlBackgroundColor)
-                )
-                .shadow(color: isAntique ? Color.orange.opacity(0.15) : Color.black.opacity(0.05), radius: isAntique ? 6 : 2, x: 0, y: 1)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .stroke(
-                    isAntique ?
-                    LinearGradient(colors: [Color.orange.opacity(0.5), Color.yellow.opacity(0.3)], startPoint: .topLeading, endPoint: .bottomTrailing) :
-                    LinearGradient(colors: [Color.gray.opacity(0.2)], startPoint: .top, endPoint: .bottom),
-                    lineWidth: isAntique ? 1.5 : 1.0
-                )
-        )
+        .liquidGlassCard(isAntique: isAntique, cornerRadius: 18)
     }
 
     @ViewBuilder
@@ -1094,24 +1112,7 @@ struct TablaCardView: View {
         }
         .padding(16)
         .frame(width: 340)
-        .background(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(
-                    isAntique ?
-                    Color(NSColor.windowBackgroundColor).opacity(0.85) :
-                    Color(NSColor.controlBackgroundColor)
-                )
-                .shadow(color: isAntique ? Color.orange.opacity(0.15) : Color.black.opacity(0.05), radius: isAntique ? 6 : 2, x: 0, y: 1)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .stroke(
-                    isAntique ?
-                    LinearGradient(colors: [Color.orange.opacity(0.5), Color.yellow.opacity(0.3)], startPoint: .topLeading, endPoint: .bottomTrailing) :
-                    LinearGradient(colors: [Color.gray.opacity(0.2)], startPoint: .top, endPoint: .bottom),
-                    lineWidth: isAntique ? 1.5 : 1.0
-                )
-        )
+        .liquidGlassCard(isAntique: isAntique, cornerRadius: 18)
     }
 }
 
@@ -1439,15 +1440,7 @@ struct PresetsDrawerView: View {
         }
         .padding(16)
         .frame(width: 300)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(.ultraThinMaterial)
-                .shadow(color: Color.black.opacity(0.25), radius: 10, x: 2, y: 4)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(Color.white.opacity(0.2), lineWidth: 1)
-        )
+        .liquidGlassCard(isAntique: audio.isAntiqueThemeEnabled, cornerRadius: 20)
         .padding(.leading, 24)
         .padding(.top, 12)
     }
