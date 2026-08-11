@@ -20,59 +20,35 @@ let stringPickerItems: [PickerNote] = Array(tanpuraNotes.keys)
     .sorted(by: { (tanpuraNotes[$0] ?? 0.0) < (tanpuraNotes[$1] ?? 0.0) })
     .map { PickerNote(name: $0, cents: tanpuraNotes[$0] ?? -1.0) }
 
+struct VisualEffectBackground: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSVisualEffectView {
+        let view = NSVisualEffectView()
+        view.material = .hudWindow
+        view.blendingMode = .behindWindow
+        view.state = .active
+        return view
+    }
+
+    func updateNSView(_ view: NSVisualEffectView, context: Context) {
+        view.material = .hudWindow
+        view.blendingMode = .behindWindow
+        view.state = .active
+    }
+}
+
 struct ContentView: View {
     @StateObject private var audio = AppAudioOrchestrator()
 
     var body: some View {
-        VStack(spacing: 0) {
-            // MARK: - Master Header Bar (Integrated with macOS Traffic Lights)
-            HStack(spacing: 16) {
-                // Presets Drawer Toggle Button (Left)
-                Button(action: {
-                    audio.isPresetsPresented.toggle()
-                }) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "sidebar.left")
-                        Text("Presets")
-                    }
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundColor(audio.isPresetsPresented ? .accentColor : .primary)
-                }
-                .buttonStyle(.plain)
-                .help("Toggle Presets Drawer")
-
-                Spacer()
-
-                Text(audio.isAntiqueThemeEnabled ? "Raagini & Tabla Digital" : "macTablaPro Studio")
-                    .font(audio.isAntiqueThemeEnabled ? .custom("Snell Roundhand", size: 22).weight(.bold) : .headline)
-                    .foregroundColor(audio.isAntiqueThemeEnabled ? Color.orange : .secondary)
-
-                Spacer()
-
-                // Settings Floating Panel Toggle Button (Right)
-                Button(action: {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                        audio.isInspectorPresented.toggle()
-                    }
-                }) {
-                    HStack(spacing: 4) {
-                        Text("Settings")
-                        Image(systemName: "slider.horizontal.3")
-                    }
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundColor(audio.isInspectorPresented ? .accentColor : .primary)
-                }
-                .buttonStyle(.plain)
-                .help("Toggle Settings Drawer")
-            }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 8)
-            .background(Color(NSColor.windowBackgroundColor))
-            .overlay(Divider(), alignment: .bottom)
+        ZStack {
+            VisualEffectBackground()
+                .ignoresSafeArea()
 
             // MARK: - Main Workspace (Zero-Scroll 3-Column Layout with Split Glass Overlays)
             ZStack(alignment: .top) {
-                HStack(alignment: .top, spacing: 20) {
+                HStack(alignment: .top, spacing: 0) {
+                    Spacer(minLength: 16)
+
                     // 1. LEFT COLUMN: Tanpura 1 & 2 Cards Stacked + Swar Mandal Underneath
                     VStack(spacing: 14) {
                         if let tanpura1 = audio.tanpura1 {
@@ -89,6 +65,8 @@ struct ContentView: View {
                     }
                     .frame(width: 340)
 
+                    Spacer(minLength: 16)
+
                     // 2. CENTER COLUMN: Master Pitch (Top) + Tabla Controls (Center)
                     VStack(spacing: 14) {
                         MasterPitchView(audio: audio)
@@ -99,13 +77,17 @@ struct ContentView: View {
                     }
                     .frame(width: 340)
 
+                    Spacer(minLength: 16)
+
                     // 3. RIGHT COLUMN: Master Mixer Hub (ALWAYS VISIBLE!)
                     VStack(spacing: 14) {
                         MixerCardView(audio: audio)
                     }
                     .frame(width: 340)
+
+                    Spacer(minLength: 16)
                 }
-                .padding(20)
+                .padding(.vertical, 20)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
 
                 // MARK: - Left Presets Drawer Overlay (Pre-rendered offscreen for 0ms instant open)
@@ -213,8 +195,47 @@ struct ContentView: View {
                 }
             }
         }
-        .frame(minWidth: 1050, idealWidth: 1150, minHeight: 650)
-        .background(Color(NSColor.windowBackgroundColor))
+        .frame(minWidth: 1100, idealWidth: 1100, minHeight: 670)
+        .navigationTitle(Text(""))
+        .toolbar {
+            ToolbarItem(placement: .navigation) {
+                Button(action: {
+                    audio.isPresetsPresented.toggle()
+                }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "sidebar.left")
+                        Text("Presets")
+                    }
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(audio.isPresetsPresented ? .accentColor : .primary)
+                }
+                .buttonStyle(.plain)
+                .help("Toggle Presets Drawer")
+            }
+
+            ToolbarItem(placement: .principal) {
+                Text(audio.isAntiqueThemeEnabled ? "macTablaPro Vintage" : "macTablaPro")
+                    .font(audio.isAntiqueThemeEnabled ? .custom("Snell Roundhand", size: 18).weight(.bold) : .headline)
+                    .foregroundColor(audio.isAntiqueThemeEnabled ? Color.orange : .secondary)
+            }
+
+            ToolbarItem(placement: .primaryAction) {
+                Button(action: {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                        audio.isInspectorPresented.toggle()
+                    }
+                }) {
+                    HStack(spacing: 4) {
+                        Text("Settings")
+                        Image(systemName: "slider.horizontal.3")
+                    }
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(audio.isInspectorPresented ? .accentColor : .primary)
+                }
+                .buttonStyle(.plain)
+                .help("Toggle Settings Drawer")
+            }
+        }
     }
 }
 
