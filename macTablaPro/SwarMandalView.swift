@@ -19,8 +19,9 @@ struct SwarMandalView: View {
             // MARK: - Header Row: Title, LED, Auto-Loop Toggle & Manual Play Icon
             HStack(spacing: 8) {
                 Circle()
-                    .fill(swarMandal.isPlaying ? Color.green : Color.gray.opacity(0.5))
+                    .fill(swarMandal.isPlaying ? Color.green : Color.gray.opacity(0.4))
                     .frame(width: 8, height: 8)
+                    .shadow(color: swarMandal.isPlaying ? Color.green.opacity(0.8) : Color.clear, radius: 4)
                 
                 Text("Swar Mandal")
                     .font(.headline)

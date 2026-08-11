@@ -50,44 +50,61 @@ struct ContentView: View {
                     Spacer(minLength: 16)
 
                     // 1. LEFT COLUMN: Tanpura 1 & 2 Cards Stacked + Swar Mandal Underneath
-                    VStack(spacing: 14) {
+                    VStack(spacing: 0) {
+                        Spacer(minLength: 12)
+
                         if let tanpura1 = audio.tanpura1 {
                             TanpuraCardView(tanpura: tanpura1, audio: audio, title: "Tanpura 1")
                         }
+
+                        Spacer(minLength: 12)
                         
                         if let tanpura2 = audio.tanpura2 {
                             TanpuraCardView(tanpura: tanpura2, audio: audio, title: "Tanpura 2")
                         }
                         
+                        Spacer(minLength: 12)
+
                         if let swarMandal = audio.swarMandal {
                             SwarMandalView(swarMandal: swarMandal)
                         }
+
+                        Spacer(minLength: 12)
                     }
                     .frame(width: 340)
 
                     Spacer(minLength: 16)
 
                     // 2. CENTER COLUMN: Master Pitch (Top) + Tabla Controls (Center)
-                    VStack(spacing: 14) {
+                    VStack(spacing: 0) {
+                        Spacer(minLength: 12)
+
                         MasterPitchView(audio: audio)
                         
+                        Spacer(minLength: 12)
+
                         if let tabla = audio.tabla {
                             TablaCardView(tabla: tabla)
                         }
+
+                        Spacer(minLength: 12)
                     }
                     .frame(width: 340)
 
                     Spacer(minLength: 16)
 
                     // 3. RIGHT COLUMN: Master Mixer Hub (ALWAYS VISIBLE!)
-                    VStack(spacing: 14) {
+                    VStack(spacing: 0) {
+                        Spacer(minLength: 12)
+
                         MixerCardView(audio: audio)
+
+                        Spacer(minLength: 12)
                     }
                     .frame(width: 340)
 
                     Spacer(minLength: 16)
                 }
-                .padding(.vertical, 20)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
 
                 // MARK: - Left Presets Drawer Overlay (Pre-rendered offscreen for 0ms instant open)
@@ -468,6 +485,26 @@ struct MasterPitchView: View {
                     .foregroundColor(isAntique ? Color.orange : .secondary)
             }
         }
+        .padding(16)
+        .frame(width: 340)
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(
+                    isAntique ?
+                    Color(NSColor.windowBackgroundColor).opacity(0.85) :
+                    Color(NSColor.controlBackgroundColor)
+                )
+                .shadow(color: isAntique ? Color.orange.opacity(0.15) : Color.black.opacity(0.05), radius: isAntique ? 6 : 2, x: 0, y: 1)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(
+                    isAntique ?
+                    LinearGradient(colors: [Color.orange.opacity(0.5), Color.yellow.opacity(0.3)], startPoint: .topLeading, endPoint: .bottomTrailing) :
+                    LinearGradient(colors: [Color.gray.opacity(0.2)], startPoint: .top, endPoint: .bottom),
+                    lineWidth: isAntique ? 1.5 : 1.0
+                )
+        )
     }
     
     private func executeCoarsePitchStep(upwards: Bool) {
@@ -560,12 +597,10 @@ struct TanpuraCardView: View {
         let isAntique = tanpura.orchestrator.isAntiqueThemeEnabled
         VStack(spacing: 16) {
             HStack(spacing: 8) {
-                if isAntique {
-                    Circle()
-                        .fill(tanpura.isPlaying ? Color.green : Color.red)
-                        .frame(width: 8, height: 8)
-                        .shadow(color: (tanpura.isPlaying ? Color.green : Color.red).opacity(0.8), radius: 4)
-                }
+                Circle()
+                    .fill(tanpura.isPlaying ? Color.green : Color.gray.opacity(0.4))
+                    .frame(width: 8, height: 8)
+                    .shadow(color: tanpura.isPlaying ? Color.green.opacity(0.8) : Color.clear, radius: 4)
                 
                 Text(title)
                     .font(isAntique ? .custom("Snell Roundhand", size: 20).weight(.bold) : .headline)
@@ -809,12 +844,10 @@ struct TablaCardView: View {
         let isAntique = tabla.orchestrator.isAntiqueThemeEnabled
         VStack(spacing: 16) {
             HStack(spacing: 8) {
-                if isAntique {
-                    Circle()
-                        .fill(tabla.isPlaying ? Color.green : Color.red)
-                        .frame(width: 8, height: 8)
-                        .shadow(color: (tabla.isPlaying ? Color.green : Color.red).opacity(0.8), radius: 4)
-                }
+                Circle()
+                    .fill(tabla.isPlaying ? Color.green : Color.gray.opacity(0.4))
+                    .frame(width: 8, height: 8)
+                    .shadow(color: tabla.isPlaying ? Color.green.opacity(0.8) : Color.clear, radius: 4)
                 
                 Text("Tabla")
                     .font(isAntique ? .custom("Snell Roundhand", size: 20).weight(.bold) : .headline)
