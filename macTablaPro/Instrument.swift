@@ -31,10 +31,10 @@ class Instrument: ObservableObject, Identifiable {
         self.sampleRegistry = registry
         
         self.clock = LookaheadAudioScheduler(
-            getBPM: { @MainActor [weak self] in
+            getBPM: { [weak self] in
                 self?.tempoBPM ?? 100.0
             },
-            onTick: { @MainActor [weak self] stepIndex, time in
+            onTick: { [weak self] stepIndex, time in
                 self?.executeSequenceTick(stepIndex: stepIndex, time: time) ?? 1.0
             }
         )

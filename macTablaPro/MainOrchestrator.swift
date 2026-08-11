@@ -48,6 +48,14 @@ class AppAudioOrchestrator: ObservableObject {
     @Published var isInspectorPresented: Bool = false
     @Published var hasStartedFirstTime: Bool = false
     @Published var activePresetName: String? = nil
+    @Published var allPresets: [ITablaProPreset] = []
+
+    func refreshAllPresets() {
+        Task {
+            let container = await SettingsStorageService.shared.loadAllPresetsContainer()
+            self.allPresets = container.objects
+        }
+    }
 
     private var isUpdatingVolumeFromHardware = false
 
@@ -118,7 +126,14 @@ class AppAudioOrchestrator: ObservableObject {
 
         // Load persisted settings (or defaults) off main thread asynchronously
         Task {
-            let loaded = await SettingsStorageService.shared.loadActiveSettings()
+            let container = await SettingsStorageService.shared.loadAllPresetsContainer()
+            self.allPresets = container.objects
+            var loaded = await SettingsStorageService.shared.loadActiveSettings()
+            // Ensure all instruments start OFF on initial app launch
+            loaded.Tanpura1On = false
+            loaded.Tanpura2On = false
+            loaded.TablaOn = false
+            loaded.SwarMandalOn = false
             self.applyPreset(loaded)
             self.setupAutosavePipeline()
         }
@@ -163,8 +178,19 @@ class AppAudioOrchestrator: ObservableObject {
         activePresetBase = preset
         activePresetName = preset.PresetName
 
+        // 1. Ingest ALL UI state properties immediately at t = 0s
         self.scaleOffsetCents = ITablaProPreset.pitchNameToScaleOffsetCents(preset.PitchName)
         self.fineTuneCents = preset.FineTuneCents
+
+        if let t1 = self.tanpura1 {
+            t1.volume = preset.Tanpura1Gain
+            t1.firstStringPitch = ITablaProPreset.stringNameToCents(preset.Tanpura1FirstString)
+        }
+
+        if let t2 = self.tanpura2 {
+            t2.volume = preset.Tanpura2Gain
+            t2.firstStringPitch = ITablaProPreset.stringNameToCents(preset.Tanpura2FirstString)
+        }
 
         if let tb = self.tabla {
             tb.activeTaal = preset.TaalName
@@ -172,31 +198,6 @@ class AppAudioOrchestrator: ObservableObject {
             tb.tempoBPM = preset.Tempo
             tb.volume = preset.TablaGain
             tb.useSurTabla = preset.UseSurTabla
-            if (preset.TablaOn) {
-                tb.startPlay()
-            } else {
-                tb.stopPlay()
-            }
-        }
-
-        if let t1 = self.tanpura1 {
-            t1.volume = preset.Tanpura1Gain
-            t1.firstStringPitch = ITablaProPreset.stringNameToCents(preset.Tanpura1FirstString)
-            if preset.Tanpura1On {
-                t1.startPlay()
-            } else {
-                t1.stopPlay()
-            }
-        }
-
-        if let t2 = self.tanpura2 {
-            t2.volume = preset.Tanpura2Gain
-            t2.firstStringPitch = ITablaProPreset.stringNameToCents(preset.Tanpura2FirstString)
-            if preset.Tanpura2On {
-                t2.startPlay()
-            } else {
-                t2.stopPlay()
-            }
         }
 
         if let sm = self.swarMandal {
@@ -207,14 +208,30 @@ class AppAudioOrchestrator: ObservableObject {
             if let notes = preset.SwarMandalNotes?.nsObjects {
                 sm.updateNotesFromPreset(notes)
             }
-            if preset.SwarMandalOn ?? false {
-                sm.startPlay()
-            } else {
-                sm.stopPlay()
+        }
+
+        self.commitPitchChange()
+
+        // 2. Staggered Audio Playback Triggers
+        if let t1 = self.tanpura1 {
+            if preset.Tanpura1On { t1.startPlay() } else { t1.stopPlay() }
+        }
+        if let tb = self.tabla {
+            if preset.TablaOn { tb.startPlay() } else { tb.stopPlay() }
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            guard let self = self else { return }
+            if let t2 = self.tanpura2 {
+                if preset.Tanpura2On { t2.startPlay() } else { t2.stopPlay() }
             }
         }
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) { [weak self] in
+            guard let self = self else { return }
+            if let sm = self.swarMandal {
+                if preset.SwarMandalOn ?? false { sm.startPlay() } else { sm.stopPlay() }
+            }
             self.isApplyingPreset = false
         }
     }
@@ -300,13 +317,20 @@ class AppAudioOrchestrator: ObservableObject {
             activeInstrumentsSnapshot.insert(ObjectIdentifier(tabla))
             tabla.togglePlay()
         }
-        // Note: Intentional omission of voicePool.stopAll() to allow lingering sustain/decay ring out naturally!
+        if let sm = swarMandal, sm.isPlaying {
+            activeInstrumentsSnapshot.insert(ObjectIdentifier(sm))
+            sm.togglePlay()
+        }
     }
 
     func resumePreviousWorkstationAudio() {
         if activeInstrumentsSnapshot.isEmpty {
             activeInstrumentsSnapshot.insert(ObjectIdentifier(tanpura1))
+            activeInstrumentsSnapshot.insert(ObjectIdentifier(tanpura2))
             activeInstrumentsSnapshot.insert(ObjectIdentifier(tabla))
+            if let sm = swarMandal {
+                activeInstrumentsSnapshot.insert(ObjectIdentifier(sm))
+            }
         }
         
         if activeInstrumentsSnapshot.contains(ObjectIdentifier(tanpura1)) && !tanpura1.isPlaying {
@@ -317,6 +341,9 @@ class AppAudioOrchestrator: ObservableObject {
         }
         if activeInstrumentsSnapshot.contains(ObjectIdentifier(tabla)) && !tabla.isPlaying {
             tabla.togglePlay()
+        }
+        if let sm = swarMandal, activeInstrumentsSnapshot.contains(ObjectIdentifier(sm)) && !sm.isPlaying {
+            sm.togglePlay()
         }
     }
                                                                                           

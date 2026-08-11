@@ -24,6 +24,15 @@ nonisolated struct TablaSettings: Codable, Equatable, Sendable {
     var useSurTabla: Bool = false
 }
 
+nonisolated struct SwarMandalSettings: Codable, Equatable, Sendable {
+    var volume: Double = 0.25
+    var isMuted: Bool = false
+    var mode: String = "Pluck Mode"
+    var loopDurationSec: Int = 60
+    var stringCount: Int = 24
+    var stringNotes: [String] = []
+}
+
 nonisolated struct WorkstationSettings: Codable, Equatable, Sendable {
     var scaleOffsetCents: Double = 100.0
     var fineTuneCents: Double = 0.0
@@ -34,6 +43,7 @@ nonisolated struct WorkstationSettings: Codable, Equatable, Sendable {
     var tanpura1: TanpuraSettings = TanpuraSettings()
     var tanpura2: TanpuraSettings = TanpuraSettings()
     var tabla: TablaSettings = TablaSettings()
+    var swarMandal: SwarMandalSettings = SwarMandalSettings()
 }
 
 // MARK: - 2. Thread-Separated Background Storage Engine
@@ -42,6 +52,7 @@ actor SettingsStorageService {
     static let shared = SettingsStorageService()
 
     private let fileManager = FileManager.default
+    private var cachedPresetsContainer: ITablaProPresetsContainer? = nil
 
     private var appSupportURL: URL {
         let urls = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask)
@@ -52,7 +63,7 @@ actor SettingsStorageService {
         return dir
     }
 
-    private var activeSettingsURL: URL {
+    private var activeSettingsFileURL: URL {
         appSupportURL.appendingPathComponent("active_settings.json")
     }
 
@@ -83,10 +94,12 @@ actor SettingsStorageService {
     }
 
     func resetPresetsToDefault() {
+        cachedPresetsContainer = nil
         if fileManager.fileExists(atPath: userPresetsFileURL.path) {
             try? fileManager.removeItem(at: userPresetsFileURL)
         }
         ensureUserPresetsExist()
+        _ = loadAllPresetsContainer()
     }
 
     func openPresetsFolderInFinder() {
@@ -98,17 +111,17 @@ actor SettingsStorageService {
         }
     }
 
-    // MARK: - Active Settings Operations
+    // MARK: - Workstation State Persistence (active_settings.json)
 
     func loadActiveSettings() -> ITablaProPreset {
-        guard fileManager.fileExists(atPath: activeSettingsURL.path),
-            let data = try? Data(contentsOf: activeSettingsURL),
-            let decoded = try? JSONDecoder().decode(ITablaProPreset.self, from: data) else {
-            let defaults = ITablaProPreset.defaultPreset
-            saveActiveSettings(defaults)
-            return defaults
+        ensureUserPresetsExist()
+        guard fileManager.fileExists(atPath: activeSettingsFileURL.path),
+            let data = try? Data(contentsOf: activeSettingsFileURL),
+            let preset = try? JSONDecoder().decode(ITablaProPreset.self, from: data) else {
+            let container = loadAllPresetsContainer()
+            return container.objects.first ?? ITablaProPreset.defaultPreset
         }
-        return decoded
+        return preset
     }
 
     func saveActiveSettings(_ preset: ITablaProPreset) {
@@ -116,25 +129,32 @@ actor SettingsStorageService {
             let encoder = JSONEncoder()
             encoder.outputFormatting = .prettyPrinted
             let data = try encoder.encode(preset)
-            try data.write(to: activeSettingsURL, options: .atomic)
+            try data.write(to: activeSettingsFileURL, options: .atomic)
         } catch {
             print("❌ Background I/O Failure: Failed to write active settings: \(error)")
         }
     }
 
-    // MARK: - Presets Container Operations (presets.json)
+    // MARK: - Presets Container Operations (presets.json Cached In Memory)
 
     func loadAllPresetsContainer() -> ITablaProPresetsContainer {
+        if let cached = cachedPresetsContainer {
+            return cached
+        }
         ensureUserPresetsExist()
         guard fileManager.fileExists(atPath: userPresetsFileURL.path),
             let data = try? Data(contentsOf: userPresetsFileURL),
             let container = try? JSONDecoder().decode(ITablaProPresetsContainer.self, from: data) else {
-            return ITablaProPresetsContainer(keys: [], objects: [])
+            let empty = ITablaProPresetsContainer(keys: [], objects: [])
+            cachedPresetsContainer = empty
+            return empty
         }
+        cachedPresetsContainer = container
         return container
     }
 
     func savePresetsContainer(_ container: ITablaProPresetsContainer) {
+        cachedPresetsContainer = container
         do {
             let encoder = JSONEncoder()
             encoder.outputFormatting = .prettyPrinted
@@ -158,8 +178,6 @@ actor SettingsStorageService {
             container.objects.append(preset)
             if container.keys != nil {
                 container.keys?.append(preset.PresetName)
-            } else {
-                container.keys = container.objects.map { $0.PresetName }
             }
         }
         savePresetsContainer(container)

@@ -7,22 +7,19 @@
 
 import AVFoundation
 import Darwin
-import AVFoundation
-import Darwin
 import Foundation
 
 @MainActor
-class LookaheadAudioScheduler {
+final class LookaheadAudioScheduler: Sendable {
     private var schedulerTask: Task<Void, Never>?
-    private let tickCallback: @MainActor (Int, AVAudioTime) -> Double
-    private let getBPM: @MainActor () -> Double
+    private let tickCallback: @MainActor @Sendable (Int, AVAudioTime) -> Double
+    private let getBPM: @MainActor @Sendable () -> Double
 
-    /// The lookahead window duration in seconds (100ms)
     let lookaheadWindowSec: Double = 0.100
 
     init(
-        getBPM: @escaping @MainActor () -> Double,
-        onTick: @escaping @MainActor (Int, AVAudioTime) -> Double
+        getBPM: @escaping @MainActor @Sendable () -> Double,
+        onTick: @escaping @MainActor @Sendable (Int, AVAudioTime) -> Double
     ) {
         self.getBPM = getBPM
         self.tickCallback = onTick
@@ -36,7 +33,6 @@ class LookaheadAudioScheduler {
         mach_timebase_info(&info)
         let ns = UInt64(seconds * 1e9)
         return UInt64(ns * UInt64(info.denom) / UInt64(info.numer))
-
     }
 
     /// Converts CPU mach_absolute_time host ticks to a time interval in seconds.
@@ -61,9 +57,7 @@ class LookaheadAudioScheduler {
             var stepIndex = startingAtStep
 
             while !Task.isCancelled {
-
-                let boundaryTicks =
-                    mach_absolute_time() + secondsToHostTicks(lookaheadWindowSec)
+                let boundaryTicks = mach_absolute_time() + secondsToHostTicks(lookaheadWindowSec)
 
                 while currentTicks < boundaryTicks {
                     if Task.isCancelled {
@@ -73,8 +67,7 @@ class LookaheadAudioScheduler {
                         stepIndex,
                         AVAudioTime(hostTime: currentTicks)
                     )
-                    let safeFraction =
-                        durationFraction > 0 ? durationFraction : 1.0
+                    let safeFraction = durationFraction > 0 ? durationFraction : 1.0
 
                     let seconds = safeFraction * 60.0 / getBPM()
                     currentTicks += secondsToHostTicks(seconds)
@@ -82,7 +75,6 @@ class LookaheadAudioScheduler {
                     stepIndex = (stepIndex + 1) % (stepsCount > 0 ? stepsCount : 1)
                 }
                 try? await Task.sleep(nanoseconds: UInt64(2.5e7))
-
             }
         }
     }
@@ -98,6 +90,7 @@ class LookaheadAudioScheduler {
         Task { @MainActor in
             var currentTicks = mach_absolute_time() + secondsToHostTicks(0.01)
             for stepIndex in 0..<stepsCount {
+                if Task.isCancelled { return }
                 let durationFraction = tickCallback(
                     stepIndex,
                     AVAudioTime(hostTime: currentTicks)

@@ -29,9 +29,7 @@ struct ContentView: View {
             HStack(spacing: 16) {
                 // Presets Drawer Toggle Button (Left)
                 Button(action: {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                        audio.isPresetsPresented.toggle()
-                    }
+                    audio.isPresetsPresented.toggle()
                 }) {
                     HStack(spacing: 4) {
                         Image(systemName: "sidebar.left")
@@ -110,14 +108,15 @@ struct ContentView: View {
                 .padding(20)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
 
-                // MARK: - Left Presets Drawer Overlay
-                if audio.isPresetsPresented {
-                    HStack {
-                        PresetsDrawerView(audio: audio)
-                            .transition(.move(edge: .leading).combined(with: .opacity))
-                        Spacer()
-                    }
+                // MARK: - Left Presets Drawer Overlay (Pre-rendered offscreen for 0ms instant open)
+                HStack {
+                    PresetsDrawerView(audio: audio)
+                        .offset(x: audio.isPresetsPresented ? 0 : -350)
+                        .opacity(audio.isPresetsPresented ? 1 : 0)
+                        .animation(.spring(response: 0.35, dampingFraction: 0.82), value: audio.isPresetsPresented)
+                    Spacer()
                 }
+                .allowsHitTesting(audio.isPresetsPresented)
 
                 // MARK: - Liquid Glass Translucent Overlay (Floating Settings Panel)
                 if audio.isInspectorPresented {
@@ -1169,13 +1168,12 @@ struct LiquidGlassDisplay<Content: View>: View {
 // MARK: - Left Presets Translucent Glass Drawer View
 struct PresetsDrawerView: View {
     @ObservedObject var audio: AppAudioOrchestrator
-    @State private var presetsList: [ITablaProPreset] = []
     @State private var searchFilter: String = ""
     @State private var newPresetName: String = ""
     @State private var isShowingSaveField = false
 
     var filteredPresets: [ITablaProPreset] {
-        let baseList = presetsList.sorted { $0.PresetName.localizedStandardCompare($1.PresetName) == .orderedAscending }
+        let baseList = audio.allPresets.sorted { $0.PresetName.localizedStandardCompare($1.PresetName) == .orderedAscending }
         if searchFilter.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             return baseList
         }
@@ -1234,93 +1232,101 @@ struct PresetsDrawerView: View {
 
             Divider()
 
-            // Presets Scroll List
+            // Presets Scroll List (Auto-centered on active preset)
             if filteredPresets.isEmpty {
                 Text("No matching presets found.")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                     .padding(.vertical, 8)
             } else {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 6) {
-                        ForEach(filteredPresets) { preset in
-                            let isActive = (audio.activePresetName == preset.PresetName)
-                            HStack(spacing: 6) {
-                                // Favorite Star Toggle
-                                Button(action: {
-                                    Task {
-                                        await SettingsStorageService.shared.toggleFavorite(presetName: preset.PresetName)
-                                        await refreshPresetsList()
-                                    }
-                                }) {
-                                    Image(systemName: preset.IsFavorite ? "star.fill" : "star")
-                                        .font(.caption)
-                                        .foregroundColor(preset.IsFavorite ? .yellow : .secondary.opacity(0.5))
-                                }
-                                .buttonStyle(.plain)
-
-                                // Apply Preset Button with Hover Tooltip & Right-Click Context Menu
-                                Button(action: {
-                                    audio.applyPreset(preset)
-                                    Task {
-                                        await SettingsStorageService.shared.saveActiveSettings(preset)
-                                    }
-                                }) {
-                                    HStack {
-                                        Image(systemName: isActive ? "checkmark.circle.fill" : "circle")
-                                            .foregroundColor(isActive ? (audio.isAntiqueThemeEnabled ? .orange : .accentColor) : .secondary)
-                                        Text(preset.PresetName)
-                                            .font(.system(size: 13, weight: isActive ? .bold : .medium))
-                                            .foregroundColor(isActive ? .primary : .secondary)
-                                            .lineLimit(1)
-                                        Spacer()
-                                    }
-                                    .padding(.vertical, 5)
-                                    .padding(.horizontal, 8)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .fill(isActive ?
-                                                (audio.isAntiqueThemeEnabled ? Color.orange.opacity(0.25) : Color.accentColor.opacity(0.2)) :
-                                                Color(NSColor.controlBackgroundColor).opacity(0.4)
-                                            )
-                                    )
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .stroke(isActive ? (audio.isAntiqueThemeEnabled ? Color.orange : Color.accentColor) : Color.clear, lineWidth: 1.5)
-                                    )
-                                }
-                                .buttonStyle(.plain)
-                                .help(presetTooltipText(for: preset))
-                                .contextMenu {
-                                    Text("🎵 \(preset.PresetName)").font(.headline)
-                                    Divider()
-                                    Text("Pitch: \(preset.PitchName)")
-                                    Text("Tanpura 1: \(preset.Tanpura1FirstString) (\(Int(preset.Tanpura1Gain * 100))%)")
-                                    Text("Tanpura 2: \(preset.Tanpura2FirstString) (\(Int(preset.Tanpura2Gain * 100))%)")
-                                    Text("Tabla: \(preset.TaalName) (\(preset.StyleName)) @ \(Int(preset.Tempo)) BPM")
-                                }
-
-                                // Delete Preset Button
-                                Button(action: {
-                                    Task {
-                                        await SettingsStorageService.shared.deletePreset(name: preset.PresetName)
-                                        if audio.activePresetName == preset.PresetName {
-                                            audio.activePresetName = nil
+                ScrollViewReader { scrollProxy in
+                    ScrollView {
+                        LazyVStack(alignment: .leading, spacing: 6) {
+                            ForEach(filteredPresets) { preset in
+                                let isActive = (audio.activePresetName == preset.PresetName)
+                                HStack(spacing: 6) {
+                                    // Favorite Star Toggle
+                                    Button(action: {
+                                        Task {
+                                            await SettingsStorageService.shared.toggleFavorite(presetName: preset.PresetName)
+                                            audio.refreshAllPresets()
                                         }
-                                        await refreshPresetsList()
+                                    }) {
+                                        Image(systemName: preset.IsFavorite ? "star.fill" : "star")
+                                            .font(.caption)
+                                            .foregroundColor(preset.IsFavorite ? .yellow : .secondary.opacity(0.5))
                                     }
-                                }) {
-                                    Image(systemName: "trash")
-                                        .font(.caption2)
-                                        .foregroundColor(.red.opacity(0.7))
+                                    .buttonStyle(.plain)
+
+                                    // Apply Preset Button with Hover Tooltip & Right-Click Context Menu
+                                    Button(action: {
+                                        audio.applyPreset(preset)
+                                        Task {
+                                            await SettingsStorageService.shared.saveActiveSettings(preset)
+                                        }
+                                    }) {
+                                        HStack {
+                                            Image(systemName: isActive ? "checkmark.circle.fill" : "circle")
+                                                .foregroundColor(isActive ? (audio.isAntiqueThemeEnabled ? .orange : .accentColor) : .secondary)
+                                            Text(preset.PresetName)
+                                                .font(.system(size: 13, weight: isActive ? .bold : .medium))
+                                                .foregroundColor(isActive ? .primary : .secondary)
+                                                .lineLimit(1)
+                                            Spacer()
+                                        }
+                                        .padding(.vertical, 5)
+                                        .padding(.horizontal, 8)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 8)
+                                                .fill(isActive ?
+                                                    (audio.isAntiqueThemeEnabled ? Color.orange.opacity(0.25) : Color.accentColor.opacity(0.2)) :
+                                                    Color(NSColor.controlBackgroundColor).opacity(0.4)
+                                                )
+                                        )
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 8)
+                                                .stroke(isActive ? (audio.isAntiqueThemeEnabled ? Color.orange : Color.accentColor) : Color.clear, lineWidth: 1.5)
+                                        )
+                                    }
+                                    .buttonStyle(.plain)
+                                    .help(presetTooltipText(for: preset))
+                                    .contextMenu {
+                                        Text("🎵 \(preset.PresetName)").font(.headline)
+                                        Divider()
+                                        Text("Pitch: \(preset.PitchName)")
+                                        Text("Tanpura 1: \(preset.Tanpura1FirstString) (\(Int(preset.Tanpura1Gain * 100))%)")
+                                        Text("Tanpura 2: \(preset.Tanpura2FirstString) (\(Int(preset.Tanpura2Gain * 100))%)")
+                                        Text("Tabla: \(preset.TaalName) (\(preset.StyleName)) @ \(Int(preset.Tempo)) BPM")
+                                    }
+
+                                    // Delete Preset Button
+                                    Button(action: {
+                                        Task {
+                                            await SettingsStorageService.shared.deletePreset(name: preset.PresetName)
+                                            if audio.activePresetName == preset.PresetName {
+                                                audio.activePresetName = nil
+                                            }
+                                            audio.refreshAllPresets()
+                                        }
+                                    }) {
+                                        Image(systemName: "trash")
+                                            .font(.caption2)
+                                            .foregroundColor(.red.opacity(0.7))
+                                    }
+                                    .buttonStyle(.plain)
+                                    .help("Delete Preset")
                                 }
-                                .buttonStyle(.plain)
-                                .help("Delete Preset")
+                                .id(preset.PresetName)
                             }
                         }
                     }
+                    .frame(maxHeight: 280)
+                    .onAppear {
+                        if let activeName = audio.activePresetName {
+                            scrollProxy.scrollTo(activeName, anchor: .center)
+                        }
+                    }
                 }
-                .frame(maxHeight: 280)
             }
 
             Divider()
@@ -1346,7 +1352,7 @@ struct PresetsDrawerView: View {
                             Task {
                                 await SettingsStorageService.shared.savePreset(snapshot)
                                 audio.activePresetName = name
-                                await refreshPresetsList()
+                                audio.refreshAllPresets()
                                 isShowingSaveField = false
                                 newPresetName = ""
                             }
@@ -1390,7 +1396,7 @@ struct PresetsDrawerView: View {
                 Button(action: {
                     Task {
                         await SettingsStorageService.shared.resetPresetsToDefault()
-                        await refreshPresetsList()
+                        audio.refreshAllPresets()
                     }
                 }) {
                     HStack(spacing: 4) {
@@ -1417,15 +1423,5 @@ struct PresetsDrawerView: View {
         )
         .padding(.leading, 24)
         .padding(.top, 12)
-        .onAppear {
-            Task {
-                await refreshPresetsList()
-            }
-        }
-    }
-
-    private func refreshPresetsList() async {
-        let container = await SettingsStorageService.shared.loadAllPresetsContainer()
-        self.presetsList = container.objects
     }
 }
