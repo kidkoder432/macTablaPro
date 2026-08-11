@@ -38,6 +38,7 @@ class Tabla: Instrument {
     @Published var currentMatraSubStep: Int = 0
     @Published var currentBolName: String = ""
     @Published var currentStepIndex = 0
+    @Published var logScaleBase: Double = 10.0
 
     override init(id: String, name: String, orchestrator: AppAudioOrchestrator, voicePool: VoicePool, registry: [String: PitchedSample]) {
         super.init(id: id, name: name, orchestrator: orchestrator, voicePool: voicePool, registry: registry)
@@ -58,10 +59,37 @@ class Tabla: Instrument {
         
         let minBPMs = [10.0, 25.0, 81.0, 151.0, 301.0]
         let maxBPMs = [25.0, 80.0, 150.0, 300.0, 700.0]
-        
-        let low = minBPMs[minTier]
-        let high = maxBPMs[maxTier]
-        return low...high
+        let minVal = minBPMs[minTier]
+        let maxVal = maxBPMs[maxTier]
+        return minVal...maxVal
+    }
+    
+    /// Converts tempoBPM to logarithmic slider value [0.0 ... 1.0]
+    func bpmToLogSliderValue(_ bpm: Double) -> Double {
+        let range = allowedBPMRange()
+        let minB = range.lowerBound
+        let maxB = range.upperBound
+        let clampedBPM = max(minB, min(maxB, bpm))
+        let ratio = (clampedBPM - minB) / max(1.0, maxB - minB)
+        if logScaleBase <= 1.0 {
+            return ratio
+        }
+        let logVal = log(1.0 + (logScaleBase - 1.0) * ratio) / log(logScaleBase)
+        return max(0.0, min(1.0, logVal))
+    }
+    
+    /// Converts logarithmic slider value [0.0 ... 1.0] to tempoBPM clamped to allowed range
+    func logSliderValueToBPM(_ sliderVal: Double) -> Double {
+        let range = allowedBPMRange()
+        let minB = range.lowerBound
+        let maxB = range.upperBound
+        let clampedVal = max(0.0, min(1.0, sliderVal))
+        if logScaleBase <= 1.0 {
+            return minB + clampedVal * (maxB - minB)
+        }
+        let frac = (pow(logScaleBase, clampedVal) - 1.0) / (logScaleBase - 1.0)
+        let computedBPM = minB + frac * (maxB - minB)
+        return max(minB, min(maxB, computedBPM))
     }
 
     /// Clamps the current tempoBPM to stay within allowedBPMRange().

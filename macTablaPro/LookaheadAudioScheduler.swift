@@ -92,4 +92,20 @@ class LookaheadAudioScheduler {
         schedulerTask?.cancel()
         schedulerTask = nil
     }
+    
+    /// Runs a single non-looping pass across 0 ... (stepsCount - 1) using the lookahead scheduler
+    func triggerSinglePass(stepsCount: Int) {
+        Task { @MainActor in
+            var currentTicks = mach_absolute_time() + secondsToHostTicks(0.01)
+            for stepIndex in 0..<stepsCount {
+                let durationFraction = tickCallback(
+                    stepIndex,
+                    AVAudioTime(hostTime: currentTicks)
+                )
+                let safeFraction = durationFraction > 0 ? durationFraction : 1.0
+                let seconds = safeFraction * 60.0 / getBPM()
+                currentTicks += secondsToHostTicks(seconds)
+            }
+        }
+    }
 }
