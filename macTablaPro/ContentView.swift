@@ -706,6 +706,8 @@ struct TablaCardView: View {
     let database = TablaDatabase.shared
     
     @State private var isSettingsExpanded: Bool = false
+    @State private var bpmInputText: String = ""
+    @State private var isEditingBPM: Bool = false
 
     private func tempoCategoryName(tier: Int) -> String {
         switch tier {
@@ -790,7 +792,11 @@ struct TablaCardView: View {
                             Button(action: {
                                 if tabla.activeTaal != taal.name {
                                     tabla.activeTaal = taal.name
-                                    tabla.activeVariation = "Pro Default"
+                                    if taal.name == "Metronome" {
+                                        tabla.activeVariation = "1 beat Basic"
+                                    } else {
+                                        tabla.activeVariation = "Pro Default"
+                                    }
                                     DispatchQueue.main.async {
                                         tabla.clampTempoToAllowedRange()
                                     }
@@ -907,13 +913,41 @@ struct TablaCardView: View {
 
                                 Spacer()
 
-                                // Top-Right: BPM Number with 'bpm' underneath
+                                // Top-Right: BPM Number (Editable with I-Beam Cursor) with 'bpm' underneath
                                 VStack(alignment: .trailing, spacing: -2) {
-                                    Text("\(Int(tabla.tempoBPM))")
+                                    if isEditingBPM {
+                                        TextField("", text: $bpmInputText, onCommit: {
+                                            if let val = Double(bpmInputText) {
+                                                let range = tabla.allowedBPMRange()
+                                                tabla.tempoBPM = max(range.lowerBound, min(range.upperBound, val))
+                                            }
+                                            isEditingBPM = false
+                                        })
+                                        .textFieldStyle(.plain)
+                                        .multilineTextAlignment(.trailing)
                                         .font(isAntique ?
                                             .system(size: 15, weight: .bold, design: .monospaced) :
                                             .system(size: 15, weight: .bold, design: .rounded))
                                         .foregroundColor(isAntique ? Color.yellow : Color.cyan.opacity(0.95))
+                                        .frame(width: 45)
+                                    } else {
+                                        Text("\(Int(tabla.tempoBPM))")
+                                            .font(isAntique ?
+                                                .system(size: 15, weight: .bold, design: .monospaced) :
+                                                .system(size: 15, weight: .bold, design: .rounded))
+                                            .foregroundColor(isAntique ? Color.yellow : Color.cyan.opacity(0.95))
+                                            .onTapGesture {
+                                                bpmInputText = "\(Int(tabla.tempoBPM))"
+                                                isEditingBPM = true
+                                            }
+                                            .onHover { isHovered in
+                                                if isHovered {
+                                                    NSCursor.iBeam.push()
+                                                } else {
+                                                    NSCursor.pop()
+                                                }
+                                            }
+                                    }
                                     Text("bpm")
                                         .font(isAntique ?
                                             .system(size: 9, weight: .semibold, design: .monospaced) :
@@ -975,11 +1009,17 @@ struct TablaCardView: View {
             }
             .padding(.horizontal, 4)
 
-            // Permanently Visible Settings & Tempo Controls
+            // Permanently Visible Settings & Tempo Controls (Logarithmic Slider)
             VStack(spacing: 12) {
-                Divider()
-
-                Slider(value: $tabla.tempoBPM, in: tabla.allowedBPMRange(), step: 1.0) { isEditing in
+                Slider(
+                    value: Binding(
+                        get: { tabla.bpmToLogSliderValue(tabla.tempoBPM) },
+                        set: { newValue in
+                            tabla.tempoBPM = tabla.logSliderValueToBPM(newValue)
+                        }
+                    ),
+                    in: 0.0...1.0
+                ) { isEditing in
                     if !isEditing {
                         let snapshot = tabla.orchestrator.capturePreset()
                         Task.detached(priority: .utility) {

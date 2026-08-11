@@ -13,10 +13,10 @@ var logger = Logger(subsystem: "com.praj.macTablaPro", category: "SwarMandal")
 // MARK: - Swar Mandal Timing Configuration
 public struct SwarMandalTimingConfig: Sendable {
     /// Initial tempo (BPM) for Pluck Mode at string index 0
-    public static var pluckStartBPM: Double = 400.0
+    public static var pluckBPM: Double = 400.0
     
     /// Final tempo (BPM) for Pluck Mode at string index (stringCount - 1)
-    public static var pluckEndBPM: Double = 180.0
+    public static var pluckDecay = 0.95
     
     /// Constant tempo (BPM) for Strum Mode (fast ambient glissando)
     public static var strumBPM: Double = 800.0
@@ -227,10 +227,8 @@ class SwarMandal: Instrument {
             
             // Return step duration fraction based on mode (Pluck mode ramps from 400 to 240 BPM)
             if mode == .pluck {
-                let denom = max(1, stringCount - 1)
-                let frac = Double(stepIndex) / Double(denom)
-                let stepBPM = SwarMandalTimingConfig.pluckStartBPM + frac * (SwarMandalTimingConfig.pluckEndBPM - SwarMandalTimingConfig.pluckStartBPM)
-                return 100.0 / stepBPM
+                print(100.0 / (SwarMandalTimingConfig.pluckBPM * pow(SwarMandalTimingConfig.pluckDecay, Double(stepIndex))))
+                return 100.0 / (SwarMandalTimingConfig.pluckBPM * pow(SwarMandalTimingConfig.pluckDecay, Double(stepIndex)))
             } else {
                 return 100.0 / SwarMandalTimingConfig.strumBPM
             }
@@ -239,11 +237,10 @@ class SwarMandal: Instrument {
             let totalTargetSeconds = Double(loopOption.rawValue)
             var strumPassSeconds = 0.0
             if mode == .pluck {
+                var stepBPM = SwarMandalTimingConfig.pluckBPM
                 for i in 0..<stringCount {
-                    let denom = max(1, stringCount - 1)
-                    let frac = Double(i) / Double(denom)
-                    let stepBPM = SwarMandalTimingConfig.pluckStartBPM + frac * (SwarMandalTimingConfig.pluckEndBPM - SwarMandalTimingConfig.pluckStartBPM)
                     strumPassSeconds += 60.0 / stepBPM
+                    stepBPM *= SwarMandalTimingConfig.pluckDecay
                 }
             } else {
                 strumPassSeconds = Double(stringCount) * (60.0 / SwarMandalTimingConfig.strumBPM)
@@ -268,27 +265,14 @@ class SwarMandal: Instrument {
         }
     }
     
-    /// Manual strum trigger available anytime with decelerating Pluck timing
+    /// Manual strum trigger reusing the instrument's lookahead audio scheduler clock
     public func triggerManualStrumPass() {
         if isPlaying {
-            // Immediately restart the lookahead scheduler sequence from step 0
+            // Reset auto-looper sequence to step 0 immediately
             clock.start(stepsCount: stringCount + 1, startingAtStep: 0)
         } else {
-            Task { @MainActor in
-                for idx in 0..<self.stringCount {
-                    self.pluckString(at: idx)
-                    let stepBPM: Double
-                    if self.mode == .pluck {
-                        let denom = max(1, self.stringCount - 1)
-                        let frac = Double(idx) / Double(denom)
-                        stepBPM = SwarMandalTimingConfig.pluckStartBPM + frac * (SwarMandalTimingConfig.pluckEndBPM - SwarMandalTimingConfig.pluckStartBPM)
-                    } else {
-                        stepBPM = SwarMandalTimingConfig.strumBPM
-                    }
-                    let delaySeconds = 60.0 / stepBPM
-                    try? await Task.sleep(nanoseconds: UInt64(delaySeconds * 1e9))
-                }
-            }
+            // Trigger single non-looping strum pass via lookahead scheduler
+            clock.triggerSinglePass(stepsCount: stringCount)
         }
     }
 }
