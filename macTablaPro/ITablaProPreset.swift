@@ -67,6 +67,9 @@ nonisolated struct ITablaProPreset: Codable, Equatable, Identifiable, Sendable {
     var SwarMandalLoopDuration: Int?
     var SwarMandalNotes: SwarMandalNotesContainer?
 
+    var SavedAudioDeviceName: String?
+    var SharedTanpuraBPM: Double?
+
     // Helper: Default initial preset
     nonisolated static var defaultPreset: ITablaProPreset {
         ITablaProPreset(

@@ -187,7 +187,29 @@ struct ContentView: View {
                     .shadow(color: Color.black.opacity(0.15), radius: 12, x: -2, y: 4)
                     .padding(.trailing, 24)
                     .padding(.top, 24)
-                    .transition(.move(edge: .trailing).combined(with: .opacity))
+                }
+
+                // MARK: - Launch Blurry Loading Overlay
+                if audio.isAppLoading {
+                    ZStack {
+                        Rectangle()
+                            .fill(.ultraThinMaterial)
+                            .ignoresSafeArea()
+                        
+                        VStack(spacing: 16) {
+                            ProgressView()
+                                .scaleEffect(1.4)
+                                .progressViewStyle(.circular)
+                            Text("Loading Workstation Audio & Assets...")
+                                .font(.headline)
+                                .fontWeight(.medium)
+                                .foregroundColor(.primary)
+                        }
+                        .padding(28)
+                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18))
+                        .shadow(color: .black.opacity(0.3), radius: 15, x: 0, y: 8)
+                    }
+                    .transition(.opacity)
                 }
             }
         }
@@ -1323,6 +1345,11 @@ struct PresetsDrawerView: View {
                     .frame(maxHeight: 280)
                     .onAppear {
                         if let activeName = audio.activePresetName {
+                            scrollProxy.scrollTo(activeName, anchor: .center)
+                        }
+                    }
+                    .onChange(of: audio.isPresetsPresented) { isPresented in
+                        if isPresented, let activeName = audio.activePresetName {
                             scrollProxy.scrollTo(activeName, anchor: .center)
                         }
                     }

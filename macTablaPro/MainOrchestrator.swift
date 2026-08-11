@@ -49,6 +49,8 @@ class AppAudioOrchestrator: ObservableObject {
     @Published var hasStartedFirstTime: Bool = false
     @Published var activePresetName: String? = nil
     @Published var allPresets: [ITablaProPreset] = []
+    @Published var isAppLoading: Bool = true
+    var savedAudioDeviceName: String? = nil
 
     func refreshAllPresets() {
         Task {
@@ -136,6 +138,10 @@ class AppAudioOrchestrator: ObservableObject {
             loaded.SwarMandalOn = false
             self.applyPreset(loaded)
             self.setupAutosavePipeline()
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                self.isAppLoading = false
+            }
         }
     }
 
@@ -149,6 +155,11 @@ class AppAudioOrchestrator: ObservableObject {
         preset.PitchName = ITablaProPreset.scaleOffsetCentsToPitchName(self.scaleOffsetCents)
         preset.FineTuneCents = self.fineTuneCents
         preset.Tempo = self.tabla?.tempoBPM ?? preset.Tempo
+        preset.SharedTanpuraBPM = self.sharedTanpuraBPM
+
+        if let selectedDev = availableOutputDevices.first(where: { $0.id == selectedOutputDeviceID }) {
+            preset.SavedAudioDeviceName = selectedDev.name
+        }
 
         if let tb = self.tabla {
             preset.TablaOn = tb.isPlaying
@@ -181,6 +192,17 @@ class AppAudioOrchestrator: ObservableObject {
         // 1. Ingest ALL UI state properties immediately at t = 0s
         self.scaleOffsetCents = ITablaProPreset.pitchNameToScaleOffsetCents(preset.PitchName)
         self.fineTuneCents = preset.FineTuneCents
+
+        if let tanpuraBPM = preset.SharedTanpuraBPM {
+            self.sharedTanpuraBPM = tanpuraBPM
+        }
+
+        if let devName = preset.SavedAudioDeviceName {
+            self.savedAudioDeviceName = devName
+            if let match = availableOutputDevices.first(where: { $0.name == devName }) {
+                self.selectedOutputDeviceID = match.id
+            }
+        }
 
         if let t1 = self.tanpura1 {
             t1.volume = preset.Tanpura1Gain
@@ -378,6 +400,20 @@ class AppAudioOrchestrator: ObservableObject {
         commitPitchChange()
     }
 
+    private func getSystemDefaultOutputDeviceID() -> AudioDeviceID {
+        var defaultOutputDeviceID = AudioDeviceID(0)
+        var propertySize = UInt32(MemoryLayout<AudioDeviceID>.size)
+        var address = AudioObjectPropertyAddress(
+            mSelector: kAudioHardwarePropertyDefaultOutputDevice,
+            mScope: kAudioObjectPropertyScopeGlobal,
+            mElement: kAudioObjectPropertyElementMain
+        )
+        if AudioObjectGetPropertyData(AudioObjectID(kAudioObjectSystemObject), &address, 0, nil, &propertySize, &defaultOutputDeviceID) == noErr {
+            return defaultOutputDeviceID
+        }
+        return 0
+    }
+
     private func refreshAudioOutputDevices() {
         var propertySize: UInt32 = 0
         var address = AudioObjectPropertyAddress(
@@ -414,7 +450,13 @@ class AppAudioOrchestrator: ObservableObject {
             }
         }
         self.availableOutputDevices = devices
-        if let first = devices.first {
+        
+        let sysDefaultID = getSystemDefaultOutputDeviceID()
+        if let savedName = savedAudioDeviceName, let match = devices.first(where: { $0.name == savedName }) {
+            self.selectedOutputDeviceID = match.id
+        } else if devices.contains(where: { $0.id == sysDefaultID }) {
+            self.selectedOutputDeviceID = sysDefaultID
+        } else if let first = devices.first {
             self.selectedOutputDeviceID = first.id
         }
     }
