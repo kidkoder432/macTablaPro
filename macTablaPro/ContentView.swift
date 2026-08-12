@@ -22,6 +22,60 @@ let stringPickerItems: [PickerNote] = Array(tanpuraNotes.keys)
 
 typealias VisualEffectBackground = VisualEffectView
 
+// MARK: - Reusable Press-and-Hold Auto-Repeating Touch Button
+struct RepeatingTouchButton<Content: View>: View {
+    let action: () -> Void
+    var label: () -> Content
+
+    @State private var delayTimer: Timer?
+    @State private var repeatTimer: Timer?
+
+    init(action: @escaping () -> Void, @ViewBuilder label: @escaping () -> Content) {
+        self.action = action
+        self.label = label
+    }
+
+    var body: some View {
+        Button(action: {}) {
+            label()
+        }
+        .buttonStyle(.plain)
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in
+                    if delayTimer == nil && repeatTimer == nil {
+                        action()
+                        delayTimer = Timer.scheduledTimer(withTimeInterval: 0.35, repeats: false) { _ in
+                            repeatTimer = Timer.scheduledTimer(withTimeInterval: 0.08, repeats: true) { _ in
+                                action()
+                            }
+                        }
+                    }
+                }
+                .onEnded { _ in
+                    delayTimer?.invalidate()
+                    repeatTimer?.invalidate()
+                    delayTimer = nil
+                    repeatTimer = nil
+                }
+        )
+    }
+}
+
+// MARK: - Workstation Layout Constants
+struct WorkstationLayout {
+    static let cardWidth: CGFloat = 340
+    static let cardCornerRadius: CGFloat = 16
+    
+    static let minHorizontalSpacing: CGFloat = 16
+    static let verticalCardSpacing: CGFloat = 14
+    static let topPadding: CGFloat = 16
+    static let bottomPadding: CGFloat = 16
+
+    static let minWindowWidth: CGFloat = 1100
+    static let minWindowHeight: CGFloat = 670
+}
+
 struct VisualEffectView: NSViewRepresentable {
     var material: NSVisualEffectView.Material = .hudWindow
     var blendingMode: NSVisualEffectView.BlendingMode = .behindWindow
@@ -42,7 +96,7 @@ struct VisualEffectView: NSViewRepresentable {
 
 struct NativeCardModifier: ViewModifier {
     var isAntique: Bool = false
-    var cornerRadius: CGFloat = 16
+    var cornerRadius: CGFloat = WorkstationLayout.cardCornerRadius
 
     func body(content: Content) -> some View {
         content
@@ -68,7 +122,7 @@ struct NativeCardModifier: ViewModifier {
 }
 
 extension View {
-    func nativeCard(isAntique: Bool = false, cornerRadius: CGFloat = 16) -> some View {
+    func nativeCard(isAntique: Bool = false, cornerRadius: CGFloat = WorkstationLayout.cardCornerRadius) -> some View {
         self.modifier(NativeCardModifier(isAntique: isAntique, cornerRadius: cornerRadius))
     }
 }
@@ -112,64 +166,48 @@ struct ContentView: View {
             // MARK: - Main Workspace (Zero-Scroll 3-Column Layout with Split Glass Overlays)
             ZStack(alignment: .top) {
                 HStack(alignment: .top, spacing: 0) {
-                    Spacer(minLength: 16)
+                    Spacer(minLength: WorkstationLayout.minHorizontalSpacing)
 
                     // 1. LEFT COLUMN: Tanpura 1 & 2 Cards Stacked + Swar Mandal Underneath
-                    VStack(spacing: 0) {
-                        Spacer(minLength: 12)
-
+                    VStack(spacing: WorkstationLayout.verticalCardSpacing) {
                         if let tanpura1 = audio.tanpura1 {
                             TanpuraCardView(tanpura: tanpura1, audio: audio, title: "Tanpura 1")
                         }
 
-                        Spacer(minLength: 12)
-                        
                         if let tanpura2 = audio.tanpura2 {
                             TanpuraCardView(tanpura: tanpura2, audio: audio, title: "Tanpura 2")
                         }
-                        
-                        Spacer(minLength: 12)
 
                         if let swarMandal = audio.swarMandal {
                             SwarMandalView(swarMandal: swarMandal)
                         }
-
-                        Spacer(minLength: 12)
                     }
-                    .frame(width: 340)
+                    .frame(width: WorkstationLayout.cardWidth)
 
-                    Spacer(minLength: 16)
+                    Spacer(minLength: WorkstationLayout.minHorizontalSpacing)
 
                     // 2. CENTER COLUMN: Master Pitch (Top) + Tabla Controls (Center)
-                    VStack(spacing: 0) {
-                        Spacer(minLength: 12)
-
+                    VStack(spacing: WorkstationLayout.verticalCardSpacing) {
                         MasterPitchView(audio: audio)
                         
-                        Spacer(minLength: 12)
-
                         if let tabla = audio.tabla {
                             TablaCardView(tabla: tabla)
                         }
-
-                        Spacer(minLength: 12)
                     }
-                    .frame(width: 340)
+                    .frame(width: WorkstationLayout.cardWidth)
 
-                    Spacer(minLength: 16)
+                    Spacer(minLength: WorkstationLayout.minHorizontalSpacing)
 
                     // 3. RIGHT COLUMN: Master Mixer Hub (ALWAYS VISIBLE!)
-                    VStack(spacing: 0) {
-                        Spacer(minLength: 12)
-
+                    VStack(spacing: WorkstationLayout.verticalCardSpacing) {
                         MixerCardView(audio: audio)
-
-                        Spacer(minLength: 12)
                     }
-                    .frame(width: 340)
+                    .frame(width: WorkstationLayout.cardWidth)
 
-                    Spacer(minLength: 16)
+                    Spacer(minLength: WorkstationLayout.minHorizontalSpacing)
                 }
+                .padding(.top, WorkstationLayout.topPadding)
+                .padding(.bottom, WorkstationLayout.bottomPadding)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
 
                 // MARK: - Left Presets Drawer Overlay (Pre-rendered offscreen for 0ms instant open)
@@ -270,7 +308,7 @@ struct ContentView: View {
                 }
             }
         }
-        .frame(minWidth: 1100, idealWidth: 1100, minHeight: 670)
+        .frame(minWidth: WorkstationLayout.minWindowWidth, idealWidth: WorkstationLayout.minWindowWidth, minHeight: WorkstationLayout.minWindowHeight)
         .navigationTitle(Text(""))
         .toolbar {
             ToolbarItem(placement: .navigation) {
@@ -468,14 +506,19 @@ struct MasterPitchView: View {
                 .font(isAntique ? .custom("Snell Roundhand", size: 22).weight(.bold) : .headline)
                 .foregroundColor(isAntique ? Color.orange : .secondary)
             
-            // Giant Pitch Display with Chevrons
-            HStack(spacing: 30) {
-                Button(action: { executeCoarsePitchStep(upwards: false) }) {
-                    Image(systemName: "chevron.left")
-                        .font(.system(size: 28, weight: .bold))
-                        .foregroundColor(isAntique ? Color.orange : .secondary)
+            // Giant Pitch Display with Chevrons (Full Display Height Click Target)
+            HStack(spacing: 16) {
+                RepeatingTouchButton(action: { executeCoarsePitchStep(upwards: false) }) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(Color(NSColor.controlBackgroundColor).opacity(0.5))
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 26, weight: .bold))
+                            .foregroundColor(isAntique ? Color.orange : .secondary)
+                    }
+                    .frame(width: 44, height: 105)
+                    .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
                 
                 let displayData = getDisplayData(baseCents: audio.scaleOffsetCents, fineCents: audio.fineTuneCents)
                 
@@ -499,19 +542,22 @@ struct MasterPitchView: View {
                     }
                 }
                 
-                Button(action: { executeCoarsePitchStep(upwards: true) }) {
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 28, weight: .bold))
-                        .foregroundColor(isAntique ? Color.orange : .secondary)
+                RepeatingTouchButton(action: { executeCoarsePitchStep(upwards: true) }) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(Color(NSColor.controlBackgroundColor).opacity(0.5))
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 26, weight: .bold))
+                            .foregroundColor(isAntique ? Color.orange : .secondary)
+                    }
+                    .frame(width: 44, height: 105)
+                    .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
             }
             
-            // Fine Tuning Slider Row
-            HStack(spacing: 16) {
+            // Fine Tuning Slider Row with Circular ♭ / ♯ Buttons
+            HStack(spacing: 12) {
                 continuousAdjustmentButton(label: "♭", isIncrementing: false)
-                    .font(.title2)
-                    .foregroundColor(isAntique ? Color.orange : .secondary)
                 
                 Slider(value: $audio.fineTuneCents, in: -100...100, step: 1.0) { isEditing in
                     if !isEditing {
@@ -519,10 +565,9 @@ struct MasterPitchView: View {
                     }
                 }
                 .tint(isAntique ? .orange : (audio.fineTuneCents == 0 ? .gray : .accentColor))
-                .frame(width: 200)
+                .frame(width: 180)
                 
                 continuousAdjustmentButton(label: "♯", isIncrementing: true)
-                    .font(.title2)
             }
         }
         .padding(16)
@@ -587,30 +632,22 @@ struct MasterPitchView: View {
     
     @ViewBuilder
     private func continuousAdjustmentButton(label: String, isIncrementing: Bool) -> some View {
-        Text(label)
-            .foregroundColor(.secondary)
-            .frame(width: 30, height: 30)
-            .contentShape(Rectangle())
-            .onTapGesture {
-                audio.fineTuneCents = max(-100, min(100, audio.fineTuneCents + (isIncrementing ? 1.0 : -1.0)))
+        RepeatingTouchButton(action: {
+            audio.fineTuneCents = max(-100, min(100, audio.fineTuneCents + (isIncrementing ? 1.0 : -1.0)))
+        }) {
+            ZStack {
+                Circle()
+                    .fill(Color(NSColor.controlBackgroundColor))
+                    .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1)
+                
+                Text(label)
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundColor(audio.isAntiqueThemeEnabled ? Color.orange : .primary)
             }
-            .onLongPressGesture(minimumDuration: 0.0, pressing: { isPressing in
-                if isPressing {
-                    // Wait 0.4 seconds before starting the fast-forward loop
-                    delayTimer?.invalidate()
-                    repeatTimer?.invalidate()
-                    delayTimer = Timer.scheduledTimer(withTimeInterval: 0.4, repeats: false) { _ in
-                        let timer = Timer(timeInterval: 0.02, repeats: true) { _ in
-                            audio.fineTuneCents = max(-100, min(100, audio.fineTuneCents + (isIncrementing ? 1.0 : -1.0)))
-                        }
-                        RunLoop.main.add(timer, forMode: .common)
-                        self.repeatTimer = timer
-                    }
-                } else {
-                    delayTimer?.invalidate()
-                    repeatTimer?.invalidate()
-                }
-            }, perform: {})
+            .frame(width: 32, height: 32)
+            .frame(width: 44, height: 44)
+            .contentShape(Rectangle())
+        }
     }
 }
 
@@ -697,26 +734,6 @@ struct TanpuraCardView: View {
                 .buttonStyle(CustomTagButtonStyle(isSelected: isCustomSelected, isAntique: isAntique))
             }
 
-            // RESTORED: Collapsible Settings Pane
-            DisclosureGroup("Settings", isExpanded: $isSettingsExpanded) {
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("Tempo: \(Int(tanpura.tempoBPM)) BPM")
-                        .font(.caption)
-                        .foregroundColor(isAntique ? Color.orange : .secondary)
-                        .padding(.top, 4)
-
-                    HStack(spacing: 12) {
-                        tempoAdjustmentButton(label: "minus.circle.fill", isIncrementing: false)
-                        
-                        Slider(value: $tanpura.tempoBPM, in: 60...140, step: 1.0)
-                            .tint(isAntique ? .orange : .accentColor)
-                        
-                        tempoAdjustmentButton(label: "plus.circle.fill", isIncrementing: true)
-                    }
-                }
-            }
-            .font(.subheadline)
-            .tint(isAntique ? Color.orange : .secondary)
         }
         .padding(16)
         .frame(width: 340)
@@ -1107,60 +1124,75 @@ struct TablaCardView: View {
             }
             .padding(.horizontal, 4)
 
-            // Permanently Visible Settings & Tempo Controls (Logarithmic Slider)
+            // Permanently Visible Settings & Tempo Controls (Flanked Slider & Multipliers)
             VStack(spacing: 12) {
-                Slider(
-                    value: Binding(
-                        get: { tabla.bpmToLogSliderValue(tabla.tempoBPM) },
-                        set: { newValue in
-                            tabla.tempoBPM = tabla.logSliderValueToBPM(newValue)
+                HStack(spacing: 12) {
+                    RepeatingTouchButton(action: { tabla.tempoBPM = max(10, tabla.tempoBPM - 1) }) {
+                        ZStack {
+                            Circle()
+                                .fill(Color(NSColor.controlBackgroundColor))
+                                .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1)
+                            Image(systemName: "minus")
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundColor(isAntique ? Color.orange : .primary)
                         }
-                    ),
-                    in: 0.0...1.0
-                ) { isEditing in
-                    if !isEditing {
-                        let snapshot = tabla.orchestrator.capturePreset()
-                        Task.detached(priority: .utility) {
-                            await SettingsStorageService.shared.saveActiveSettings(snapshot)
+                        .frame(width: 32, height: 32)
+                        .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
+                    }
+
+                    Slider(
+                        value: Binding(
+                            get: { tabla.bpmToLogSliderValue(tabla.tempoBPM) },
+                            set: { newValue in
+                                tabla.tempoBPM = tabla.logSliderValueToBPM(newValue)
+                            }
+                        ),
+                        in: 0.0...1.0
+                    ) { isEditing in
+                        if !isEditing {
+                            let snapshot = tabla.orchestrator.capturePreset()
+                            Task.detached(priority: .utility) {
+                                await SettingsStorageService.shared.saveActiveSettings(snapshot)
+                            }
                         }
                     }
+                    .tint(isAntique ? .orange : .accentColor)
+
+                    RepeatingTouchButton(action: { tabla.tempoBPM = min(700, tabla.tempoBPM + 1) }) {
+                        ZStack {
+                            Circle()
+                                .fill(Color(NSColor.controlBackgroundColor))
+                                .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1)
+                            Image(systemName: "plus")
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundColor(isAntique ? Color.orange : .primary)
+                        }
+                        .frame(width: 32, height: 32)
+                        .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
+                    }
                 }
-                .tint(isAntique ? .orange : .accentColor)
 
                 Grid(horizontalSpacing: 8, verticalSpacing: 8) {
                     GridRow {
-                        Button(action: { tabla.tempoBPM = max(10, tabla.tempoBPM - 5) }) {
+                        RepeatingTouchButton(action: { tabla.tempoBPM = max(10, tabla.tempoBPM - 5) }) {
                             Text("-5").font(.caption).fontWeight(.medium).frame(maxWidth: .infinity)
                         }
                         .buttonStyle(CustomTagButtonStyle(isSelected: false, isAntique: isAntique))
 
-                        Button(action: { tabla.tempoBPM = max(10, tabla.tempoBPM - 1) }) {
-                            Text("-").font(.caption).fontWeight(.medium).frame(maxWidth: .infinity)
-                        }
-                        .buttonStyle(CustomTagButtonStyle(isSelected: false, isAntique: isAntique))
-
-                        Button(action: { tabla.tempoBPM = min(700, tabla.tempoBPM + 1) }) {
-                            Text("+").font(.caption).fontWeight(.medium).frame(maxWidth: .infinity)
-                        }
-                        .buttonStyle(CustomTagButtonStyle(isSelected: false, isAntique: isAntique))
-
-                        Button(action: { tabla.tempoBPM = min(700, tabla.tempoBPM + 5) }) {
-                            Text("+5").font(.caption).fontWeight(.medium).frame(maxWidth: .infinity)
-                        }
-                        .buttonStyle(CustomTagButtonStyle(isSelected: false, isAntique: isAntique))
-                    }
-
-                    GridRow {
-                        Button(action: { tabla.tempoBPM = max(10, tabla.tempoBPM / 2.0) }) {
+                        RepeatingTouchButton(action: { tabla.tempoBPM = max(10, tabla.tempoBPM / 2.0) }) {
                             Text("x/2").font(.caption).fontWeight(.medium).frame(maxWidth: .infinity)
                         }
                         .buttonStyle(CustomTagButtonStyle(isSelected: false, isAntique: isAntique))
-                        
-                        Spacer()
-                        Spacer()
 
-                        Button(action: { tabla.tempoBPM = min(700, tabla.tempoBPM * 2.0) }) {
+                        RepeatingTouchButton(action: { tabla.tempoBPM = min(700, tabla.tempoBPM * 2.0) }) {
                             Text("2x").font(.caption).fontWeight(.medium).frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(CustomTagButtonStyle(isSelected: false, isAntique: isAntique))
+
+                        RepeatingTouchButton(action: { tabla.tempoBPM = min(700, tabla.tempoBPM + 5) }) {
+                            Text("+5").font(.caption).fontWeight(.medium).frame(maxWidth: .infinity)
                         }
                         .buttonStyle(CustomTagButtonStyle(isSelected: false, isAntique: isAntique))
                     }
@@ -1433,4 +1465,8 @@ struct PresetsDrawerView: View {
         .padding(.leading, 24)
         .padding(.top, 12)
     }
+}
+
+#Preview {
+    ContentView()
 }
