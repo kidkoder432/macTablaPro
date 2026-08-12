@@ -20,19 +20,84 @@ let stringPickerItems: [PickerNote] = Array(tanpuraNotes.keys)
     .sorted(by: { (tanpuraNotes[$0] ?? 0.0) < (tanpuraNotes[$1] ?? 0.0) })
     .map { PickerNote(name: $0, cents: tanpuraNotes[$0] ?? -1.0) }
 
-struct VisualEffectBackground: NSViewRepresentable {
+typealias VisualEffectBackground = VisualEffectView
+
+struct VisualEffectView: NSViewRepresentable {
+    var material: NSVisualEffectView.Material = .hudWindow
+    var blendingMode: NSVisualEffectView.BlendingMode = .behindWindow
+
     func makeNSView(context: Context) -> NSVisualEffectView {
         let view = NSVisualEffectView()
-        view.material = .hudWindow
-        view.blendingMode = .behindWindow
+        view.material = material
+        view.blendingMode = blendingMode
         view.state = .active
         return view
     }
 
-    func updateNSView(_ view: NSVisualEffectView, context: Context) {
-        view.material = .hudWindow
-        view.blendingMode = .behindWindow
-        view.state = .active
+    func updateNSView(_ nsView: NSVisualEffectView, context: Context) {
+        nsView.material = material
+        nsView.blendingMode = blendingMode
+    }
+}
+
+struct NativeCardModifier: ViewModifier {
+    var isAntique: Bool = false
+    var cornerRadius: CGFloat = 16
+
+    func body(content: Content) -> some View {
+        content
+            .background(
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(
+                        isAntique ?
+                        Color(NSColor.windowBackgroundColor).opacity(0.85) :
+                        Color(NSColor.controlBackgroundColor)
+                    )
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .stroke(
+                        isAntique ?
+                        Color.orange.opacity(0.4) :
+                        Color(NSColor.separatorColor),
+                        lineWidth: 1
+                    )
+            )
+            .shadow(color: isAntique ? Color.orange.opacity(0.12) : Color.black.opacity(0.06), radius: isAntique ? 6 : 3, x: 0, y: 2)
+    }
+}
+
+extension View {
+    func nativeCard(isAntique: Bool = false, cornerRadius: CGFloat = 16) -> some View {
+        self.modifier(NativeCardModifier(isAntique: isAntique, cornerRadius: cornerRadius))
+    }
+}
+
+struct NativeDisplayBox<Content: View>: View {
+    let width: CGFloat
+    let height: CGFloat
+    var isAntique: Bool = false
+    let content: () -> Content
+
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(
+                    isAntique ?
+                        Color(red: 0.12, green: 0.08, blue: 0.05) :
+                        Color(NSColor.controlBackgroundColor)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .stroke(
+                            isAntique ? Color.orange.opacity(0.4) : Color(NSColor.separatorColor),
+                            lineWidth: 1
+                        )
+                )
+            
+            content()
+        }
+        .frame(width: width, height: height)
     }
 }
 
@@ -178,7 +243,7 @@ struct ContentView: View {
                     }
                     .padding(20)
                     .frame(width: 280)
-                    .liquidGlassCard(isAntique: audio.isAntiqueThemeEnabled, cornerRadius: 20)
+                    .nativeCard(isAntique: audio.isAntiqueThemeEnabled, cornerRadius: 20)
                     .padding(.trailing, 24)
                     .padding(.top, 24)
                 }
@@ -199,7 +264,7 @@ struct ContentView: View {
                                 .foregroundColor(.primary)
                         }
                         .padding(28)
-                        .liquidGlassCard(isAntique: audio.isAntiqueThemeEnabled, cornerRadius: 22)
+                        .nativeCard(isAntique: audio.isAntiqueThemeEnabled, cornerRadius: 22)
                     }
                     .transition(.opacity)
                 }
@@ -346,7 +411,7 @@ struct MixerCardView: View {
         }
         .padding(20)
         .frame(width: 340)
-        .liquidGlassCard(isAntique: isAntique, cornerRadius: 18)
+        .nativeCard(isAntique: isAntique, cornerRadius: 16)
     }
 }
 
@@ -414,7 +479,7 @@ struct MasterPitchView: View {
                 
                 let displayData = getDisplayData(baseCents: audio.scaleOffsetCents, fineCents: audio.fineTuneCents)
                 
-                LiquidGlassDisplay(width: 170, height: 105, isAntique: isAntique) {
+                NativeDisplayBox(width: 170, height: 105, isAntique: isAntique) {
                     ZStack(alignment: .topLeading) {
                         Text(displayData.noteName)
                             .font(isAntique ?
@@ -655,7 +720,7 @@ struct TanpuraCardView: View {
         }
         .padding(16)
         .frame(width: 340)
-        .liquidGlassCard(isAntique: isAntique, cornerRadius: 18)
+        .nativeCard(isAntique: isAntique, cornerRadius: 16)
     }
 
     @ViewBuilder
@@ -919,7 +984,7 @@ struct TablaCardView: View {
 
             // Central Display and Play/Stop Control
             HStack(spacing: 20) {
-                LiquidGlassDisplay(width: 145, height: 95, isAntique: isAntique) {
+                NativeDisplayBox(width: 145, height: 95, isAntique: isAntique) {
                     ZStack {
                         // 1. Top Bar: Symbol (Left), Sub-beat Dots (Center), BPM Number & Label (Right)
                         VStack {
@@ -1106,81 +1171,11 @@ struct TablaCardView: View {
         }
         .padding(16)
         .frame(width: 340)
-        .liquidGlassCard(isAntique: isAntique, cornerRadius: 18)
+        .nativeCard(isAntique: isAntique, cornerRadius: 16)
     }
 }
 
-// MARK: - Native macOS Liquid Glass Backlit Display Box
-struct LiquidGlassDisplay<Content: View>: View {
-    let width: CGFloat
-    let height: CGFloat
-    var isAntique: Bool = false
-    let content: () -> Content
 
-    var body: some View {
-        ZStack {
-            // 1. Recessed Outer Electronic Box Bezel Frame
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: isAntique ?
-                            [Color.orange.opacity(0.35), Color.black.opacity(0.9)] :
-                            [Color.black.opacity(0.85), Color(NSColor.darkGray).opacity(0.6)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .shadow(color: Color.black.opacity(0.35), radius: 3, x: 0, y: 2)
-
-            // 2. Liquid Glass Translucent Backstage Pane
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(.ultraThinMaterial)
-                .overlay(
-                    LinearGradient(
-                        colors: isAntique ?
-                            [Color.orange.opacity(0.2), Color.black.opacity(0.8)] :
-                            [Color.black.opacity(0.5), Color.black.opacity(0.75)],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
-                .padding(2)
-
-            // 3. High-Gloss Specular Glare (Top Refraction Specular Highlight)
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: [
-                            Color.white.opacity(isAntique ? 0.3 : 0.22),
-                            Color.white.opacity(0.05),
-                            Color.clear
-                        ],
-                        startPoint: .top,
-                        endPoint: .center
-                    )
-                )
-                .padding(2)
-
-            // 4. Subtle Inner Glow & Chamfered Glass Edge Border
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .strokeBorder(
-                    LinearGradient(
-                        colors: isAntique ?
-                            [Color.yellow.opacity(0.65), Color.orange.opacity(0.4), Color.yellow.opacity(0.15)] :
-                            [Color.white.opacity(0.45), Color.white.opacity(0.1), Color.cyan.opacity(0.25)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ),
-                    lineWidth: 1.2
-                )
-                .padding(2)
-
-            // 5. Backlit Digital Display Content
-            content()
-        }
-        .frame(width: width, height: height)
-    }
-}
 
 // MARK: - Left Presets Translucent Glass Drawer View
 struct PresetsDrawerView: View {
@@ -1434,7 +1429,7 @@ struct PresetsDrawerView: View {
         }
         .padding(16)
         .frame(width: 300)
-        .liquidGlassCard(isAntique: audio.isAntiqueThemeEnabled, cornerRadius: 20)
+        .nativeCard(isAntique: audio.isAntiqueThemeEnabled, cornerRadius: 20)
         .padding(.leading, 24)
         .padding(.top, 12)
     }

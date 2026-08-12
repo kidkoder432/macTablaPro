@@ -184,22 +184,7 @@ struct SwarMandalView: View {
         }
         .padding(14)
         .frame(width: 340)
-        .background(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(.ultraThinMaterial)
-                .shadow(color: Color.black.opacity(0.18), radius: 14, x: 0, y: 6)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(
-                    LinearGradient(
-                        colors: [Color.white.opacity(0.45), Color.white.opacity(0.12)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ),
-                    lineWidth: 1
-                )
-        )
+        .nativeCard(isAntique: swarMandal.orchestrator.isAntiqueThemeEnabled, cornerRadius: 16)
         .popover(isPresented: $isPopoverPresented, arrowEdge: .bottom) {
             if let idx = selectedStringIndex, idx < swarMandal.stringNotes.count {
                 SwarTunerPopoverView(
