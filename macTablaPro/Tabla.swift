@@ -156,8 +156,8 @@ class Tabla: Instrument {
         switch tier {
         case 0: return 64
         case 1: return 32
-        case 2: return 16
-        case 3: return 8
+        case 2: return 32
+        case 3: return 16
         default: return 4
         }
     }

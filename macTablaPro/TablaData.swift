@@ -16,8 +16,8 @@ struct SubStrokeRecipe {
 /// Value: Recipe specifying duration split ratios and single-stroke sample names.
 let compoundBolTuningMap: [String: SubStrokeRecipe] = [
     "KDa": SubStrokeRecipe(
-        ratio1: 0.125, left1: "Ka", right1: nil,
-        ratio2: 0.875, left2: nil, right2: "Din"
+        ratio1: 0.25, left1: "Ka", right1: nil,
+        ratio2: 0.75, left2: nil, right2: "TTaL"
     ),
     "TaKa": SubStrokeRecipe(
         ratio1: 0.50, left1: nil, right1: "Ta",
