@@ -248,21 +248,7 @@ struct ContentView: View {
                             .font(.subheadline)
                             .fontWeight(.medium)
 
-                        // Audio Output Selector
-                        if !audio.availableOutputDevices.isEmpty {
-                            VStack(alignment: .leading, spacing: 6) {
-                                Text("Audio Output Device")
-                                    .font(.subheadline)
-                                    .fontWeight(.semibold)
-                                Picker("", selection: $audio.selectedOutputDeviceID) {
-                                    ForEach(audio.availableOutputDevices) { device in
-                                        Text(device.name).tag(device.id)
-                                    }
-                                }
-                                .labelsHidden()
-                                .pickerStyle(.menu)
-                            }
-                        }
+
 
                         // Shared Tanpura Tempo Controller
                         VStack(spacing: 12) {
@@ -333,20 +319,32 @@ struct ContentView: View {
             }
 
             ToolbarItem(placement: .primaryAction) {
-                Button(action: {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                        audio.isInspectorPresented.toggle()
+                HStack(spacing: 12) {
+                    Button(action: {
+                        audio.isMasterMuted.toggle()
+                    }) {
+                        Image(systemName: audio.isMasterMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(audio.isMasterMuted ? .red : (audio.isAntiqueThemeEnabled ? Color.orange : .primary))
                     }
-                }) {
-                    HStack(spacing: 4) {
-                        Text("Settings")
-                        Image(systemName: "slider.horizontal.3")
+                    .buttonStyle(.plain)
+                    .help(audio.isMasterMuted ? "Unmute All Instruments" : "Quick Mute All Instruments")
+
+                    Button(action: {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                            audio.isInspectorPresented.toggle()
+                        }
+                    }) {
+                        HStack(spacing: 4) {
+                            Text("Settings")
+                            Image(systemName: "slider.horizontal.3")
+                        }
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(audio.isInspectorPresented ? .accentColor : .primary)
                     }
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundColor(audio.isInspectorPresented ? .accentColor : .primary)
+                    .buttonStyle(.plain)
+                    .help("Toggle Settings Drawer")
                 }
-                .buttonStyle(.plain)
-                .help("Toggle Settings Drawer")
             }
         }
     }
@@ -407,25 +405,7 @@ struct MixerCardView: View {
             .padding(10)
             .background(isAntique ? Color.black.opacity(0.2) : Color.gray.opacity(0.08), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
 
-            // Audio Output Device Selector
-            if !audio.availableOutputDevices.isEmpty {
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack {
-                        Text("Audio Output")
-                            .font(isAntique ? .custom("Baskerville-Italic", size: 14) : .caption)
-                            .foregroundColor(isAntique ? Color.orange : .secondary)
-                        Spacer()
-                        Picker("", selection: $audio.selectedOutputDeviceID) {
-                            ForEach(audio.availableOutputDevices) { device in
-                                Text(device.name).tag(device.id)
-                            }
-                        }
-                        .labelsHidden()
-                        .pickerStyle(.menu)
-                    }
-                }
-                .padding(.horizontal, 4)
-            }
+
 
             Divider()
 
