@@ -8,7 +8,13 @@ class Instrument: ObservableObject, Identifiable {
     let name: String
     
     @Published var isPlaying = false
-    @Published var isMuted = false
+    @Published var isMuted = false {
+        didSet {
+            if isMuted {
+                voicePool.stopAll()
+            }
+        }
+    }
     @Published var tempoBPM: Double = 100.0
     @Published var volume = 1.0
     

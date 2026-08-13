@@ -1,12 +1,8 @@
 import AVFoundation
 import Combine
-import CoreAudio
 import Foundation
 
-struct AudioOutputDevice: Identifiable, Hashable {
-    let id: AudioDeviceID
-    let name: String
-}
+
 
 @MainActor
 class AppAudioOrchestrator: ObservableObject {
@@ -50,7 +46,6 @@ class AppAudioOrchestrator: ObservableObject {
     @Published var activePresetName: String? = nil
     @Published var allPresets: [ITablaProPreset] = []
     @Published var isAppLoading: Bool = true
-    var savedAudioDeviceName: String? = nil
 
     func refreshAllPresets() {
         Task {
@@ -59,21 +54,23 @@ class AppAudioOrchestrator: ObservableObject {
         }
     }
 
-    private var isUpdatingVolumeFromHardware = false
-
     @Published var masterVolume: Double = 1.0 {
         didSet {
-            masterMixer.outputVolume = Float(masterVolume)
-            engine.mainMixerNode.outputVolume = 1
-            if !isUpdatingVolumeFromHardware {
-                setSystemMasterVolume(Float(masterVolume))
+            if !isMasterMuted {
+                masterMixer.outputVolume = Float(masterVolume)
             }
         }
     }
 
-    @Published var availableOutputDevices: [AudioOutputDevice] = []
-    @Published var selectedOutputDeviceID: AudioDeviceID = 0 {
-        didSet { setAudioOutputDevice(deviceID: selectedOutputDeviceID) }
+    @Published var isMasterMuted: Bool = false {
+        didSet {
+            if isMasterMuted {
+                masterMixer.outputVolume = 0.0
+                voicePool.stopAll()
+            } else {
+                masterMixer.outputVolume = Float(masterVolume)
+            }
+        }
     }
 
     private var activeInstrumentsSnapshot: Set<ObjectIdentifier> = []
@@ -117,14 +114,8 @@ class AppAudioOrchestrator: ObservableObject {
         self.instruments = [t1, t2, tb, sm]
         
         setupChildSubscriptions()
-        let sysVol = getSystemMasterVolume()
-        if sysVol > 0 {
-            self.masterVolume = Double(sysVol)
-        }
-        
         updateMasterPitch()
-        refreshAudioOutputDevices()
-        setupSystemVolumeListener()
+        setupAudioEngineNotifications()
 
         // Load persisted settings (or defaults) off main thread asynchronously
         Task {
@@ -156,10 +147,6 @@ class AppAudioOrchestrator: ObservableObject {
         preset.FineTuneCents = self.fineTuneCents
         preset.Tempo = self.tabla?.tempoBPM ?? preset.Tempo
         preset.SharedTanpuraBPM = self.sharedTanpuraBPM
-
-        if let selectedDev = availableOutputDevices.first(where: { $0.id == selectedOutputDeviceID }) {
-            preset.SavedAudioDeviceName = selectedDev.name
-        }
 
         if let tb = self.tabla {
             preset.TablaOn = tb.isPlaying
@@ -195,13 +182,6 @@ class AppAudioOrchestrator: ObservableObject {
 
         if let tanpuraBPM = preset.SharedTanpuraBPM {
             self.sharedTanpuraBPM = tanpuraBPM
-        }
-
-        if let devName = preset.SavedAudioDeviceName {
-            self.savedAudioDeviceName = devName
-            if let match = availableOutputDevices.first(where: { $0.name == devName }) {
-                self.selectedOutputDeviceID = match.id
-            }
         }
 
         if let t1 = self.tanpura1 {
@@ -400,80 +380,6 @@ class AppAudioOrchestrator: ObservableObject {
         commitPitchChange()
     }
 
-    private func getSystemDefaultOutputDeviceID() -> AudioDeviceID {
-        var defaultOutputDeviceID = AudioDeviceID(0)
-        var propertySize = UInt32(MemoryLayout<AudioDeviceID>.size)
-        var address = AudioObjectPropertyAddress(
-            mSelector: kAudioHardwarePropertyDefaultOutputDevice,
-            mScope: kAudioObjectPropertyScopeGlobal,
-            mElement: kAudioObjectPropertyElementMain
-        )
-        if AudioObjectGetPropertyData(AudioObjectID(kAudioObjectSystemObject), &address, 0, nil, &propertySize, &defaultOutputDeviceID) == noErr {
-            return defaultOutputDeviceID
-        }
-        return 0
-    }
-
-    private func refreshAudioOutputDevices() {
-        var propertySize: UInt32 = 0
-        var address = AudioObjectPropertyAddress(
-            mSelector: kAudioHardwarePropertyDevices,
-            mScope: kAudioObjectPropertyScopeGlobal,
-            mElement: kAudioObjectPropertyElementMain
-        )
-        
-        guard AudioObjectGetPropertyDataSize(AudioObjectID(kAudioObjectSystemObject), &address, 0, nil, &propertySize) == noErr else { return }
-        
-        let deviceCount = Int(propertySize) / MemoryLayout<AudioDeviceID>.size
-        var deviceIDs = [AudioDeviceID](repeating: 0, count: deviceCount)
-        guard AudioObjectGetPropertyData(AudioObjectID(kAudioObjectSystemObject), &address, 0, nil, &propertySize, &deviceIDs) == noErr else { return }
-        
-        var devices: [AudioOutputDevice] = []
-        for devID in deviceIDs {
-            var streamAddress = AudioObjectPropertyAddress(
-                mSelector: kAudioDevicePropertyStreams,
-                mScope: kAudioDevicePropertyScopeOutput,
-                mElement: kAudioObjectPropertyElementMain
-            )
-            var streamSize: UInt32 = 0
-            if AudioObjectGetPropertyDataSize(devID, &streamAddress, 0, nil, &streamSize) == noErr && streamSize > 0 {
-                var nameAddress = AudioObjectPropertyAddress(
-                    mSelector: kAudioObjectPropertyName,
-                    mScope: kAudioObjectPropertyScopeGlobal,
-                    mElement: kAudioObjectPropertyElementMain
-                )
-                var nameString: CFString = "" as CFString
-                var nameSize = UInt32(MemoryLayout<CFString>.size)
-                if AudioObjectGetPropertyData(devID, &nameAddress, 0, nil, &nameSize, &nameString) == noErr {
-                    devices.append(AudioOutputDevice(id: devID, name: nameString as String))
-                }
-            }
-        }
-        self.availableOutputDevices = devices
-        
-        let sysDefaultID = getSystemDefaultOutputDeviceID()
-        if let savedName = savedAudioDeviceName, let match = devices.first(where: { $0.name == savedName }) {
-            self.selectedOutputDeviceID = match.id
-        } else if devices.contains(where: { $0.id == sysDefaultID }) {
-            self.selectedOutputDeviceID = sysDefaultID
-        } else if let first = devices.first {
-            self.selectedOutputDeviceID = first.id
-        }
-    }
-
-    private func setAudioOutputDevice(deviceID: AudioDeviceID) {
-        guard deviceID != 0, let audioUnit = engine.outputNode.audioUnit else { return }
-        var devID = deviceID
-        AudioUnitSetProperty(
-            audioUnit,
-            kAudioOutputUnitProperty_CurrentDevice,
-            kAudioUnitScope_Global,
-            0,
-            &devID,
-            UInt32(MemoryLayout<AudioDeviceID>.size)
-        )
-    }
-
     private var cancellables = Set<AnyCancellable>()
 
     private func setupChildSubscriptions() {
@@ -485,76 +391,19 @@ class AppAudioOrchestrator: ObservableObject {
         }
     }
 
-    private func getSystemMasterVolume() -> Float {
-        var defaultOutputDeviceID = AudioDeviceID(0)
-        var propertySize = UInt32(MemoryLayout<AudioDeviceID>.size)
-        var address = AudioObjectPropertyAddress(
-            mSelector: kAudioHardwarePropertyDefaultOutputDevice,
-            mScope: kAudioObjectPropertyScopeGlobal,
-            mElement: kAudioObjectPropertyElementMain
-        )
-        
-        if AudioObjectGetPropertyData(AudioObjectID(kAudioObjectSystemObject), &address, 0, nil, &propertySize, &defaultOutputDeviceID) == noErr {
-            var volume: Float32 = 0.0
-            var volSize = UInt32(MemoryLayout<Float32>.size)
-            var volAddress = AudioObjectPropertyAddress(
-                mSelector: kAudioHardwareServiceDeviceProperty_VirtualMainVolume,
-                mScope: kAudioDevicePropertyScopeOutput,
-                mElement: kAudioObjectPropertyElementMain
-            )
-            if AudioObjectGetPropertyData(defaultOutputDeviceID, &volAddress, 0, nil, &volSize, &volume) == noErr {
-                return volume
+    private func setupAudioEngineNotifications() {
+        NotificationCenter.default.publisher(for: .AVAudioEngineConfigurationChange, object: engine)
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.handleEngineConfigurationChange()
             }
-        }
-        return 1.0
+            .store(in: &cancellables)
     }
 
-    private func setSystemMasterVolume(_ volume: Float) {
-        var defaultOutputDeviceID = AudioDeviceID(0)
-        var propertySize = UInt32(MemoryLayout<AudioDeviceID>.size)
-        var address = AudioObjectPropertyAddress(
-            mSelector: kAudioHardwarePropertyDefaultOutputDevice,
-            mScope: kAudioObjectPropertyScopeGlobal,
-            mElement: kAudioObjectPropertyElementMain
-        )
-        
-        if AudioObjectGetPropertyData(AudioObjectID(kAudioObjectSystemObject), &address, 0, nil, &propertySize, &defaultOutputDeviceID) == noErr {
-            var vol = volume
-            let volSize = UInt32(MemoryLayout<Float32>.size)
-            var volAddress = AudioObjectPropertyAddress(
-                mSelector: kAudioHardwareServiceDeviceProperty_VirtualMainVolume,
-                mScope: kAudioDevicePropertyScopeOutput,
-                mElement: kAudioObjectPropertyElementMain
-            )
-            AudioObjectSetPropertyData(defaultOutputDeviceID, &volAddress, 0, nil, volSize, &vol)
-        }
-    }
-
-    private func setupSystemVolumeListener() {
-        var defaultOutputDeviceID = AudioDeviceID(0)
-        var propertySize = UInt32(MemoryLayout<AudioDeviceID>.size)
-        var address = AudioObjectPropertyAddress(
-            mSelector: kAudioHardwarePropertyDefaultOutputDevice,
-            mScope: kAudioObjectPropertyScopeGlobal,
-            mElement: kAudioObjectPropertyElementMain
-        )
-
-        guard AudioObjectGetPropertyData(AudioObjectID(kAudioObjectSystemObject), &address, 0, nil, &propertySize, &defaultOutputDeviceID) == noErr else { return }
-
-        var volAddress = AudioObjectPropertyAddress(
-            mSelector: kAudioHardwareServiceDeviceProperty_VirtualMainVolume,
-            mScope: kAudioDevicePropertyScopeOutput,
-            mElement: kAudioObjectPropertyElementMain
-        )
-
-        AudioObjectAddPropertyListenerBlock(defaultOutputDeviceID, &volAddress, DispatchQueue.main) { [weak self] _, _ in
-            guard let self = self else { return }
-            let hardwareVol = Double(self.getSystemMasterVolume())
-            if abs(self.masterVolume - hardwareVol) > 0.01 {
-                self.isUpdatingVolumeFromHardware = true
-                self.masterVolume = hardwareVol
-                self.isUpdatingVolumeFromHardware = false
-            }
-        }
+    private func handleEngineConfigurationChange() {
+        print("🔄 AVAudioEngine Configuration Changed - Resetting Graph for Hardware Switch")
+        engine.stop()
+        engine.reset()
+        setupAudioGraph()
     }
 }
