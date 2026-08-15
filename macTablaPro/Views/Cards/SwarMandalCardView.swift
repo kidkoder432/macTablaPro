@@ -1,13 +1,9 @@
-//
-//  SwarMandalView.swift
-//  macTablaPro
-//
-
 import SwiftUI
+import AppKit
 
-struct SwarMandalView: View {
+// MARK: - Swar Mandal Card View
+struct SwarMandalCardView: View {
     @ObservedObject var swarMandal: SwarMandal
-    @EnvironmentObject var orchestrator: AppAudioOrchestrator
     
     @State private var selectedStringIndex: Int? = nil
     @State private var hoveredStringIndex: Int? = nil
@@ -15,6 +11,7 @@ struct SwarMandalView: View {
     @State private var isPopoverPresented: Bool = false
     
     var body: some View {
+        let isAntique = swarMandal.orchestrator.isAntiqueThemeEnabled
         VStack(spacing: 10) {
             // MARK: - Header Row: Title, LED, Auto-Loop Toggle & Manual Play Icon
             HStack(spacing: 8) {
@@ -24,8 +21,8 @@ struct SwarMandalView: View {
                     .shadow(color: swarMandal.isPlaying ? Color.green.opacity(0.8) : Color.clear, radius: 4)
                 
                 Text("Swar Mandal")
-                    .font(.headline)
-                    .fontWeight(.bold)
+                    .font(isAntique ? .custom("Snell Roundhand", size: 20).weight(.bold) : .headline)
+                    .foregroundColor(isAntique ? Color.orange : .primary)
                 
                 Spacer()
                 
@@ -41,18 +38,19 @@ struct SwarMandalView: View {
                 ))
                 .toggleStyle(.switch)
                 .font(.caption2)
+                .foregroundColor(isAntique ? Color.orange : .secondary)
                 
                 Button(action: {
                     swarMandal.triggerManualStrumPass()
                 }) {
                     ZStack {
                         Circle()
-                            .fill(Color.accentColor)
+                            .fill(isAntique ? Color.orange : Color.accentColor)
                             .frame(width: 24, height: 24)
                         
                         Image(systemName: "play.fill")
                             .font(.system(size: 9, weight: .bold))
-                            .foregroundColor(.white)
+                            .foregroundColor(isAntique ? .black : .white)
                             .offset(x: 1)
                     }
                 }
@@ -73,12 +71,13 @@ struct SwarMandalView: View {
                 HStack(spacing: 4) {
                     Text("Strings:")
                         .font(.caption2)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(isAntique ? Color.orange : .secondary)
                     Stepper("\(swarMandal.stringCount)", value: $swarMandal.stringCount, in: SwarMandalTimingConfig.minStringCount...SwarMandalTimingConfig.maxStringCount)
                         .labelsHidden()
                     Text("\(swarMandal.stringCount)")
                         .font(.caption)
                         .monospacedDigit()
+                        .foregroundColor(isAntique ? Color.yellow : .primary)
                 }
                 
                 Spacer()
@@ -96,16 +95,16 @@ struct SwarMandalView: View {
             HStack(spacing: 6) {
                 Text("Vol")
                     .font(.caption2)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(isAntique ? Color.orange : .secondary)
                 Slider(value: $swarMandal.volume, in: 0...1)
-                    .tint(.accentColor)
+                    .tint(isAntique ? .orange : .accentColor)
             }
             
             Divider()
             
             // MARK: - Two-Tier Harp Visualizer
             VStack(alignment: .leading, spacing: 6) {
-                // 1. Top Note Tuning Tags Rail (Scrollable with Visible Indicator)
+                // 1. Top Note Tuning Tags Rail
                 ScrollView(.horizontal, showsIndicators: true) {
                     HStack(spacing: 4) {
                         ForEach(0..<swarMandal.stringCount, id: \.self) { idx in
@@ -123,8 +122,16 @@ struct SwarMandalView: View {
                                     .lineLimit(1)
                                     .padding(.horizontal, 4)
                                     .padding(.vertical, 3)
-                                    .background(isPlucked ? Color.accentColor : (isOff ? Color.gray.opacity(0.15) : Color.accentColor.opacity(0.15)))
-                                    .foregroundColor(isPlucked ? .white : (isOff ? .secondary : .primary))
+                                    .background(
+                                        isPlucked ?
+                                        (isAntique ? Color.orange : Color.accentColor) :
+                                        (isOff ? Color.gray.opacity(0.15) : (isAntique ? Color.orange.opacity(0.2) : Color.accentColor.opacity(0.15)))
+                                    )
+                                    .foregroundColor(
+                                        isPlucked ?
+                                        (isAntique ? .black : .white) :
+                                        (isOff ? .secondary : (isAntique ? Color.orange : .primary))
+                                    )
                                     .cornerRadius(4)
                             }
                             .buttonStyle(.plain)
@@ -133,7 +140,7 @@ struct SwarMandalView: View {
                     .padding(.vertical, 2)
                 }
                 
-                // 2. Bottom Interactive Strum Bar (20-36 Vertical String Lines with Continuous Drag)
+                // 2. Bottom Interactive Strum Bar
                 GeometryReader { geo in
                     let totalWidth = geo.size.width
                     let count = max(1, swarMandal.stringCount)
@@ -148,10 +155,14 @@ struct SwarMandalView: View {
                             
                             ZStack {
                                 Rectangle()
-                                    .fill(isHovered || isPlucked ? Color.accentColor.opacity(0.25) : Color.clear)
+                                    .fill(isHovered || isPlucked ? (isAntique ? Color.orange.opacity(0.3) : Color.accentColor.opacity(0.25)) : Color.clear)
                                 
                                 Rectangle()
-                                    .fill(isOff ? Color.secondary.opacity(0.2) : (isPlucked || isHovered ? Color.accentColor : Color.primary.opacity(0.5)))
+                                    .fill(
+                                        isOff ?
+                                        Color.secondary.opacity(0.2) :
+                                        (isPlucked || isHovered ? (isAntique ? Color.yellow : Color.accentColor) : (isAntique ? Color.orange.opacity(0.7) : Color.primary.opacity(0.5)))
+                                    )
                                     .frame(width: isPlucked || isHovered ? 2.5 : 1.0)
                             }
                             .frame(width: stepWidth, height: 40)
@@ -178,13 +189,13 @@ struct SwarMandalView: View {
                     )
                 }
                 .frame(height: 40)
-                .background(Color(NSColor.controlBackgroundColor).opacity(0.5))
+                .background(isAntique ? Color.black.opacity(0.25) : Color(NSColor.controlBackgroundColor).opacity(0.5))
                 .cornerRadius(6)
             }
         }
         .padding(14)
         .frame(width: 340)
-        .nativeCard(isAntique: swarMandal.orchestrator.isAntiqueThemeEnabled, cornerRadius: 16)
+        .nativeCard(isAntique: isAntique, cornerRadius: 16)
         .popover(isPresented: $isPopoverPresented, arrowEdge: .bottom) {
             if let idx = selectedStringIndex, idx < swarMandal.stringNotes.count {
                 SwarTunerPopoverView(
