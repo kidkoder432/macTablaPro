@@ -74,7 +74,7 @@ final class LookaheadAudioScheduler: Sendable {
                     
                     stepIndex = (stepIndex + 1) % (stepsCount > 0 ? stepsCount : 1)
                 }
-                try? await Task.sleep(nanoseconds: UInt64(2.5e7))
+                try? await Task.sleep(nanoseconds: UInt64(5.0e7))
             }
         }
     }

@@ -227,7 +227,6 @@ class SwarMandal: Instrument {
             
             // Return step duration fraction based on mode (Pluck mode ramps from 400 to 240 BPM)
             if mode == .pluck {
-                print(100.0 / (SwarMandalTimingConfig.pluckBPM * pow(SwarMandalTimingConfig.pluckDecay, Double(stepIndex))))
                 return 100.0 / (SwarMandalTimingConfig.pluckBPM * pow(SwarMandalTimingConfig.pluckDecay, Double(stepIndex)))
             } else {
                 return 100.0 / SwarMandalTimingConfig.strumBPM

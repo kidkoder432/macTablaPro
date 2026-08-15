@@ -87,7 +87,6 @@ class Tanpura: Instrument {
         ]
 
         let step = seq[stepIndex]
-        print("Playing step \(step)")
         switch step {
         case .Rest:
             break
