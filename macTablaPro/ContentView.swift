@@ -397,7 +397,13 @@ struct ContentView: View {
                                                 .monospacedDigit()
                                                 .foregroundColor(.secondary)
                                         }
-                                        Slider(value: $audio.sharedTanpuraBPM, in: 20...180)
+                                        Slider(
+                                            value: Binding(
+                                                get: { audio.sharedTanpuraBPM },
+                                                set: { audio.sharedTanpuraBPM = round($0) }
+                                            ),
+                                            in: 20...180
+                                        )
                                     }
                                 } else {
                                     VStack(alignment: .leading, spacing: 12) {
@@ -726,7 +732,13 @@ struct MasterPitchView: View {
                     audio.fineTuneCents = max(-100, min(100, audio.fineTuneCents - 1.0))
                 }
                 
-                Slider(value: $audio.fineTuneCents, in: -100...100) { isEditing in
+                Slider(
+                    value: Binding(
+                        get: { audio.fineTuneCents },
+                        set: { audio.fineTuneCents = round($0) }
+                    ),
+                    in: -100...100
+                ) { isEditing in
                     if !isEditing {
                         audio.commitPitchChange()
                     }

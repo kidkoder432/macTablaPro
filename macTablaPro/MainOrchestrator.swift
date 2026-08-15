@@ -30,11 +30,29 @@ class AppAudioOrchestrator: ObservableObject {
         instruments.first(where: { $0.id == "swar_mandal" }) as? SwarMandal
     }
     
-    @Published var scaleOffsetCents: Double = 100.0
-    @Published var fineTuneCents: Double = 0.0
+    @Published var scaleOffsetCents: Double = 100.0 {
+        didSet {
+            let rounded = round(scaleOffsetCents)
+            if scaleOffsetCents != rounded {
+                scaleOffsetCents = rounded
+            }
+        }
+    }
+    @Published var fineTuneCents: Double = 0.0 {
+        didSet {
+            let rounded = round(fineTuneCents)
+            if fineTuneCents != rounded {
+                fineTuneCents = rounded
+            }
+        }
+    }
     
     @Published var sharedTanpuraBPM: Double = 60.0 {
         didSet {
+            let rounded = round(sharedTanpuraBPM)
+            if sharedTanpuraBPM != rounded {
+                sharedTanpuraBPM = rounded
+            }
             tanpura1?.tempoBPM = sharedTanpuraBPM
             tanpura2?.tempoBPM = sharedTanpuraBPM
         }
