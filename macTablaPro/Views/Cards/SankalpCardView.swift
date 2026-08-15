@@ -2,11 +2,14 @@ import SwiftUI
 
 // MARK: - Sankalp Practice Log Card View
 struct SankalpCardView: View {
-    @ObservedObject var audio: AppAudioOrchestrator
+    @ObservedObject var sankalp: SankalpPracticeManager
+    var isAntique: Bool = false
+    
     @State private var isShowingLogDialog = false
+    @State private var isShowingResetSessionAlert = false
+    @State private var isShowingResetDailyAlert = false
     
     var body: some View {
-        let isAntique = audio.isAntiqueThemeEnabled
         VStack(alignment: .leading, spacing: 14) {
             // Header Row
             HStack(spacing: 8) {
@@ -18,23 +21,45 @@ struct SankalpCardView: View {
                 Spacer()
             }
             
-            // Stats Row
-            HStack(spacing: 20) {
+            // Stats Row with Minute Precision and Reset Controls
+            HStack(spacing: 24) {
+                // Session Stat Box
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("SESSION")
-                        .font(.system(size: 9, weight: .bold))
-                        .foregroundColor(.secondary)
-                    Text(formatDuration(seconds: audio.sessionSeconds))
-                        .font(.system(size: 16, weight: .bold, design: .monospaced))
+                    HStack(spacing: 4) {
+                        Text("SESSION")
+                            .font(.system(size: 9, weight: .bold))
+                            .foregroundColor(.secondary)
+                        
+                        Button(action: { isShowingResetSessionAlert = true }) {
+                            Image(systemName: "arrow.counterclockwise")
+                                .font(.system(size: 8, weight: .medium))
+                                .foregroundColor(.secondary.opacity(0.7))
+                        }
+                        .buttonStyle(.plain)
+                        .help("Reset Session Time")
+                    }
+                    Text(SankalpPracticeManager.formatMinutes(sankalp.sessionMinutes))
+                        .font(.system(size: 17, weight: .bold, design: .rounded))
                         .foregroundColor(isAntique ? Color.yellow : .primary)
                 }
                 
+                // Today Stat Box
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("TODAY")
-                        .font(.system(size: 9, weight: .bold))
-                        .foregroundColor(.secondary)
-                    Text(formatDuration(seconds: audio.dailySeconds))
-                        .font(.system(size: 16, weight: .bold, design: .monospaced))
+                    HStack(spacing: 4) {
+                        Text("TODAY")
+                            .font(.system(size: 9, weight: .bold))
+                            .foregroundColor(.secondary)
+                        
+                        Button(action: { isShowingResetDailyAlert = true }) {
+                            Image(systemName: "arrow.counterclockwise")
+                                .font(.system(size: 8, weight: .medium))
+                                .foregroundColor(.secondary.opacity(0.7))
+                        }
+                        .buttonStyle(.plain)
+                        .help("Reset Today's Time")
+                    }
+                    Text(SankalpPracticeManager.formatMinutes(sankalp.dailyMinutes))
+                        .font(.system(size: 17, weight: .bold, design: .rounded))
                         .foregroundColor(isAntique ? Color.yellow : .primary)
                 }
             }
@@ -53,19 +78,29 @@ struct SankalpCardView: View {
                 }
                 .padding(.vertical, 6)
             }
-            .buttonStyle(SankalpButtonStyle(isProminent: !audio.hasLoggedToday, isAntique: isAntique))
+            .buttonStyle(SankalpButtonStyle(isProminent: !sankalp.hasLoggedToday, isAntique: isAntique))
         }
         .padding(16)
         .frame(width: 340)
         .nativeCard(isAntique: isAntique, cornerRadius: 16)
         .sheet(isPresented: $isShowingLogDialog) {
-            SankalpLogDialog(audio: audio, isPresented: $isShowingLogDialog)
+            SankalpLogDialog(sankalp: sankalp, isAntique: isAntique, isPresented: $isShowingLogDialog)
         }
-    }
-    
-    private func formatDuration(seconds: TimeInterval) -> String {
-        let mins = Int(seconds) / 60
-        let secs = Int(seconds) % 60
-        return "\(mins)m \(secs)s"
+        .alert("Reset Session Time?", isPresented: $isShowingResetSessionAlert) {
+            Button("Cancel", role: .cancel) { }
+            Button("Reset", role: .destructive) {
+                sankalp.resetSessionTime()
+            }
+        } message: {
+            Text("Are you sure you want to reset your current session practice timer to 0m?")
+        }
+        .alert("Reset Today's Time?", isPresented: $isShowingResetDailyAlert) {
+            Button("Cancel", role: .cancel) { }
+            Button("Reset", role: .destructive) {
+                sankalp.resetDailyTime()
+            }
+        } message: {
+            Text("Are you sure you want to reset today's accumulated practice timer to 0m?")
+        }
     }
 }

@@ -2,7 +2,8 @@ import SwiftUI
 
 // MARK: - Sankalp Practice Log Submission Dialog
 struct SankalpLogDialog: View {
-    @ObservedObject var audio: AppAudioOrchestrator
+    @ObservedObject var sankalp: SankalpPracticeManager
+    var isAntique: Bool = false
     @Binding var isPresented: Bool
     
     @State private var minutes: Int = 1
@@ -14,7 +15,6 @@ struct SankalpLogDialog: View {
     @State private var errorMessage: String? = nil
     
     var body: some View {
-        let isAntique = audio.isAntiqueThemeEnabled
         VStack(alignment: .leading, spacing: 16) {
             // Title
             Text("Submit Sankalp Practice Log")
@@ -27,15 +27,15 @@ struct SankalpLogDialog: View {
                 Text("STUDENT INFO")
                     .font(.system(size: 9, weight: .bold))
                     .foregroundColor(.secondary)
-                if audio.studentID.isEmpty || audio.firstName.isEmpty || audio.lastName.isEmpty || audio.email.isEmpty {
+                if sankalp.studentID.isEmpty || sankalp.firstName.isEmpty || sankalp.lastName.isEmpty || sankalp.email.isEmpty {
                     Text("⚠️ Warning: Sankalp Form Info is incomplete. Please configure it in Settings first.")
                         .font(.caption)
                         .foregroundColor(.red)
                 } else {
-                    Text("\(audio.firstName) \(audio.lastName) (\(audio.studentID))")
+                    Text("\(sankalp.firstName) \(sankalp.lastName) (\(sankalp.studentID))")
                         .font(.subheadline)
                         .foregroundColor(.primary)
-                    Text("\(audio.email) — Batch: \(audio.batch)")
+                    Text("\(sankalp.email) — Batch: \(sankalp.batch)")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -122,14 +122,14 @@ struct SankalpLogDialog: View {
                     }
                 }
                 .buttonStyle(.borderedProminent)
-                .disabled(isSubmitting || audio.studentID.isEmpty || audio.firstName.isEmpty || audio.lastName.isEmpty || audio.email.isEmpty)
+                .disabled(isSubmitting || sankalp.studentID.isEmpty || sankalp.firstName.isEmpty || sankalp.lastName.isEmpty || sankalp.email.isEmpty)
             }
         }
         .padding(20)
         .frame(width: 420)
         .onAppear {
-            // Set defaults
-            self.minutes = max(1, Int(audio.sessionSeconds / 60.0))
+            // Prefill with active session minutes (default 1 if 0)
+            self.minutes = max(1, sankalp.sessionMinutes)
             self.summary = UserDefaults.standard.string(forKey: "SankalpLastPracticeSummary") ?? ""
             self.sankalpWord = UserDefaults.standard.string(forKey: "SankalpLastWord") ?? ""
         }
@@ -141,12 +141,12 @@ struct SankalpLogDialog: View {
         
         Task {
             do {
-                try await audio.submitSankalpForm(
-                    studentId: audio.studentID,
-                    firstName: audio.firstName,
-                    lastName: audio.lastName,
-                    email: audio.email,
-                    batch: audio.batch,
+                try await sankalp.submitForm(
+                    studentId: sankalp.studentID,
+                    firstName: sankalp.firstName,
+                    lastName: sankalp.lastName,
+                    email: sankalp.email,
+                    batch: sankalp.batch,
                     minutes: minutes,
                     summary: summary,
                     sankalpWord: sankalpWord,
@@ -161,11 +161,11 @@ struct SankalpLogDialog: View {
                 let formatter = DateFormatter()
                 formatter.dateFormat = "yyyy-MM-dd"
                 let todayStr = formatter.string(from: Date())
-                audio.lastLogDateString = todayStr
+                sankalp.lastLogDateString = todayStr
                 UserDefaults.standard.set(todayStr, forKey: "SankalpLastLogDate")
                 
                 // Reset session seconds
-                audio.sessionSeconds = 0.0
+                sankalp.resetSessionTime()
                 
                 isSubmitting = false
                 isPresented = false

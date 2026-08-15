@@ -47,7 +47,7 @@ struct ContentView: View {
                     // 3. RIGHT COLUMN: Master Mixer Hub (ALWAYS VISIBLE!) + Sankalp Card
                     VStack(spacing: WorkstationLayout.verticalCardSpacing) {
                         MixerCardView(audio: audio)
-                        SankalpCardView(audio: audio)
+                        SankalpCardView(sankalp: audio.sankalp, isAntique: audio.isAntiqueThemeEnabled)
                     }
                     .frame(width: WorkstationLayout.cardWidth)
 

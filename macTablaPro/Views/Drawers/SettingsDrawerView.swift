@@ -114,7 +114,7 @@ struct SettingsDrawerView: View {
                                 Text("MKSM ID")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
-                                TextField("Enter MKSM ID", text: $audio.studentID)
+                                TextField("Enter MKSM ID", text: $audio.sankalp.studentID)
                                     .textFieldStyle(.roundedBorder)
                             }
 
@@ -122,7 +122,7 @@ struct SettingsDrawerView: View {
                                 Text("First Name")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
-                                TextField("Enter First Name", text: $audio.firstName)
+                                TextField("Enter First Name", text: $audio.sankalp.firstName)
                                     .textFieldStyle(.roundedBorder)
                             }
 
@@ -130,7 +130,7 @@ struct SettingsDrawerView: View {
                                 Text("Last Name")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
-                                TextField("Enter Last Name", text: $audio.lastName)
+                                TextField("Enter Last Name", text: $audio.sankalp.lastName)
                                     .textFieldStyle(.roundedBorder)
                             }
 
@@ -138,7 +138,7 @@ struct SettingsDrawerView: View {
                                 Text("Email")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
-                                TextField("Enter Email", text: $audio.email)
+                                TextField("Enter Email", text: $audio.sankalp.email)
                                     .textFieldStyle(.roundedBorder)
                             }
 
@@ -146,7 +146,7 @@ struct SettingsDrawerView: View {
                                 Text("Batch")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
-                                TextField("Enter Batch", text: $audio.batch)
+                                TextField("Enter Batch", text: $audio.sankalp.batch)
                                     .textFieldStyle(.roundedBorder)
                             }
                         }
