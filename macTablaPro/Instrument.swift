@@ -15,7 +15,14 @@ class Instrument: ObservableObject, Identifiable {
             }
         }
     }
-    @Published var tempoBPM: Double = 100.0
+    @Published var tempoBPM: Double = 100.0 {
+        didSet {
+            let rounded = round(tempoBPM)
+            if tempoBPM != rounded {
+                tempoBPM = rounded
+            }
+        }
+    }
     @Published var volume = 1.0
     
     var effectiveVolume: Double {

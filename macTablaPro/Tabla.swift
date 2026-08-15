@@ -47,6 +47,31 @@ class Tabla: Instrument {
     private let taalDb = TablaDatabase.shared.taalCatalog
 
     /// Returns the allowed BPM range (min...max) for the currently selected Taal and Variation.
+    private func minBPM(forTier tier: Int) -> Double {
+        switch tier {
+        case 0: return 10.0
+        case 1: return 25.0
+        case 55: return 55.0
+        case 2: return 81.0
+        case 3: return 151.0
+        case 4: return 301.0
+        default: return 10.0
+        }
+    }
+
+    private func maxBPM(forTier tier: Int) -> Double {
+        switch tier {
+        case 0: return 25.0
+        case 1: return 80.0
+        case 55: return 80.0
+        case 2: return 150.0
+        case 3: return 300.0
+        case 4: return 700.0
+        default: return 700.0
+        }
+    }
+
+    /// Returns the allowed BPM range (min...max) for the currently selected Taal and Variation.
     func allowedBPMRange() -> ClosedRange<Double> {
         guard let taal = taalDb[activeTaal],
               let variation = taal.variations[activeVariation],
@@ -54,13 +79,8 @@ class Tabla: Instrument {
             return 10.0...700.0
         }
         let tiers = variation.allowedTempos
-        let minTier = tiers.min() ?? 0
-        let maxTier = tiers.max() ?? 4
-        
-        let minBPMs = [10.0, 25.0, 81.0, 151.0, 301.0]
-        let maxBPMs = [25.0, 80.0, 150.0, 300.0, 700.0]
-        let minVal = minBPMs[minTier]
-        let maxVal = maxBPMs[maxTier]
+        let minVal = tiers.map { minBPM(forTier: $0) }.min() ?? 10.0
+        let maxVal = tiers.map { maxBPM(forTier: $0) }.max() ?? 700.0
         return minVal...maxVal
     }
     
@@ -85,11 +105,11 @@ class Tabla: Instrument {
         let maxB = range.upperBound
         let clampedVal = max(0.0, min(1.0, sliderVal))
         if logScaleBase <= 1.0 {
-            return minB + clampedVal * (maxB - minB)
+            return round(minB + clampedVal * (maxB - minB))
         }
         let frac = (pow(logScaleBase, clampedVal) - 1.0) / (logScaleBase - 1.0)
         let computedBPM = minB + frac * (maxB - minB)
-        return max(minB, min(maxB, computedBPM))
+        return round(max(minB, min(maxB, computedBPM)))
     }
 
     /// Clamps the current tempoBPM to stay within allowedBPMRange().
@@ -105,16 +125,40 @@ class Tabla: Instrument {
 
     // MARK: - Tempo & Tier Management
 
-    /// Maps the current raw tempoBPM to its corresponding Tempo Tier Index (0...4)
-    /// Tier 0: 10-25 (Ati-Vilambit), Tier 1: 25-80 (Vilambit), Tier 2: 81-150 (Madhya),
-    /// Tier 3: 151-300 (Drut), Tier 4: 301-700 (Ati-Drut)
+    /// Maps the current raw tempoBPM to its corresponding Tempo Tier Index
+    /// Tier 0: 10-25 (Ati-Vilambit), Tier 1: 25-54 or 25-80 (Vilambit), Tier 55: 55-80 (Vilambit Fine),
+    /// Tier 2: 81-150 (Madhya), Tier 3: 151-300 (Drut), Tier 4: 301-700 (Ati-Drut)
     func currentTempoTier() -> Int {
+        guard let taal = taalDb[activeTaal],
+              let variation = taal.variations[activeVariation] else {
+            switch tempoBPM {
+            case ..<25: return 0
+            case 25..<81: return 1
+            case 81..<151: return 2
+            case 151..<301: return 3
+            default: return 4
+            }
+        }
+
         switch tempoBPM {
-        case ..<25: return 0
-        case 25..<81: return 1
-        case 81..<151: return 2
-        case 151..<301: return 3
-        default: return 4
+        case ..<25:
+            return 0
+        case 25..<55:
+            if variation.allowedTempos.contains(1) {
+                return 1
+            } else if variation.allowedTempos.contains(55) {
+                return 55
+            } else {
+                return 1
+            }
+        case 55..<81:
+            return variation.allowedTempos.contains(55) ? 55 : 1
+        case 81..<151:
+            return 2
+        case 151..<301:
+            return 3
+        default:
+            return 4
         }
     }
 
@@ -129,16 +173,27 @@ class Tabla: Instrument {
 
         let desiredTier = currentTempoTier()
 
-        // If exact tier exists in variation, use it
+        // 1. If exact tier exists in variation, use it
         if let timeline = variation.timelinesByTempoTier[desiredTier],
             !timeline.isEmpty
         {
             return timeline
         }
 
-        // Fallback clamping to nearest available tier
-        if let fallbackTier = variation.allowedTempos.sorted().min(by: {
-            abs($0 - desiredTier) < abs($1 - desiredTier)
+        // 2. Direct fallback between 1 and 55 if one is missing
+        if desiredTier == 1, let timeline = variation.timelinesByTempoTier[55], !timeline.isEmpty {
+            return timeline
+        }
+        if desiredTier == 55, let timeline = variation.timelinesByTempoTier[1], !timeline.isEmpty {
+            return timeline
+        }
+
+        // 3. Fallback clamping by closest BPM range midpoint
+        let currentBPM = self.tempoBPM
+        if let fallbackTier = variation.allowedTempos.min(by: {
+            let mid1 = (minBPM(forTier: $0) + maxBPM(forTier: $0)) / 2.0
+            let mid2 = (minBPM(forTier: $1) + maxBPM(forTier: $1)) / 2.0
+            return abs(mid1 - currentBPM) < abs(mid2 - currentBPM)
         }),
             let timeline = variation.timelinesByTempoTier[fallbackTier]
         {
@@ -151,13 +206,15 @@ class Tabla: Instrument {
     private var lastExecutedTier: Int = -1
 
     /// Subdivisions per beat according to Tempo Tier:
-    /// Ati-Vilambit (0): 16, Vilambit (1): 16, Madhya (2): 8, Drut (3): 4, Ati-Drut (4): 2
+    /// Ati-Vilambit (0): 16, Vilambit (1): 16, Vilambit Fine (55): 16, Madhya (2): 8, Drut (3): 4, Ati-Drut (4): 4
     func subdivisionsPerBeat(forTier tier: Int) -> Int {
         switch tier {
-        case 0: return 64
-        case 1: return 32
-        case 2: return 32
-        case 3: return 16
+        case 0: return 16
+        case 1: return 16
+        case 55: return 16
+        case 2: return 8
+        case 3: return 4
+        case 4: return 1
         default: return 4
         }
     }
@@ -220,12 +277,16 @@ class Tabla: Instrument {
         let calculatedMatra = (stepIndex / subs) + 1
         let subStep = (pulseWithinBeat * 4) / subs
         
+        // Gated UI mutations: update ONLY when value changes to prevent 50+ FPS redraw loops
+        if self.currentMatra != calculatedMatra {
+            self.currentMatra = calculatedMatra
+        }
+        if self.currentMatraSubStep != subStep {
+            self.currentMatraSubStep = subStep
+        }
+        
         let timeline = resolveActiveTimeline()
         guard !timeline.isEmpty else {
-            Task { @MainActor in
-                self.currentMatra = calculatedMatra
-                self.currentMatraSubStep = subStep
-            }
             return stepFraction
         }
 
@@ -233,21 +294,13 @@ class Tabla: Instrument {
         let pulseBeatTime = Double(stepIndex) * stepFraction
         let halfStep = stepFraction * 0.5
         
-        guard let event = timeline.first(where: { abs($0.startBeatFraction - pulseBeatTime) < halfStep }) else {
-            Task { @MainActor in
-                self.currentMatra = calculatedMatra
-                self.currentMatraSubStep = subStep
-            }
+        // O(log N) binary search instead of linear search
+        guard let event = timeline.event(atBeat: pulseBeatTime, tolerance: halfStep) else {
             return stepFraction
         }
 
-        let newBol = event.bolName
-        Task { @MainActor in
-            self.currentMatra = calculatedMatra
-            self.currentMatraSubStep = subStep
-            if let b = newBol {
-                self.currentBolName = b
-            }
+        if let b = event.bolName, self.currentBolName != b {
+            self.currentBolName = b
         }
 
         // Execute Left Hand (Bayan)
@@ -287,6 +340,58 @@ class Tabla: Instrument {
             }
         }
 
+        // Execute Secondary Stroke for Fixed-Delay Compound Bols (e.g. KDa, Tra flams)
+        if let delaySec = event.secondaryDelaySec, let primaryTime = time {
+            let delayTicks = clock.secondsToHostTicks(delaySec)
+            let secondaryTime = AVAudioTime(hostTime: primaryTime.hostTime + delayTicks)
+
+            if let secLeft = event.secondaryLeftSample,
+                let sampleToPlay = sampleRegistry["Bayaan_" + secLeft] {
+                _ = self.voicePool.play(
+                    sample: sampleToPlay,
+                    targetPitchCents: 0,
+                    volume: Double(event.leftVolume) * self.effectiveVolume,
+                    time: secondaryTime
+                )
+            }
+
+            if let secRight = event.secondaryRightSample {
+                let sampleString = "Dayaan_" + tablaPitch + "_" + surString + secRight
+                if let sampleToPlay = sampleRegistry[sampleString] {
+                    _ = self.voicePool.play(
+                        sample: sampleToPlay,
+                        targetPitchCents: orchestrator.scaleOffsetCents
+                            + orchestrator.fineTuneCents,
+                        volume: Double(event.rightVolume) * self.effectiveVolume,
+                        time: secondaryTime
+                    )
+                }
+            }
+        }
+
         return stepFraction
+    }
+}
+
+// MARK: - Binary Search Timeline Extension
+
+extension Array where Element == TablaStrokeEvent {
+    /// O(log N) binary search for the stroke event matching the specified beat time within tolerance.
+    func event(atBeat beatTime: Double, tolerance: Double) -> TablaStrokeEvent? {
+        var low = 0
+        var high = count - 1
+        while low <= high {
+            let mid = (low + high) / 2
+            let event = self[mid]
+            let diff = event.startBeatFraction - beatTime
+            if abs(diff) < tolerance {
+                return event
+            } else if diff < 0 {
+                low = mid + 1
+            } else {
+                high = mid - 1
+            }
+        }
+        return nil
     }
 }
