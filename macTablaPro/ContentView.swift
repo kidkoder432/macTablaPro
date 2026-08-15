@@ -27,8 +27,8 @@ struct RepeatingTouchButton<Content: View>: View {
     let action: () -> Void
     var label: () -> Content
 
-    @State private var delayTimer: Timer?
-    @State private var repeatTimer: Timer?
+    @State private var isPressed: Bool = false
+    @State private var repeatTask: Task<Void, Never>? = nil
 
     init(action: @escaping () -> Void, @ViewBuilder label: @escaping () -> Content) {
         self.action = action
@@ -36,29 +36,112 @@ struct RepeatingTouchButton<Content: View>: View {
     }
 
     var body: some View {
-        Button(action: {}) {
-            label()
-        }
-        .buttonStyle(.plain)
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { _ in
-                    if delayTimer == nil && repeatTimer == nil {
-                        action()
-                        delayTimer = Timer.scheduledTimer(withTimeInterval: 0.35, repeats: false) { _ in
-                            repeatTimer = Timer.scheduledTimer(withTimeInterval: 0.08, repeats: true) { _ in
-                                action()
+        label()
+            .opacity(isPressed ? 0.75 : 1.0)
+            .scaleEffect(isPressed ? 0.94 : 1.0)
+            .animation(.easeInOut(duration: 0.1), value: isPressed)
+            .contentShape(Rectangle())
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { _ in
+                        if !isPressed {
+                            isPressed = true
+                            action()
+                            repeatTask?.cancel()
+                            repeatTask = Task { @MainActor in
+                                try? await Task.sleep(nanoseconds: 350_000_000) // 350ms hold delay
+                                while !Task.isCancelled && isPressed {
+                                    action()
+                                    try? await Task.sleep(nanoseconds: 75_000_000) // ~13 ticks/sec
+                                }
                             }
                         }
                     }
+                    .onEnded { _ in
+                        isPressed = false
+                        repeatTask?.cancel()
+                        repeatTask = nil
+                    }
+            )
+    }
+}
+
+struct TempoActionButton: View {
+    let label: String
+    var isAntique: Bool = false
+    let action: () -> Void
+
+    var body: some View {
+        RepeatingTouchButton(action: action) {
+            Text(label)
+                .font(.caption)
+                .fontWeight(.semibold)
+                .foregroundColor(isAntique ? Color.orange : .primary)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 7)
+                .padding(.horizontal, 4)
+                .background(
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(
+                            isAntique ?
+                            Color.black.opacity(0.35) :
+                            Color(NSColor.controlBackgroundColor)
+                        )
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .stroke(
+                            isAntique ?
+                            Color.orange.opacity(0.45) :
+                            Color(NSColor.separatorColor),
+                            lineWidth: 1
+                        )
+                )
+                .shadow(color: Color.black.opacity(0.06), radius: 1, x: 0, y: 1)
+        }
+    }
+}
+
+struct StepperCircleButton: View {
+    var iconName: String? = nil
+    var textLabel: String? = nil
+    var isAntique: Bool = false
+    let action: () -> Void
+
+    var body: some View {
+        RepeatingTouchButton(action: action) {
+            ZStack {
+                Circle()
+                    .fill(
+                        isAntique ?
+                        Color.black.opacity(0.35) :
+                        Color(NSColor.controlBackgroundColor)
+                    )
+                    .overlay(
+                        Circle()
+                            .stroke(
+                                isAntique ?
+                                Color.orange.opacity(0.45) :
+                                Color(NSColor.separatorColor),
+                                lineWidth: 1
+                            )
+                    )
+                    .shadow(color: Color.black.opacity(0.08), radius: 2, x: 0, y: 1)
+
+                if let icon = iconName {
+                    Image(systemName: icon)
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundColor(isAntique ? Color.orange : .primary)
+                } else if let txt = textLabel {
+                    Text(txt)
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundColor(isAntique ? Color.orange : .primary)
                 }
-                .onEnded { _ in
-                    delayTimer?.invalidate()
-                    repeatTimer?.invalidate()
-                    delayTimer = nil
-                    repeatTimer = nil
-                }
-        )
+            }
+            .frame(width: 32, height: 32)
+            .frame(width: 44, height: 44)
+            .contentShape(Rectangle())
+        }
     }
 }
 
@@ -155,8 +238,23 @@ struct NativeDisplayBox<Content: View>: View {
     }
 }
 
+enum SettingsTab: String, CaseIterable, Identifiable {
+    case global = "Global"
+    case sankalp = "Sankalp Info"
+    
+    var id: String { self.rawValue }
+    
+    var iconName: String {
+        switch self {
+        case .global: return "slider.horizontal.3"
+        case .sankalp: return "clock.badge.checkmark.fill"
+        }
+    }
+}
+
 struct ContentView: View {
     @StateObject private var audio = AppAudioOrchestrator()
+    @State private var settingsTab: SettingsTab = .global
 
     var body: some View {
         ZStack {
@@ -198,9 +296,10 @@ struct ContentView: View {
 
                     Spacer(minLength: WorkstationLayout.minHorizontalSpacing)
 
-                    // 3. RIGHT COLUMN: Master Mixer Hub (ALWAYS VISIBLE!)
+                    // 3. RIGHT COLUMN: Master Mixer Hub (ALWAYS VISIBLE!) + Sankalp Card
                     VStack(spacing: WorkstationLayout.verticalCardSpacing) {
                         MixerCardView(audio: audio)
+                        SankalpCardView(audio: audio)
                     }
                     .frame(width: WorkstationLayout.cardWidth)
 
@@ -221,10 +320,11 @@ struct ContentView: View {
                 .allowsHitTesting(audio.isPresetsPresented)
 
                 // MARK: - Liquid Glass Translucent Overlay (Floating Settings Panel)
+                // MARK: - Liquid Glass Translucent Overlay (Floating Settings Panel)
                 if audio.isInspectorPresented {
-                    VStack(alignment: .leading, spacing: 16) {
+                    VStack(alignment: .leading, spacing: 0) {
                         HStack {
-                            Text("Global Settings")
+                            Text("Settings")
                                 .font(.headline)
                                 .fontWeight(.semibold)
                             Spacer()
@@ -239,34 +339,119 @@ struct ContentView: View {
                             }
                             .buttonStyle(.plain)
                         }
+                        .padding([.horizontal, .top], 20)
+                        .padding(.bottom, 12)
+
+                        // Horizontal Tab Selector
+                        HStack(spacing: 8) {
+                            ForEach(SettingsTab.allCases) { tab in
+                                Button(action: {
+                                    withAnimation(.spring(response: 0.25, dampingFraction: 0.8)) {
+                                        settingsTab = tab
+                                    }
+                                }) {
+                                    HStack(spacing: 6) {
+                                        Image(systemName: tab.iconName)
+                                            .font(.system(size: 11, weight: .semibold))
+                                        Text(tab.rawValue)
+                                            .font(.system(size: 11, weight: .medium))
+                                    }
+                                    .padding(.vertical, 6)
+                                    .padding(.horizontal, 12)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                            .fill(settingsTab == tab ?
+                                                (audio.isAntiqueThemeEnabled ? Color.orange : Color.accentColor) :
+                                                Color.clear)
+                                    )
+                                    .foregroundColor(settingsTab == tab ?
+                                        (audio.isAntiqueThemeEnabled ? .black : .white) :
+                                        .secondary)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, 12)
 
                         Divider()
 
-                        // Antique Electronic Box Theme Toggle
-                        Toggle("Antique Box Theme", isOn: $audio.isAntiqueThemeEnabled)
-                            .toggleStyle(.switch)
-                            .font(.subheadline)
-                            .fontWeight(.medium)
+                        ScrollView {
+                            VStack(alignment: .leading, spacing: 16) {
+                                if settingsTab == .global {
+                                    // Antique Electronic Box Theme Toggle
+                                    Toggle("Antique Box Theme", isOn: $audio.isAntiqueThemeEnabled)
+                                        .toggleStyle(.switch)
+                                        .font(.subheadline)
+                                        .fontWeight(.medium)
 
+                                    // Shared Tanpura Tempo Controller
+                                    VStack(spacing: 12) {
+                                        HStack {
+                                            Text("Shared Tanpura Tempo")
+                                                .font(.subheadline)
+                                                .fontWeight(.semibold)
+                                            Spacer()
+                                            Text("\(Int(audio.sharedTanpuraBPM)) BPM")
+                                                .font(.caption)
+                                                .monospacedDigit()
+                                                .foregroundColor(.secondary)
+                                        }
+                                        Slider(value: $audio.sharedTanpuraBPM, in: 20...180)
+                                    }
+                                } else {
+                                    VStack(alignment: .leading, spacing: 12) {
+                                        Text("Sankalp Form Info")
+                                            .font(.headline)
+                                            .foregroundColor(audio.isAntiqueThemeEnabled ? Color.orange : .primary)
 
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text("MKSM ID")
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                            TextField("Enter MKSM ID", text: $audio.studentID)
+                                                .textFieldStyle(.roundedBorder)
+                                        }
 
-                        // Shared Tanpura Tempo Controller
-                        VStack(spacing: 12) {
-                            HStack {
-                                Text("Shared Tanpura Tempo")
-                                    .font(.subheadline)
-                                    .fontWeight(.semibold)
-                                Spacer()
-                                Text("\(Int(audio.sharedTanpuraBPM)) BPM")
-                                    .font(.caption)
-                                    .monospacedDigit()
-                                    .foregroundColor(.secondary)
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text("First Name")
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                            TextField("Enter First Name", text: $audio.firstName)
+                                                .textFieldStyle(.roundedBorder)
+                                        }
+
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text("Last Name")
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                            TextField("Enter Last Name", text: $audio.lastName)
+                                                .textFieldStyle(.roundedBorder)
+                                        }
+
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text("Email")
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                            TextField("Enter Email", text: $audio.email)
+                                                .textFieldStyle(.roundedBorder)
+                                        }
+
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text("Batch")
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                            TextField("Enter Batch", text: $audio.batch)
+                                                .textFieldStyle(.roundedBorder)
+                                        }
+                                    }
+                                }
                             }
-                            Slider(value: $audio.sharedTanpuraBPM, in: 20...180, step: 1.0)
+                            .padding(20)
                         }
                     }
-                    .padding(20)
                     .frame(width: 280)
+                    .frame(maxHeight: 520)
                     .nativeCard(isAntique: audio.isAntiqueThemeEnabled, cornerRadius: 20)
                     .padding(.trailing, 24)
                     .padding(.top, 24)
@@ -537,17 +722,20 @@ struct MasterPitchView: View {
             
             // Fine Tuning Slider Row with Circular ♭ / ♯ Buttons
             HStack(spacing: 12) {
-                continuousAdjustmentButton(label: "♭", isIncrementing: false)
+                StepperCircleButton(textLabel: "♭", isAntique: isAntique) {
+                    audio.fineTuneCents = max(-100, min(100, audio.fineTuneCents - 1.0))
+                }
                 
-                Slider(value: $audio.fineTuneCents, in: -100...100, step: 1.0) { isEditing in
+                Slider(value: $audio.fineTuneCents, in: -100...100) { isEditing in
                     if !isEditing {
                         audio.commitPitchChange()
                     }
                 }
                 .tint(isAntique ? .orange : (audio.fineTuneCents == 0 ? .gray : .accentColor))
-                .frame(width: 180)
                 
-                continuousAdjustmentButton(label: "♯", isIncrementing: true)
+                StepperCircleButton(textLabel: "♯", isAntique: isAntique) {
+                    audio.fineTuneCents = max(-100, min(100, audio.fineTuneCents + 1.0))
+                }
             }
         }
         .padding(16)
@@ -608,26 +796,6 @@ struct MasterPitchView: View {
             fineString = "\(sign)\(Int(fineCents))¢"
         }
         return NoteDisplayData(noteName: centsNoteNames[currentIndex], fineCentsString: fineString)
-    }
-    
-    @ViewBuilder
-    private func continuousAdjustmentButton(label: String, isIncrementing: Bool) -> some View {
-        RepeatingTouchButton(action: {
-            audio.fineTuneCents = max(-100, min(100, audio.fineTuneCents + (isIncrementing ? 1.0 : -1.0)))
-        }) {
-            ZStack {
-                Circle()
-                    .fill(Color(NSColor.controlBackgroundColor))
-                    .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1)
-                
-                Text(label)
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundColor(audio.isAntiqueThemeEnabled ? Color.orange : .primary)
-            }
-            .frame(width: 32, height: 32)
-            .frame(width: 44, height: 44)
-            .contentShape(Rectangle())
-        }
     }
 }
 
@@ -809,7 +977,7 @@ struct TablaCardView: View {
     private func tempoCategoryName(tier: Int) -> String {
         switch tier {
         case 0: return "Ati-Vilambit"
-        case 1: return "Vilambit"
+        case 1, 55: return "Vilambit"
         case 2: return "Madhya"
         case 3: return "Drut"
         case 4: return "Ati-Drut"
@@ -1107,18 +1275,9 @@ struct TablaCardView: View {
             // Permanently Visible Settings & Tempo Controls (Flanked Slider & Multipliers)
             VStack(spacing: 12) {
                 HStack(spacing: 12) {
-                    RepeatingTouchButton(action: { tabla.tempoBPM = max(10, tabla.tempoBPM - 1) }) {
-                        ZStack {
-                            Circle()
-                                .fill(Color(NSColor.controlBackgroundColor))
-                                .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1)
-                            Image(systemName: "minus")
-                                .font(.system(size: 14, weight: .bold))
-                                .foregroundColor(isAntique ? Color.orange : .primary)
-                        }
-                        .frame(width: 32, height: 32)
-                        .frame(width: 44, height: 44)
-                        .contentShape(Rectangle())
+                    StepperCircleButton(iconName: "minus", isAntique: isAntique) {
+                        let range = tabla.allowedBPMRange()
+                        tabla.tempoBPM = max(range.lowerBound, tabla.tempoBPM - 1)
                     }
 
                     Slider(
@@ -1139,42 +1298,30 @@ struct TablaCardView: View {
                     }
                     .tint(isAntique ? .orange : .accentColor)
 
-                    RepeatingTouchButton(action: { tabla.tempoBPM = min(700, tabla.tempoBPM + 1) }) {
-                        ZStack {
-                            Circle()
-                                .fill(Color(NSColor.controlBackgroundColor))
-                                .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1)
-                            Image(systemName: "plus")
-                                .font(.system(size: 14, weight: .bold))
-                                .foregroundColor(isAntique ? Color.orange : .primary)
-                        }
-                        .frame(width: 32, height: 32)
-                        .frame(width: 44, height: 44)
-                        .contentShape(Rectangle())
+                    StepperCircleButton(iconName: "plus", isAntique: isAntique) {
+                        let range = tabla.allowedBPMRange()
+                        tabla.tempoBPM = min(range.upperBound, tabla.tempoBPM + 1)
                     }
                 }
 
                 Grid(horizontalSpacing: 8, verticalSpacing: 8) {
                     GridRow {
-                        RepeatingTouchButton(action: { tabla.tempoBPM = max(10, tabla.tempoBPM - 5) }) {
-                            Text("-5").font(.caption).fontWeight(.medium).frame(maxWidth: .infinity)
+                        let range = tabla.allowedBPMRange()
+                        TempoActionButton(label: "-5", isAntique: isAntique) {
+                            tabla.tempoBPM = max(range.lowerBound, round(tabla.tempoBPM - 5))
                         }
-                        .buttonStyle(CustomTagButtonStyle(isSelected: false, isAntique: isAntique))
 
-                        RepeatingTouchButton(action: { tabla.tempoBPM = max(10, tabla.tempoBPM / 2.0) }) {
-                            Text("x/2").font(.caption).fontWeight(.medium).frame(maxWidth: .infinity)
+                        TempoActionButton(label: "x/2", isAntique: isAntique) {
+                            tabla.tempoBPM = max(range.lowerBound, round(tabla.tempoBPM / 2.0))
                         }
-                        .buttonStyle(CustomTagButtonStyle(isSelected: false, isAntique: isAntique))
 
-                        RepeatingTouchButton(action: { tabla.tempoBPM = min(700, tabla.tempoBPM * 2.0) }) {
-                            Text("2x").font(.caption).fontWeight(.medium).frame(maxWidth: .infinity)
+                        TempoActionButton(label: "2x", isAntique: isAntique) {
+                            tabla.tempoBPM = min(range.upperBound, round(tabla.tempoBPM * 2.0))
                         }
-                        .buttonStyle(CustomTagButtonStyle(isSelected: false, isAntique: isAntique))
 
-                        RepeatingTouchButton(action: { tabla.tempoBPM = min(700, tabla.tempoBPM + 5) }) {
-                            Text("+5").font(.caption).fontWeight(.medium).frame(maxWidth: .infinity)
+                        TempoActionButton(label: "+5", isAntique: isAntique) {
+                            tabla.tempoBPM = min(range.upperBound, round(tabla.tempoBPM + 5))
                         }
-                        .buttonStyle(CustomTagButtonStyle(isSelected: false, isAntique: isAntique))
                     }
                 }
             }
@@ -1444,6 +1591,280 @@ struct PresetsDrawerView: View {
         .nativeCard(isAntique: audio.isAntiqueThemeEnabled, cornerRadius: 20)
         .padding(.leading, 24)
         .padding(.top, 12)
+    }
+}
+
+// MARK: - Sankalp Practice Log Views & Styles
+struct SankalpCardView: View {
+    @ObservedObject var audio: AppAudioOrchestrator
+    @State private var isShowingLogDialog = false
+    
+    var body: some View {
+        let isAntique = audio.isAntiqueThemeEnabled
+        VStack(alignment: .leading, spacing: 14) {
+            // Header Row
+            HStack(spacing: 8) {
+                Image(systemName: "clock.badge.checkmark.fill")
+                    .foregroundColor(isAntique ? Color.orange : .accentColor)
+                Text("Sankalp Practice Log")
+                    .font(isAntique ? .custom("Snell Roundhand", size: 20).weight(.bold) : .headline)
+                    .foregroundColor(isAntique ? Color.orange : .primary)
+                Spacer()
+            }
+            
+            // Stats Row
+            HStack(spacing: 20) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("SESSION")
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundColor(.secondary)
+                    Text(formatDuration(seconds: audio.sessionSeconds))
+                        .font(.system(size: 16, weight: .bold, design: .monospaced))
+                        .foregroundColor(isAntique ? Color.yellow : .primary)
+                }
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("TODAY")
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundColor(.secondary)
+                    Text(formatDuration(seconds: audio.dailySeconds))
+                        .font(.system(size: 16, weight: .bold, design: .monospaced))
+                        .foregroundColor(isAntique ? Color.yellow : .primary)
+                }
+            }
+            .padding(.vertical, 2)
+            
+            // Log Button
+            Button(action: {
+                isShowingLogDialog = true
+            }) {
+                HStack {
+                    Spacer()
+                    Image(systemName: "square.and.pencil")
+                    Text("Log Sankalp")
+                        .fontWeight(.medium)
+                    Spacer()
+                }
+                .padding(.vertical, 6)
+            }
+            .buttonStyle(SankalpButtonStyle(isProminent: !audio.hasLoggedToday, isAntique: isAntique))
+        }
+        .padding(16)
+        .frame(width: 340)
+        .nativeCard(isAntique: isAntique, cornerRadius: 16)
+        .sheet(isPresented: $isShowingLogDialog) {
+            SankalpLogDialog(audio: audio, isPresented: $isShowingLogDialog)
+        }
+    }
+    
+    private func formatDuration(seconds: TimeInterval) -> String {
+        let mins = Int(seconds) / 60
+        let secs = Int(seconds) % 60
+        return "\(mins)m \(secs)s"
+    }
+}
+
+struct SankalpButtonStyle: ButtonStyle {
+    var isProminent: Bool
+    var isAntique: Bool
+    
+    func makeBody(configuration: Configuration) -> some View {
+        let defaultBg: Color = isProminent ? .accentColor : Color(NSColor.controlBackgroundColor)
+        let antiqueBg: Color = isProminent ? .orange : Color.black.opacity(0.3)
+        let activeBg = isAntique ? antiqueBg : defaultBg
+        
+        let defaultFg: Color = isProminent ? .white : .primary
+        let antiqueFg: Color = isProminent ? .black : Color.orange
+        let activeFg = isAntique ? antiqueFg : defaultFg
+        
+        return configuration.label
+            .foregroundColor(activeFg)
+            .background(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(activeBg.opacity(configuration.isPressed ? 0.8 : 1.0))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .stroke(isAntique ? Color.orange.opacity(0.6) : Color(NSColor.separatorColor), lineWidth: isProminent ? 0 : 1)
+            )
+            .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
+            .animation(.easeOut(duration: 0.1), value: configuration.isPressed)
+    }
+}
+
+struct SankalpLogDialog: View {
+    @ObservedObject var audio: AppAudioOrchestrator
+    @Binding var isPresented: Bool
+    
+    @State private var minutes: Int = 1
+    @State private var date: Date = Date()
+    @State private var summary: String = ""
+    @State private var sankalpWord: String = ""
+    
+    @State private var isSubmitting = false
+    @State private var errorMessage: String? = nil
+    
+    var body: some View {
+        let isAntique = audio.isAntiqueThemeEnabled
+        VStack(alignment: .leading, spacing: 16) {
+            // Title
+            Text("Submit Sankalp Practice Log")
+                .font(isAntique ? .custom("Snell Roundhand", size: 22).weight(.bold) : .title2)
+                .foregroundColor(isAntique ? Color.orange : .primary)
+                .padding(.bottom, 2)
+            
+            // Student Info Summary
+            VStack(alignment: .leading, spacing: 4) {
+                Text("STUDENT INFO")
+                    .font(.system(size: 9, weight: .bold))
+                    .foregroundColor(.secondary)
+                if audio.studentID.isEmpty || audio.firstName.isEmpty || audio.lastName.isEmpty || audio.email.isEmpty {
+                    Text("⚠️ Warning: Sankalp Form Info is incomplete. Please configure it in Settings first.")
+                        .font(.caption)
+                        .foregroundColor(.red)
+                } else {
+                    Text("\(audio.firstName) \(audio.lastName) (\(audio.studentID))")
+                        .font(.subheadline)
+                        .foregroundColor(.primary)
+                    Text("\(audio.email) — Batch: \(audio.batch)")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+            .padding(10)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(isAntique ? Color.black.opacity(0.2) : Color.gray.opacity(0.08), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+            
+            // Inputs List
+            VStack(spacing: 12) {
+                // Practice Date Row
+                HStack {
+                    Text("Practice Date")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    Spacer()
+                    DatePicker("", selection: $date, displayedComponents: .date)
+                        .datePickerStyle(.compact)
+                        .labelsHidden()
+                }
+                
+                // Minutes Practiced Row
+                HStack {
+                    Text("Minutes Practiced")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    Spacer()
+                    HStack(spacing: 6) {
+                        TextField("", value: $minutes, formatter: NumberFormatter())
+                            .frame(width: 60)
+                            .textFieldStyle(.roundedBorder)
+                            .multilineTextAlignment(.trailing)
+                        Stepper("", value: $minutes, in: 1...1440)
+                            .labelsHidden()
+                    }
+                }
+                
+                // Practice Summary
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Practice Summary (Optional)")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    TextEditor(text: $summary)
+                        .frame(height: 80)
+                        .cornerRadius(6)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 6)
+                                .stroke(isAntique ? Color.orange.opacity(0.4) : Color.gray.opacity(0.2), lineWidth: 1)
+                        )
+                }
+                
+                // Sankalp Word
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Sankalp Word (Optional)")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    TextField("Enter Sankalp word", text: $sankalpWord)
+                        .textFieldStyle(.roundedBorder)
+                }
+            }
+            
+            if let error = errorMessage {
+                Text(error)
+                    .font(.caption)
+                    .foregroundColor(.red)
+            }
+            
+            // Buttons
+            HStack(spacing: 12) {
+                Spacer()
+                Button("Cancel") {
+                    isPresented = false
+                }
+                .buttonStyle(.bordered)
+                .disabled(isSubmitting)
+                
+                Button(action: submitLog) {
+                    if isSubmitting {
+                        ProgressView()
+                            .scaleEffect(0.8)
+                            .frame(width: 60, height: 16)
+                    } else {
+                        Text("Submit Log")
+                    }
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(isSubmitting || audio.studentID.isEmpty || audio.firstName.isEmpty || audio.lastName.isEmpty || audio.email.isEmpty)
+            }
+        }
+        .padding(20)
+        .frame(width: 420)
+        .onAppear {
+            // Set defaults
+            self.minutes = max(1, Int(audio.sessionSeconds / 60.0))
+            self.summary = UserDefaults.standard.string(forKey: "SankalpLastPracticeSummary") ?? ""
+            self.sankalpWord = UserDefaults.standard.string(forKey: "SankalpLastWord") ?? ""
+        }
+    }
+    
+    private func submitLog() {
+        isSubmitting = true
+        errorMessage = nil
+        
+        Task {
+            do {
+                try await audio.submitSankalpForm(
+                    studentId: audio.studentID,
+                    firstName: audio.firstName,
+                    lastName: audio.lastName,
+                    email: audio.email,
+                    batch: audio.batch,
+                    minutes: minutes,
+                    summary: summary,
+                    sankalpWord: sankalpWord,
+                    date: date
+                )
+                
+                // Save last used parameters for prefill
+                UserDefaults.standard.set(summary, forKey: "SankalpLastPracticeSummary")
+                UserDefaults.standard.set(sankalpWord, forKey: "SankalpLastWord")
+                
+                // Mark as logged today
+                let formatter = DateFormatter()
+                formatter.dateFormat = "yyyy-MM-dd"
+                let todayStr = formatter.string(from: Date())
+                audio.lastLogDateString = todayStr
+                UserDefaults.standard.set(todayStr, forKey: "SankalpLastLogDate")
+                
+                // Reset session seconds
+                audio.sessionSeconds = 0.0
+                
+                isSubmitting = false
+                isPresented = false
+            } catch {
+                errorMessage = "❌ Submission failed: \(error.localizedDescription)"
+                isSubmitting = false
+            }
+        }
     }
 }
 
