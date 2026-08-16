@@ -1,0 +1,65 @@
+  Let's grill this design. Transitioning from fixed-grid subdivision polling to pure event-  
+  driven scheduling (where the timer only wakes when there is a physical stroke or rest) is  
+  much cleaner and saves CPU cycles.                                                         
+                                                                                             
+  However, your proposal introduces 4 concrete architectural problems you need to solve:     
+  ──────                                                                                     
+  ### Question 1: How does the Visual Matra Counter advance during Rests?                    
+                                                                                             
+  In slow Vilambit (e.g. 30 BPM, where 1 Matra = 2.0 seconds), a Taal like Tilwada or        
+  Vilambit Teentaal might have a bol on beat 1 with a 3-beat sustain (beats 2 and 3 have no  
+  strokes).                                                                            
+                                                                                             
+  • If the scheduler only fires on audio strokes, who tells the UI that beat 2 and beat 3    
+  have started?                                                                              
+  • In Ati-Vilambit, the card displays 4 sub-beat dots (· · · ·) ticking every quarter-beat. 
+  If the scheduler is silent, how do those dots animate?     
+
+  this might require 2 clocks, one for the ui and one for the audio/lookahead scheduler. 
+  we can also push the matra number of each taal stroke (which is already in TaalBols.csv) to the display. 
+
+
+  ──────                                                                                     
+  ### Question 2: How do you handle Gaps between Strokes in the CSV Timeline?                
+                                                                                             
+  In the CSV dataset, events are defined with startBeatFraction and durationFraction.        
+  Suppose Event A starts at beat 0.0 with duration 0.5. But the next stroke (Event B) starts 
+  at beat 1.0 (leaving a 0.5 beat rest in between).                                          
+                                                                                             
+  • If executeSequenceTick returns duration for Event A, what duration does it return?       
+  • If it returns 0.5, the scheduler will fire at beat 0.5, where there is no stroke. How do 
+  you represent that rest?     
+
+  that is not how it works. if event A has a duration of 0.5 then event b WILL start 0.5 later no matter what. 
+
+  ──────                                                                                     
+  ### Question 3: How do you switch Variations mid-cycle without glitching?                  
+                                                                                             
+  Suppose Variation 1 has 16 strokes in Teentaal, but Variation 2 has 48 rapid strokes.      
+  At beat 6.5, the user clicks the Variation dropdown and switches from Variation 1 to       
+  Variation 2.                                                                               
+                                                                                             
+  • In an event-indexed system (eventIndex = 0...N), eventIndex 6 in Variation 1 might be at 
+  beat 6.0, but eventIndex 6 in Variation 2 might be at beat 2.0!                            
+  • How do you find the exact starting stroke in the new variation without restarting the    
+  Taal from beat 1?    
+
+  you keep track of the current "internal matra" which can be any decimal from 1 to N inclusive. 
+  on each stroke you add its duration to that internal count, and then update the ui with the stroke's external matra number which like i said is in the csv. 
+  if the taal switches and your current internal matra is bigger then the new N then you have to go to beat 1
+  if not, you can do a binary search to figure out the closest stroke ahead of your current one, scheduel it, and go.
+  i think this is or was already in the code if i am not mistaken. 
+
+  ──────                                                                                     
+  ### Question 4: How does this generalize to Tanpura and Swar Mandal?                       
+                                                                                             
+  Tanpura plays 4 strings + 1 rest. Swar Mandal plays 20 strings + a 60-second pause.        
+                                                                                             
+  • What should the contract between LookaheadAudioScheduler and Instrument look like so the 
+  same scheduler works for Tabla, Tanpura, and Swar Mandal without special-case spaghetti?   
+
+  for these, the look ahead scheduler should only go maybe 1 or 2 steps ahead. 
+  i honestly think the same idea can apply if you treat these as 1 matra "taals" with fractional beats for strings and a rest at the end. 
+
+  ──────                                                                                     
+

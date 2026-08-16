@@ -2,11 +2,7 @@ import AVFoundation
 import Combine
 import Foundation
 
-import AVFoundation
-import Combine
-import Foundation
-
-class AudioVoice {
+nonisolated class AudioVoice: @unchecked Sendable {
     private(set) var playerNode = AVAudioPlayerNode()
 
     private let lock = NSLock()

@@ -1,4 +1,4 @@
-let tanpuraNotes: [String: Double] = [
+nonisolated let tanpuraNotes: [String: Double] = [
     // --- Lower Octave (Kharaj) ---
     "Kharaj": 0.0,  // Low Sa
     "Re Komal": 100.0,
@@ -22,7 +22,7 @@ let tanpuraNotes: [String: Double] = [
     "Ma Higher": 1700.0,
 ]
 
-enum TanpuraSeqElem {
+nonisolated enum TanpuraSeqElem: Sendable {
     case Rest
     case Sa
     case Kharaj

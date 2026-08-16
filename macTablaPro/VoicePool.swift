@@ -2,7 +2,7 @@ import Foundation
 import AVFoundation
 import Combine
 
-class VoicePool {
+nonisolated class VoicePool: @unchecked Sendable {
     private(set) var voicePool: [AudioVoice] = []
     private let lock = NSLock()
     
