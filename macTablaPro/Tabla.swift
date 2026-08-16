@@ -320,15 +320,19 @@ class Tabla: Instrument {
         let bolName = event.bolName
         let taalSymbol = Tabla.getTaalSymbol(matra: calculatedMatra, taal: taalDb[currentTaal])
 
-        // Enqueue frame-accurate visual event into lock-free ring buffer
-        let visualEvent = VisualBeatEvent(
-            matra: calculatedMatra,
-            subStep: subStep,
-            bolName: bolName,
-            taalSymbol: taalSymbol,
-            targetHostTime: time?.hostTime ?? mach_absolute_time()
-        )
-        presentationEngine.ringBuffer.push(visualEvent)
+        // In Ati-Drut (Tier 4: BPM > 300), only enqueue visual events on Khand / Vibhag boundaries (Taali/Khaali beats)
+        // to minimize UI redraw churn and prevent strobing at ultra-high speeds (300-700 BPM)
+        let activeTier = currentTempoTier(bpm: currentBPM, taalName: currentTaal, variationName: currentVariation)
+        if activeTier != 4 || !taalSymbol.isEmpty {
+            let visualEvent = VisualBeatEvent(
+                matra: calculatedMatra,
+                subStep: subStep,
+                bolName: bolName,
+                taalSymbol: taalSymbol,
+                targetHostTime: time?.hostTime ?? mach_absolute_time()
+            )
+            presentationEngine.ringBuffer.push(visualEvent)
+        }
 
         // Execute Left Hand (Bayan)
         if let leftSample = event.leftSampleName,
