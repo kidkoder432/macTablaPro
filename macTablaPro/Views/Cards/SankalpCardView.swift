@@ -13,6 +13,11 @@ struct SankalpCardView: View {
         VStack(alignment: .leading, spacing: 14) {
             // Header Row
             HStack(spacing: 8) {
+                Circle()
+                    .fill(sankalp.isPlaying ? Color.green : Color.gray.opacity(0.4))
+                    .frame(width: 8, height: 8)
+                    .shadow(color: sankalp.isPlaying ? Color.green.opacity(0.8) : Color.clear, radius: 4)
+                
                 Image(systemName: "clock.badge.checkmark.fill")
                     .foregroundColor(isAntique ? Color.orange : .accentColor)
                 Text("Sankalp Practice Log")
@@ -22,45 +27,57 @@ struct SankalpCardView: View {
             }
             
             // Stats Row with Minute Precision and Reset Controls
-            HStack(spacing: 24) {
+            HStack(spacing: 32) {
                 // Session Stat Box
                 VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 4) {
-                        Text("SESSION")
-                            .font(.system(size: 9, weight: .bold))
-                            .foregroundColor(.secondary)
-                        
+                    Text("SESSION")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundColor(.secondary)
+
+                    HStack(spacing: 8) {
+                        Text(SankalpPracticeManager.formatMinutes(sankalp.sessionMinutes))
+                            .font(.system(size: 20, weight: .bold, design: .rounded))
+                            .foregroundColor(isAntique ? Color.yellow : .primary)
+
                         Button(action: { isShowingResetSessionAlert = true }) {
                             Image(systemName: "arrow.counterclockwise")
-                                .font(.system(size: 8, weight: .medium))
-                                .foregroundColor(.secondary.opacity(0.7))
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundColor(isAntique ? Color.orange.opacity(0.8) : .secondary)
+                                .padding(4)
+                                .background(
+                                    Circle()
+                                        .fill(Color(NSColor.controlBackgroundColor).opacity(0.6))
+                                )
                         }
                         .buttonStyle(.plain)
                         .help("Reset Session Time")
                     }
-                    Text(SankalpPracticeManager.formatMinutes(sankalp.sessionMinutes))
-                        .font(.system(size: 17, weight: .bold, design: .rounded))
-                        .foregroundColor(isAntique ? Color.yellow : .primary)
                 }
-                
+
                 // Today Stat Box
                 VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 4) {
-                        Text("TODAY")
-                            .font(.system(size: 9, weight: .bold))
-                            .foregroundColor(.secondary)
-                        
+                    Text("TODAY")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundColor(.secondary)
+
+                    HStack(spacing: 8) {
+                        Text(SankalpPracticeManager.formatMinutes(sankalp.dailyMinutes))
+                            .font(.system(size: 20, weight: .bold, design: .rounded))
+                            .foregroundColor(isAntique ? Color.yellow : .primary)
+
                         Button(action: { isShowingResetDailyAlert = true }) {
                             Image(systemName: "arrow.counterclockwise")
-                                .font(.system(size: 8, weight: .medium))
-                                .foregroundColor(.secondary.opacity(0.7))
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundColor(isAntique ? Color.orange.opacity(0.8) : .secondary)
+                                .padding(4)
+                                .background(
+                                    Circle()
+                                        .fill(Color(NSColor.controlBackgroundColor).opacity(0.6))
+                                )
                         }
                         .buttonStyle(.plain)
                         .help("Reset Today's Time")
                     }
-                    Text(SankalpPracticeManager.formatMinutes(sankalp.dailyMinutes))
-                        .font(.system(size: 17, weight: .bold, design: .rounded))
-                        .foregroundColor(isAntique ? Color.yellow : .primary)
                 }
             }
             .padding(.vertical, 2)
@@ -103,4 +120,8 @@ struct SankalpCardView: View {
             Text("Are you sure you want to reset today's accumulated practice timer to 0m?")
         }
     }
+}
+
+#Preview {
+    SankalpCardView(sankalp: SankalpPracticeManager())
 }

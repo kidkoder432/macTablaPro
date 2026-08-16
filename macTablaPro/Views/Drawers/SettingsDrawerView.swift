@@ -18,7 +18,9 @@ enum SettingsTab: String, CaseIterable, Identifiable {
 // MARK: - Settings Drawer View (Liquid Glass Floating Panel)
 struct SettingsDrawerView: View {
     @ObservedObject var audio: AppAudioOrchestrator
+    @ObservedObject private var presentation = VisualPresentationEngine.shared
     @State private var settingsTab: SettingsTab = .global
+    @State private var latencyInputText: String = ""
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -84,6 +86,8 @@ struct SettingsDrawerView: View {
                             .font(.subheadline)
                             .fontWeight(.medium)
 
+                        Divider()
+
                         // Shared Tanpura Tempo Controller
                         VStack(spacing: 12) {
                             HStack {
@@ -103,6 +107,105 @@ struct SettingsDrawerView: View {
                                 ),
                                 in: 20...180
                             )
+                            .tint(audio.isAntiqueThemeEnabled ? .orange : .accentColor)
+                        }
+
+                        Divider()
+
+                        // Audio-Visual Sync (Display Latency Compensation)
+                        VStack(alignment: .leading, spacing: 10) {
+                            HStack(spacing: 6) {
+                                Text("Audio-Visual Sync")
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
+
+                                Text(presentation.isCustomLatency ? "Custom" : "Auto (CoreAudio)")
+                                    .font(.system(size: 9, weight: .bold))
+                                    .padding(.horizontal, 5)
+                                    .padding(.vertical, 2)
+                                    .background(
+                                        Capsule()
+                                            .fill(presentation.isCustomLatency ? Color.orange.opacity(0.2) : Color.green.opacity(0.2))
+                                    )
+                                    .foregroundColor(presentation.isCustomLatency ? Color.orange : Color.green)
+
+                                Spacer()
+                                
+                                HStack(spacing: 2) {
+                                    TextField("", text: Binding(
+                                        get: { "\(Int(round(presentation.visualLatencyOffsetMs)))" },
+                                        set: { text in
+                                            if let val = Double(text) {
+                                                presentation.setCustomLatency(val)
+                                            }
+                                        }
+                                    ))
+                                    .textFieldStyle(.plain)
+                                    .multilineTextAlignment(.trailing)
+                                    .font(.caption)
+                                    .monospacedDigit()
+                                    .frame(width: 44)
+                                    .padding(.horizontal, 4)
+                                    .padding(.vertical, 2)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 4, style: .continuous)
+                                            .fill(audio.isAntiqueThemeEnabled ? Color.black.opacity(0.3) : Color(NSColor.controlBackgroundColor))
+                                    )
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 4, style: .continuous)
+                                            .stroke(audio.isAntiqueThemeEnabled ? Color.orange.opacity(0.3) : Color.gray.opacity(0.2), lineWidth: 1)
+                                    )
+                                    
+                                    Text("ms")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+
+                            Slider(
+                                value: Binding(
+                                    get: { presentation.visualLatencyOffsetMs },
+                                    set: { presentation.setCustomLatency($0) }
+                                ),
+                                in: -300.0...300.0
+                            )
+                            .tint(audio.isAntiqueThemeEnabled ? .orange : .accentColor)
+
+                            HStack {
+                                Button(action: {
+                                    let detected = presentation.autoDetectLatency()
+                                    print("Auto-detected CoreAudio latency: \(detected) ms")
+                                }) {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "waveform.badge.magnifyingglass")
+                                            .font(.system(size: 10, weight: .semibold))
+                                        Text("Auto-Detect")
+                                            .font(.system(size: 11, weight: .medium))
+                                    }
+                                    .padding(.vertical, 4)
+                                    .padding(.horizontal, 8)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                            .fill(audio.isAntiqueThemeEnabled ? Color.orange.opacity(0.2) : Color.accentColor.opacity(0.15))
+                                    )
+                                    .foregroundColor(audio.isAntiqueThemeEnabled ? Color.orange : Color.accentColor)
+                                }
+                                .buttonStyle(.plain)
+
+                                Spacer()
+
+                                Button("Reset (0ms)") {
+                                    presentation.setCustomLatency(0.0)
+                                }
+                                .font(.caption2)
+                                .buttonStyle(.plain)
+                                .foregroundColor(.secondary)
+                            }
+
+                            Text("Delays visual beat numbers to match Bluetooth & speaker output latency.")
+                                .font(.system(size: 10))
+                                .foregroundColor(.secondary)
+                                .lineLimit(2)
                         }
                     } else {
                         VStack(alignment: .leading, spacing: 12) {
@@ -155,8 +258,8 @@ struct SettingsDrawerView: View {
                 .padding(20)
             }
         }
-        .frame(width: 280)
-        .frame(maxHeight: 520)
+        .frame(width: 290)
+        .frame(maxHeight: 560)
         .nativeCard(isAntique: audio.isAntiqueThemeEnabled, cornerRadius: 20)
         .padding(.trailing, 24)
         .padding(.top, 24)

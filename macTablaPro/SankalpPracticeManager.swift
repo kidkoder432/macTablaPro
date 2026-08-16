@@ -38,7 +38,7 @@ class SankalpPracticeManager: ObservableObject {
     }
     
     private var practiceTimer: Timer?
-    private var isPlaying: Bool = false
+    @Published var isPlaying: Bool = false
     
     init() {
         self.studentID = UserDefaults.standard.string(forKey: "SankalpStudentID") ?? ""
@@ -66,12 +66,14 @@ class SankalpPracticeManager: ObservableObject {
     
     private func startPracticeTimerIfNeeded() {
         guard practiceTimer == nil else { return }
-        practiceTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+        let timer = Timer(timeInterval: 1.0, repeats: true) { [weak self] _ in
             guard let self = self else { return }
             Task { @MainActor in
                 self.tickPracticeTime()
             }
         }
+        RunLoop.main.add(timer, forMode: .common)
+        practiceTimer = timer
     }
     
     private func stopPracticeTimer() {
@@ -106,6 +108,7 @@ class SankalpPracticeManager: ObservableObject {
     
     func resetDailyTime() {
         dailySeconds = 0.0
+        sessionSeconds = 0.0
         UserDefaults.standard.set(0.0, forKey: "SankalpDailySeconds")
     }
     
