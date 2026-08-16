@@ -2,7 +2,7 @@ import Foundation
 import SwiftCSV
 
 // MARK: - Compound Bol Sub-Stroke Tuning Map
-struct SubStrokeRecipe {
+nonisolated struct SubStrokeRecipe: Sendable {
     let ratio1: Double
     let left1: String?
     let right1: String?
@@ -33,7 +33,7 @@ struct SubStrokeRecipe {
 /// Declarative Tuning Map for Compound Tabla Bols
 /// Key: Compound bol string from CSV (e.g. "KDa", "TaKa", "NaKa", "Tra", "TiTaL")
 /// Value: Recipe specifying duration split ratios or fixed physical delay (in seconds) for ornaments.
-let compoundBolTuningMap: [String: SubStrokeRecipe] = [
+nonisolated let compoundBolTuningMap: [String: SubStrokeRecipe] = [
     "KDa": SubStrokeRecipe(
         ratio1: 0.0, left1: "Ka", right1: nil,
         ratio2: 1.0, left2: nil, right2: "TTaL",
@@ -65,7 +65,7 @@ let compoundBolTuningMap: [String: SubStrokeRecipe] = [
 // MARK: - 1. Taal Core Metadata
 /// Represents a single rhythm cycle (e.g., "Teentaal" or "Jhaptal")
 /// Derived from: Taal.csv
-struct TaalDefinition: Identifiable {
+nonisolated struct TaalDefinition: Identifiable, Sendable {
     let id = UUID()
     let name: String            // Taal.csv: `taalName`
     let displayName: String     // Taal.csv: `taalDisplayName`
@@ -84,7 +84,7 @@ struct TaalDefinition: Identifiable {
 
 // MARK: - 2. The Variation/Style Container
 /// Represents a specific played variation (e.g., "Variation #1" vs "Pro Default")
-struct TablaStyleVariation: Identifiable {
+nonisolated struct TablaStyleVariation: Identifiable, Sendable {
     let id: Int                 // TaalBols.csv: `styleNum`
     let name: String            // TaalBols.csv: `style`
     var allowedTempos: Set<Int> = [] // Unique tempo tier indices present (e.g. 0, 1, 2)
@@ -97,7 +97,7 @@ struct TablaStyleVariation: Identifiable {
 // MARK: - 3. The Atomic Audio Trigger
 /// Represents a single millisecond of action for the engine.
 /// Derived from: TaalBols.csv rows
-struct TablaStrokeEvent: Identifiable {
+nonisolated struct TablaStrokeEvent: Identifiable, Sendable {
     let id = UUID()
     let seqNum: Int             // The order in the sequence (1, 2, 3...)
     let matra: Int              // The beat index this stroke falls inside
@@ -146,11 +146,11 @@ struct TablaStrokeEvent: Identifiable {
     }
 }
 
-class TablaDatabase {
-    static let shared = TablaDatabase()
+nonisolated final class TablaDatabase: @unchecked Sendable {
+    nonisolated static let shared = TablaDatabase()
     
     // Master Dictionary: Quick lookup by Taal Name (e.g., "Teentaal")
-    private(set) var taalCatalog: [String: TaalDefinition] = [:]
+    nonisolated(unsafe) private(set) var taalCatalog: [String: TaalDefinition] = [:]
     
     init() {
         loadDatabase()

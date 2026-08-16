@@ -4,6 +4,7 @@ import AppKit
 // MARK: - Tabla Card View
 struct TablaCardView: View {
     @ObservedObject var tabla: Tabla
+    @ObservedObject private var presentation = VisualPresentationEngine.shared
     let database = TablaDatabase.shared
     
     @State private var bpmInputText: String = ""
@@ -55,12 +56,15 @@ struct TablaCardView: View {
     }
 
     private var subBeatDotsText: String {
-        let activeDots = (tabla.currentMatraSubStep % 4) + 1
+        let activeDots = (presentation.currentMatraSubStep % 4) + 1
         return String(repeating: "· ", count: activeDots).trimmingCharacters(in: .whitespaces)
     }
 
     private var activeTaalSymbol: String {
-        getTaalSymbol(matra: tabla.currentMatra, taal: database.taalCatalog[tabla.activeTaal])
+        if !presentation.currentTaalSymbol.isEmpty {
+            return presentation.currentTaalSymbol
+        }
+        return getTaalSymbol(matra: presentation.currentMatra, taal: database.taalCatalog[tabla.activeTaal])
     }
 
     var body: some View {
@@ -267,7 +271,7 @@ struct TablaCardView: View {
 
                         // 2. Center: Larger Matra Beat Number (No "OFF" label)
                         if tabla.isPlaying {
-                            Text("\(tabla.currentMatra)")
+                            Text("\(presentation.currentMatra)")
                                 .font(isAntique ?
                                     .system(size: 44, weight: .bold, design: .monospaced) :
                                     .system(size: 44, weight: .bold, design: .rounded))
@@ -294,7 +298,7 @@ struct TablaCardView: View {
                 Text("Bol:")
                     .font(isAntique ? .custom("Baskerville-Italic", size: 14) : .caption)
                     .foregroundColor(isAntique ? Color.orange : .secondary)
-                Text(tabla.isPlaying && !tabla.currentBolName.isEmpty ? tabla.currentBolName : "—")
+                Text(tabla.isPlaying && !presentation.currentBolName.isEmpty ? presentation.currentBolName : "—")
                     .font(isAntique ? .custom("Snell Roundhand", size: 16).weight(.bold) : .subheadline)
                     .foregroundColor(isAntique ? Color.yellow : .primary)
                 Spacer()

@@ -8,6 +8,7 @@
 import AVFoundation
 import Combine
 import Foundation
+import os
 
 let wavURLs: [URL] =
     Bundle.main.urls(forResourcesWithExtension: "wav", subdirectory: nil) ?? []
@@ -31,23 +32,82 @@ let tablaManifest: [PitchedSample] = wavURLs.filter { url in
 
 @MainActor
 class Tabla: Instrument {
-    @Published var activeTaal: String = "Teentaal"
-    @Published var activeVariation: String = "Pro Default"
-    @Published var useSurTabla = false
-    @Published var currentMatra: Int = 1
-    @Published var currentMatraSubStep: Int = 0
-    @Published var currentBolName: String = ""
-    @Published var currentStepIndex = 0
+    nonisolated let atomicTablaState = Locked<(taal: String, variation: String, sur: Bool, currentBeat: Double)>(
+        (taal: "Teentaal", variation: "Pro Default", sur: false, currentBeat: 0.0)
+    )
+
+    @Published var activeTaal: String = "Teentaal" {
+        didSet {
+            syncAtomicState()
+            if isPlaying {
+                updateTimelinePosition()
+            }
+        }
+    }
+    @Published var activeVariation: String = "Pro Default" {
+        didSet {
+            syncAtomicState()
+            if isPlaying {
+                updateTimelinePosition()
+            }
+        }
+    }
+    @Published var useSurTabla = false {
+        didSet {
+            syncAtomicState()
+        }
+    }
     @Published var logScaleBase: Double = 10.0
 
-    override init(id: String, name: String, orchestrator: AppAudioOrchestrator, voicePool: VoicePool, registry: [String: PitchedSample]) {
-        super.init(id: id, name: name, orchestrator: orchestrator, voicePool: voicePool, registry: registry)
+    private func syncAtomicState() {
+        atomicTablaState.withLock {
+            $0.taal = activeTaal
+            $0.variation = activeVariation
+            $0.sur = useSurTabla
+        }
     }
 
-    private let taalDb = TablaDatabase.shared.taalCatalog
+    /// Reference to the centralized high-resolution VSync-aligned presentation engine
+    nonisolated let presentationEngine: VisualPresentationEngine
 
-    /// Returns the allowed BPM range (min...max) for the currently selected Taal and Variation.
-    private func minBPM(forTier tier: Int) -> Double {
+    // Computed properties forwarding directly to the presentation engine
+    var currentMatra: Int { presentationEngine.currentMatra }
+    var currentMatraSubStep: Int { presentationEngine.currentMatraSubStep }
+    var currentBolName: String { presentationEngine.currentBolName }
+    var currentTaalSymbol: String { presentationEngine.currentTaalSymbol }
+
+    override init(id: String, name: String, orchestrator: AppAudioOrchestrator, voicePool: VoicePool, registry: [String: PitchedSample]) {
+        self.presentationEngine = VisualPresentationEngine.shared
+        super.init(id: id, name: name, orchestrator: orchestrator, voicePool: voicePool, registry: registry)
+        syncAtomicState()
+    }
+
+    nonisolated private var taalDb: [String: TaalDefinition] {
+        TablaDatabase.shared.taalCatalog
+    }
+
+    // MARK: - Taal Symbol Helper
+
+    nonisolated static func getTaalSymbol(matra: Int, taal: TaalDefinition?) -> String {
+        guard let taal = taal else { return "" }
+        if taal.khaaliMatras.contains(matra) {
+            return "O"
+        }
+        let sortedTaalis = taal.taaliMatras.sorted()
+        if let taaliIndex = sortedTaalis.firstIndex(of: matra) {
+            if matra == 1 {
+                return "X"
+            } else {
+                let number = taaliIndex + (taal.taaliMatras.contains(1) ? 1 : 2)
+                return "\(number)"
+            }
+        }
+        return ""
+    }
+
+    // MARK: - BPM & Range Calculations
+
+    nonisolated private func minBPM(forTier tier: Int) -> Double {
         switch tier {
         case 0: return 10.0
         case 1: return 25.0
@@ -59,7 +119,7 @@ class Tabla: Instrument {
         }
     }
 
-    private func maxBPM(forTier tier: Int) -> Double {
+    nonisolated private func maxBPM(forTier tier: Int) -> Double {
         switch tier {
         case 0: return 25.0
         case 1: return 80.0
@@ -120,18 +180,19 @@ class Tabla: Instrument {
         } else if tempoBPM > range.upperBound {
             tempoBPM = range.upperBound
         }
-        updateTimelinePosition()
     }
 
     // MARK: - Tempo & Tier Management
 
     /// Maps the current raw tempoBPM to its corresponding Tempo Tier Index
-    /// Tier 0: 10-25 (Ati-Vilambit), Tier 1: 25-54 or 25-80 (Vilambit), Tier 55: 55-80 (Vilambit Fine),
-    /// Tier 2: 81-150 (Madhya), Tier 3: 151-300 (Drut), Tier 4: 301-700 (Ati-Drut)
-    func currentTempoTier() -> Int {
-        guard let taal = taalDb[activeTaal],
-              let variation = taal.variations[activeVariation] else {
-            switch tempoBPM {
+    nonisolated func currentTempoTier(bpm: Double? = nil, taalName: String? = nil, variationName: String? = nil) -> Int {
+        let effectiveBPM = bpm ?? atomicBPM.value
+        let currentTaal = taalName ?? atomicTablaState.value.taal
+        let currentVariation = variationName ?? atomicTablaState.value.variation
+
+        guard let taal = taalDb[currentTaal],
+              let variation = taal.variations[currentVariation] else {
+            switch effectiveBPM {
             case ..<25: return 0
             case 25..<81: return 1
             case 81..<151: return 2
@@ -140,7 +201,7 @@ class Tabla: Instrument {
             }
         }
 
-        switch tempoBPM {
+        switch effectiveBPM {
         case ..<25:
             return 0
         case 25..<55:
@@ -163,15 +224,18 @@ class Tabla: Instrument {
     }
 
     /// Resolves the active timeline for the current Taal, Variation, and Tempo Tier.
-    /// Implements fallback clamping if the current tier is unavailable in the variation's allowedTempos.
-    func resolveActiveTimeline() -> [TablaStrokeEvent] {
-        guard let taal = taalDb[activeTaal],
-            let variation = taal.variations[activeVariation]
+    nonisolated func resolveActiveTimeline(bpm: Double? = nil, taalName: String? = nil, variationName: String? = nil) -> [TablaStrokeEvent] {
+        let effectiveBPM = bpm ?? atomicBPM.value
+        let currentTaal = taalName ?? atomicTablaState.value.taal
+        let currentVariation = variationName ?? atomicTablaState.value.variation
+
+        guard let taal = taalDb[currentTaal],
+            let variation = taal.variations[currentVariation]
         else {
             return []
         }
 
-        let desiredTier = currentTempoTier()
+        let desiredTier = currentTempoTier(bpm: effectiveBPM, taalName: currentTaal, variationName: currentVariation)
 
         // 1. If exact tier exists in variation, use it
         if let timeline = variation.timelinesByTempoTier[desiredTier],
@@ -189,11 +253,10 @@ class Tabla: Instrument {
         }
 
         // 3. Fallback clamping by closest BPM range midpoint
-        let currentBPM = self.tempoBPM
         if let fallbackTier = variation.allowedTempos.min(by: {
             let mid1 = (minBPM(forTier: $0) + maxBPM(forTier: $0)) / 2.0
             let mid2 = (minBPM(forTier: $1) + maxBPM(forTier: $1)) / 2.0
-            return abs(mid1 - currentBPM) < abs(mid2 - currentBPM)
+            return abs(mid1 - effectiveBPM) < abs(mid2 - effectiveBPM)
         }),
             let timeline = variation.timelinesByTempoTier[fallbackTier]
         {
@@ -203,105 +266,69 @@ class Tabla: Instrument {
         return variation.timelinesByTempoTier.values.first ?? []
     }
 
-    private var lastExecutedTier: Int = -1
-
-    /// Subdivisions per beat according to Tempo Tier:
-    /// Ati-Vilambit (0): 16, Vilambit (1): 16, Vilambit Fine (55): 16, Madhya (2): 8, Drut (3): 4, Ati-Drut (4): 4
-    func subdivisionsPerBeat(forTier tier: Int) -> Int {
-        switch tier {
-        case 0: return 16
-        case 1: return 16
-        case 55: return 16
-        case 2: return 8
-        case 3: return 4
-        case 4: return 1
-        default: return 4
-        }
-    }
-
-    /// Total pulses in full Taal cycle for current tempo tier
-    private func totalPulsesInCycle() -> Int {
-        let totalMatras = taalDb[activeTaal]?.matras ?? 16.0
-        let subs = Double(subdivisionsPerBeat(forTier: currentTempoTier()))
-        return Int(round(totalMatras * subs))
-    }
-
     /// Transitions playback seamlessly to a new timeline, maintaining exact fractional matra position
     func updateTimelinePosition() {
         if isPlaying {
-            let totalPulses = totalPulsesInCycle()
-            let subs = Double(subdivisionsPerBeat(forTier: currentTempoTier()))
-            let currentBeatPos = Double(currentMatra - 1) + (Double(currentMatraSubStep) / 4.0)
-            let startingPulse = Int(round(currentBeatPos * subs)) % (totalPulses > 0 ? totalPulses : 1)
-            clock.start(stepsCount: totalPulses, startingAtStep: startingPulse)
-        }
-    }
+            syncAtomicState()
+            let currentBeat = atomicTablaState.value.currentBeat
+            let newTotalMatras = taalDb[activeTaal]?.matras ?? 16.0
 
-    func restartClockIfPlaying() {
-        if isPlaying {
-            let totalPulses = totalPulsesInCycle()
-            clock.start(stepsCount: totalPulses)
+            if currentBeat >= newTotalMatras {
+                // If current beat is past the new Taal's length, reset cleanly to Sam (0.0 / Beat 1)
+                atomicTablaState.withLock { $0.currentBeat = 0.0 }
+            }
         }
     }
 
     override func startPlay() {
         guard !isPlaying else { return }
         isPlaying = true
-        currentStepIndex = 0
-        currentMatra = 1
-        currentMatraSubStep = 0
-        currentBolName = ""
-        lastExecutedTier = currentTempoTier()
-        let totalPulses = totalPulsesInCycle()
-        clock.start(stepsCount: totalPulses)
+        syncAtomicState()
+        atomicTablaState.withLock { $0.currentBeat = 0.0 }
+        presentationEngine.start()
+        clock.start()
     }
 
     override func stopPlay() {
         guard isPlaying else { return }
         isPlaying = false
         clock.stop()
+        presentationEngine.stop()
+        // Allow the final bol / resonance tail to play out completely without cutting off
     }
 
-    override internal func executeSequenceTick(stepIndex: Int, time: AVAudioTime?) -> Double {
-        let activeTier = currentTempoTier()
-        if lastExecutedTier != activeTier {
-            lastExecutedTier = activeTier
-            updateTimelinePosition()
-        }
-
-        let subs = subdivisionsPerBeat(forTier: activeTier)
-        let stepFraction = 1.0 / Double(subs)
+    nonisolated override internal func executeSequenceTick(time: AVAudioTime?) -> Double {
+        let currentBPM = atomicBPM.value
+        let (currentTaal, currentVariation, surMode, currentBeat) = atomicTablaState.value
+        let timeline = resolveActiveTimeline(bpm: currentBPM, taalName: currentTaal, variationName: currentVariation)
         
-        // Calculate current matra (1-indexed) and sub-pulse index within beat
-        let pulseWithinBeat = stepIndex % subs
-        let calculatedMatra = (stepIndex / subs) + 1
-        let subStep = (pulseWithinBeat * 4) / subs
-        
-        // Gated UI mutations: update ONLY when value changes to prevent 50+ FPS redraw loops
-        if self.currentMatra != calculatedMatra {
-            self.currentMatra = calculatedMatra
-        }
-        if self.currentMatraSubStep != subStep {
-            self.currentMatraSubStep = subStep
-        }
-        
-        let timeline = resolveActiveTimeline()
         guard !timeline.isEmpty else {
-            return stepFraction
+            return 1.0
         }
 
-        // Calculate beat offset in sequence timeline to match against CSV events
-        let pulseBeatTime = Double(stepIndex) * stepFraction
-        let halfStep = stepFraction * 0.5
-        
-        // O(log N) binary search instead of linear search
-        guard let event = timeline.event(atBeat: pulseBeatTime, tolerance: halfStep) else {
-            return stepFraction
+        let totalMatras = taalDb[currentTaal]?.matras ?? 16.0
+        guard let event = timeline.nextEvent(atOrAfterBeat: currentBeat) else {
+            return 1.0
         }
 
-        if let b = event.bolName, self.currentBolName != b {
-            self.currentBolName = b
-        }
+        // Advance to next beat timestamp for subsequent tick
+        let nextBeat = (event.startBeatFraction + event.durationFraction).truncatingRemainder(dividingBy: totalMatras)
+        atomicTablaState.withLock { $0.currentBeat = nextBeat }
+
+        let subStep = Int(round((event.startBeatFraction.truncatingRemainder(dividingBy: 1.0)) * 4.0)) % 4
+        let calculatedMatra = event.matra
+        let bolName = event.bolName
+        let taalSymbol = Tabla.getTaalSymbol(matra: calculatedMatra, taal: taalDb[currentTaal])
+
+        // Enqueue frame-accurate visual event into lock-free ring buffer
+        let visualEvent = VisualBeatEvent(
+            matra: calculatedMatra,
+            subStep: subStep,
+            bolName: bolName,
+            taalSymbol: taalSymbol,
+            targetHostTime: time?.hostTime ?? mach_absolute_time()
+        )
+        presentationEngine.ringBuffer.push(visualEvent)
 
         // Execute Left Hand (Bayan)
         if let leftSample = event.leftSampleName,
@@ -309,22 +336,24 @@ class Tabla: Instrument {
             _ = self.voicePool.play(
                 sample: sampleToPlay,
                 targetPitchCents: 0,
-                volume: Double(event.leftVolume) * self.effectiveVolume,
+                volume: Double(event.leftVolume),
                 time: time
             )
         }
 
         // Execute Right Hand (Dayan)
+        let liveScaleOffset = orchestrator.atomicScaleOffsetCents
+        let liveFineTune = orchestrator.atomicFineTuneCents
+
         let tablaPitch: String =
-            orchestrator.scaleOffsetCents <= 400 ? "C#" : "G#"
+            liveScaleOffset <= 400 ? "C#" : "G#"
         
-        if taalDb[activeTaal]!.forceSur {
-            useSurTabla = true
-        }
+        let forceSur = taalDb[currentTaal]?.forceSur ?? false
+        let isSur = forceSur || surMode
         
         var surString: String = ""
         if tablaPitch == "C#" {
-            surString = useSurTabla ? "Sur_" : "Tip_"
+            surString = isSur ? "Sur_" : "Tip_"
         }
 
         if let bol = event.rightSampleName {
@@ -332,13 +361,21 @@ class Tabla: Instrument {
             if let sampleToPlay = sampleRegistry[sampleString] {
                 _ = self.voicePool.play(
                     sample: sampleToPlay,
-                    targetPitchCents: orchestrator.scaleOffsetCents
-                        + orchestrator.fineTuneCents,
-                    volume: Double(event.rightVolume) * self.effectiveVolume,
+                    targetPitchCents: liveScaleOffset + liveFineTune,
+                    volume: Double(event.rightVolume),
                     time: time
                 )
             }
         }
+
+        // OSLog structured telemetry
+        AudioLogger.logTablaStroke(
+            bol: event.bolName ?? "Rest",
+            matra: event.matra,
+            beatFraction: event.startBeatFraction,
+            sample: (event.rightSampleName ?? "") + (event.leftSampleName.map { " / " + $0 } ?? ""),
+            hostTime: time?.hostTime ?? 0
+        )
 
         // Execute Secondary Stroke for Fixed-Delay Compound Bols (e.g. KDa, Tra flams)
         if let delaySec = event.secondaryDelaySec, let primaryTime = time {
@@ -350,7 +387,7 @@ class Tabla: Instrument {
                 _ = self.voicePool.play(
                     sample: sampleToPlay,
                     targetPitchCents: 0,
-                    volume: Double(event.leftVolume) * self.effectiveVolume,
+                    volume: Double(event.leftVolume),
                     time: secondaryTime
                 )
             }
@@ -360,38 +397,47 @@ class Tabla: Instrument {
                 if let sampleToPlay = sampleRegistry[sampleString] {
                     _ = self.voicePool.play(
                         sample: sampleToPlay,
-                        targetPitchCents: orchestrator.scaleOffsetCents
-                            + orchestrator.fineTuneCents,
-                        volume: Double(event.rightVolume) * self.effectiveVolume,
+                        targetPitchCents: liveScaleOffset + liveFineTune,
+                        volume: Double(event.rightVolume),
                         time: secondaryTime
                     )
                 }
             }
         }
 
-        return stepFraction
+        return max(0.001, event.durationFraction)
     }
 }
 
 // MARK: - Binary Search Timeline Extension
 
 extension Array where Element == TablaStrokeEvent {
-    /// O(log N) binary search for the stroke event matching the specified beat time within tolerance.
-    func event(atBeat beatTime: Double, tolerance: Double) -> TablaStrokeEvent? {
+    /// O(log N) binary search for the stroke event matching or immediately following the specified beat time.
+    nonisolated func nextEvent(atOrAfterBeat targetBeat: Double, tolerance: Double = 0.001) -> TablaStrokeEvent? {
+        guard !isEmpty else { return nil }
+        
         var low = 0
         var high = count - 1
+        var candidateIndex = 0
+        
         while low <= high {
             let mid = (low + high) / 2
             let event = self[mid]
-            let diff = event.startBeatFraction - beatTime
-            if abs(diff) < tolerance {
+            if abs(event.startBeatFraction - targetBeat) < tolerance {
                 return event
-            } else if diff < 0 {
+            } else if event.startBeatFraction < targetBeat {
                 low = mid + 1
             } else {
+                candidateIndex = mid
                 high = mid - 1
             }
         }
-        return nil
+        
+        if low < count {
+            return self[low]
+        } else if candidateIndex < count && self[candidateIndex].startBeatFraction >= targetBeat - tolerance {
+            return self[candidateIndex]
+        }
+        return self.first
     }
 }

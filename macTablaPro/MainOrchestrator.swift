@@ -1,15 +1,13 @@
 import AVFoundation
 import Combine
 import Foundation
-
-
+import os
 
 @MainActor
 class AppAudioOrchestrator: ObservableObject {
     // 1. Shared core hardware objects
     private let engine = AVAudioEngine()
     private let masterMixer = AVAudioMixerNode()
-    private var voicePool: VoicePool!
 
     // The single, master database of loaded audio data in RAM
     private var masterSampleRegistry: [String: PitchedSample] = [:]
@@ -30,12 +28,18 @@ class AppAudioOrchestrator: ObservableObject {
         instruments.first(where: { $0.id == "swar_mandal" }) as? SwarMandal
     }
     
+    nonisolated let atomicPitch = Locked<(scaleOffset: Double, fineTune: Double)>((scaleOffset: 100.0, fineTune: 0.0))
+    
+    nonisolated var atomicScaleOffsetCents: Double { atomicPitch.value.scaleOffset }
+    nonisolated var atomicFineTuneCents: Double { atomicPitch.value.fineTune }
+
     @Published var scaleOffsetCents: Double = 100.0 {
         didSet {
             let rounded = round(scaleOffsetCents)
             if scaleOffsetCents != rounded {
                 scaleOffsetCents = rounded
             }
+            atomicPitch.value = (scaleOffset: scaleOffsetCents, fineTune: fineTuneCents)
         }
     }
     @Published var fineTuneCents: Double = 0.0 {
@@ -44,6 +48,7 @@ class AppAudioOrchestrator: ObservableObject {
             if fineTuneCents != rounded {
                 fineTuneCents = rounded
             }
+            atomicPitch.value = (scaleOffset: scaleOffsetCents, fineTune: fineTuneCents)
         }
     }
     
@@ -84,12 +89,7 @@ class AppAudioOrchestrator: ObservableObject {
 
     @Published var isMasterMuted: Bool = false {
         didSet {
-            if isMasterMuted {
-                masterMixer.outputVolume = 0.0
-                voicePool.stopAll()
-            } else {
-                masterMixer.outputVolume = Float(masterVolume)
-            }
+            masterMixer.outputVolume = isMasterMuted ? 0.0 : Float(masterVolume)
         }
     }
 
@@ -112,27 +112,24 @@ class AppAudioOrchestrator: ObservableObject {
         // Step 1: Preload all data directly into system memory
         preloadAllManifestAssets()
 
-        // Step 2: Spin up a shared pool of voices
-        self.voicePool = VoicePool(engine, 256)
-
-        // Step 3: Wire up the hardware signal graph
-        setupAudioGraph()
-
-        // Step 4: Isolate instrument registries using filtered slices of the master cache
+        // Step 2: Isolate instrument registries using filtered slices of the master cache
         let tanpuraRegistry = masterSampleRegistry.filter { $0.key.contains("Tanpura_") }
         let tablaRegistry = masterSampleRegistry.filter { $0.key.contains("Bayaan_") || $0.key.contains("Dayaan_") }
         let swarMandalRegistry = masterSampleRegistry.filter { $0.key.contains("SwarMandal_") }
 
-        // Step 5: Instantiate concrete child instruments into unified registry
-        let t1 = Tanpura(id: "tanpura_1", name: "Tanpura 1", orchestrator: self, voicePool: self.voicePool, registry: tanpuraRegistry)
-        let t2 = Tanpura(id: "tanpura_2", name: "Tanpura 2", orchestrator: self, voicePool: self.voicePool, registry: tanpuraRegistry)
+        // Step 3: Instantiate concrete child instruments into unified registry with dedicated VoicePools
+        let t1 = Tanpura(id: "tanpura_1", name: "Tanpura 1", orchestrator: self, voicePool: VoicePool(engine, 16), registry: tanpuraRegistry)
+        let t2 = Tanpura(id: "tanpura_2", name: "Tanpura 2", orchestrator: self, voicePool: VoicePool(engine, 16), registry: tanpuraRegistry)
         t1.tempoBPM = self.sharedTanpuraBPM
         t2.tempoBPM = self.sharedTanpuraBPM
 
-        let tb = Tabla(id: "tabla_main", name: "Tabla", orchestrator: self, voicePool: self.voicePool, registry: tablaRegistry)
-        let sm = SwarMandal(id: "swar_mandal", name: "Swar Mandal", orchestrator: self, voicePool: self.voicePool, registry: swarMandalRegistry)
+        let tb = Tabla(id: "tabla_main", name: "Tabla", orchestrator: self, voicePool: VoicePool(engine, 32), registry: tablaRegistry)
+        let sm = SwarMandal(id: "swar_mandal", name: "Swar Mandal", orchestrator: self, voicePool: VoicePool(engine, 48), registry: swarMandalRegistry)
 
         self.instruments = [t1, t2, tb, sm]
+        
+        // Step 4: Wire up the hardware signal graph with channel strip mixer nodes
+        setupAudioGraph()
         
         setupChildSubscriptions()
         updateMasterPitch()
@@ -315,9 +312,16 @@ class AppAudioOrchestrator: ObservableObject {
 
         engine.connect(masterMixer, to: engine.mainMixerNode, format: assetFormat)
 
-        for voice in voicePool.voicePool {
-            engine.connect(voice.playerNode, to: masterMixer, format: assetFormat)
+        for instrument in instruments {
+            engine.attach(instrument.mixerNode)
+            engine.connect(instrument.mixerNode, to: masterMixer, format: assetFormat)
+            for voice in instrument.voicePool.voicePool {
+                engine.connect(voice.playerNode, to: instrument.mixerNode, format: assetFormat)
+            }
+            instrument.mixerNode.outputVolume = instrument.isMuted ? 0.0 : Float(instrument.volume)
         }
+
+        masterMixer.outputVolume = isMasterMuted ? 0.0 : Float(masterVolume)
 
         do {
             try engine.start()
@@ -408,6 +412,7 @@ class AppAudioOrchestrator: ObservableObject {
         for instrument in instruments {
             instrument.$isPlaying
                 .dropFirst()
+                .receive(on: RunLoop.main)
                 .sink { [weak self] _ in
                     guard let self = self else { return }
                     self.objectWillChange.send()

@@ -11,15 +11,15 @@ import OSLog
 var logger = Logger(subsystem: "com.praj.macTablaPro", category: "SwarMandal")
 
 // MARK: - Swar Mandal Timing Configuration
-public struct SwarMandalTimingConfig: Sendable {
+nonisolated public struct SwarMandalTimingConfig: Sendable {
     /// Initial tempo (BPM) for Pluck Mode at string index 0
-    public static var pluckBPM: Double = 400.0
+    public static let pluckBPM: Double = 400.0
     
     /// Final tempo (BPM) for Pluck Mode at string index (stringCount - 1)
-    public static var pluckDecay = 0.95
+    public static let pluckDecay: Double = 0.95
     
     /// Constant tempo (BPM) for Strum Mode (fast ambient glissando)
-    public static var strumBPM: Double = 800.0
+    public static let strumBPM: Double = 800.0
     
     /// String count constraints
     public static let minStringCount: Int = 15
@@ -28,7 +28,7 @@ public struct SwarMandalTimingConfig: Sendable {
 }
 
 // MARK: - Swar Mandal Operating Modes
-public enum SwarMandalMode: String, Codable, CaseIterable, Identifiable, Sendable {
+nonisolated public enum SwarMandalMode: String, Codable, CaseIterable, Identifiable, Sendable {
     case pluck = "Pluck Mode"
     case strum = "Strum Mode"
     
@@ -36,7 +36,7 @@ public enum SwarMandalMode: String, Codable, CaseIterable, Identifiable, Sendabl
 }
 
 // MARK: - Auto-Loop Duration Preset Options
-public enum SwarMandalLoopOption: Int, Codable, CaseIterable, Identifiable, Sendable {
+nonisolated public enum SwarMandalLoopOption: Int, Codable, CaseIterable, Identifiable, Sendable {
     case sec30 = 30
     case min1 = 60
     case min2 = 120
@@ -65,7 +65,7 @@ public enum SwarMandalLoopOption: Int, Codable, CaseIterable, Identifiable, Send
 }
 
 // MARK: - Complete 36 Swar Note & Pitch Offset Definitions
-public struct SwarNoteHelper: Sendable {
+nonisolated public struct SwarNoteHelper: Sendable {
     public static let centsMap: [String: Double] = [
         // --- Lower Octave / Kharaj (-1200c ... -100c) ---
         "Sa Lower": -1200.0,
@@ -151,8 +151,16 @@ let swarMandalManifest: [PitchedSample] = [
 // MARK: - Swar Mandal Instrument Class (LookaheadAudioScheduler Integration)
 @MainActor
 class SwarMandal: Instrument {
-    @Published public var mode: SwarMandalMode = .pluck
-    @Published public var loopOption: SwarMandalLoopOption = .min1
+    nonisolated let atomicState = Locked<(mode: SwarMandalMode, loopOption: SwarMandalLoopOption, stringCount: Int, stringNotes: [String], currentStep: Int)>(
+        (mode: .pluck, loopOption: .min1, stringCount: SwarMandalTimingConfig.defaultStringCount, stringNotes: [], currentStep: 0)
+    )
+
+    @Published public var mode: SwarMandalMode = .pluck {
+        didSet { syncAtomicState() }
+    }
+    @Published public var loopOption: SwarMandalLoopOption = .min1 {
+        didSet { syncAtomicState() }
+    }
     
     @Published public var stringCount: Int = SwarMandalTimingConfig.defaultStringCount {
         didSet {
@@ -162,14 +170,33 @@ class SwarMandal: Instrument {
             } else {
                 adjustStringNotesCount()
             }
+            syncAtomicState()
         }
     }
     
-    @Published public var stringNotes: [String] = []
+    @Published public var stringNotes: [String] = [] {
+        didSet { syncAtomicState() }
+    }
+
+    private func syncAtomicState() {
+        atomicState.withLock {
+            $0.mode = mode
+            $0.loopOption = loopOption
+            $0.stringCount = stringCount
+            $0.stringNotes = stringNotes
+        }
+    }
     
     public override init(id: String, name: String, orchestrator: AppAudioOrchestrator, voicePool: VoicePool, registry: [String: PitchedSample]) {
         super.init(id: id, name: name, orchestrator: orchestrator, voicePool: voicePool, registry: registry)
-        self.stringNotes = Array(SwarNoteHelper.middleOctaveSwars + SwarNoteHelper.higherOctaveSwars.prefix(12))
+        let initialNotes = Array(SwarNoteHelper.middleOctaveSwars + SwarNoteHelper.higherOctaveSwars.prefix(12))
+        self.stringNotes = initialNotes
+        self.atomicState.withLock {
+            $0.mode = .pluck
+            $0.loopOption = .min1
+            $0.stringCount = stringCount
+            $0.stringNotes = initialNotes
+        }
     }
     
     private func adjustStringNotesCount() {
@@ -196,32 +223,38 @@ class SwarMandal: Instrument {
     public override func startPlay() {
         guard !isPlaying else { return }
         isPlaying = true
-        // Begins at step 0 so sound fires immediately on start/preset load
-        clock.start(stepsCount: stringCount + 1, startingAtStep: 0)
+        syncAtomicState()
+        atomicState.withLock { $0.currentStep = 0 }
+        clock.start()
     }
 
-    // MARK: - STUB FUNCTION FOR LOOKAHEAD AUDIO SCHEDULER (MENTOR COMPLIANCE)
+    // MARK: - LOOKAHEAD AUDIO SCHEDULER CALLBACK
     
-    /// Called by `LookaheadAudioScheduler` for each sequence tick.
-    /// Steps 0 ... (stringCount - 1) represent individual string plucks.
-    /// Step `stringCount` represents the auto-loop pause step computed from start-to-start cycle duration.
-    /// - Parameters:
-    ///   - stepIndex: Current sequence step (0 ... stringCount).
-    ///   - time: Host-clock sample-accurate AVAudioTime for CoreAudio playback.
-    /// - Returns: Duration fraction multiplier relative to 60.0 / tempoBPM.
     @discardableResult
-    override internal func executeSequenceTick(stepIndex: Int, time: AVAudioTime?) -> Double {
+    nonisolated override internal func executeSequenceTick(time: AVAudioTime?) -> Double {
+        let (stepIndex, mode, loopOption, stringCount, stringNotes) = atomicState.withLock { state -> (Int, SwarMandalMode, SwarMandalLoopOption, Int, [String]) in
+            let step = state.currentStep
+            state.currentStep = (state.currentStep + 1) % (state.stringCount + 1)
+            return (step, state.mode, state.loopOption, state.stringCount, state.stringNotes)
+        }
+        let masterPitch = orchestrator.atomicScaleOffsetCents + orchestrator.atomicFineTuneCents
+        let currentBPM = atomicBPM.value
 
         if stepIndex < stringCount && stepIndex < stringNotes.count {
             let noteName = stringNotes[stepIndex]
             if noteName != "Off" {
                 let swarCents = SwarNoteHelper.cents(for: noteName)
-                let masterPitch = orchestrator.scaleOffsetCents + orchestrator.fineTuneCents
                 let targetPitch = masterPitch + swarCents
                 
                 let sampleToPlay = sampleRegistry["SwarMandal_C#3"] ?? sampleRegistry.values.first
                 if let sample = sampleToPlay {
-                    let _ = voicePool.play(sample: sample, targetPitchCents: targetPitch, volume: effectiveVolume, time: time)
+                    AudioLogger.logSwarMandalPluck(
+                        stringIndex: stepIndex,
+                        noteName: noteName,
+                        sample: sample.fileName,
+                        hostTime: time?.hostTime ?? 0
+                    )
+                    let _ = voicePool.play(sample: sample, targetPitchCents: targetPitch, volume: 1.0, time: time)
                 }
             }
             
@@ -237,7 +270,7 @@ class SwarMandal: Instrument {
             var strumPassSeconds = 0.0
             if mode == .pluck {
                 var stepBPM = SwarMandalTimingConfig.pluckBPM
-                for i in 0..<stringCount {
+                for _ in 0..<stringCount {
                     strumPassSeconds += 60.0 / stepBPM
                     stepBPM *= SwarMandalTimingConfig.pluckDecay
                 }
@@ -245,7 +278,7 @@ class SwarMandal: Instrument {
                 strumPassSeconds = Double(stringCount) * (60.0 / SwarMandalTimingConfig.strumBPM)
             }
             let remainingPauseSeconds = max(0.1, totalTargetSeconds - strumPassSeconds)
-            return remainingPauseSeconds * (tempoBPM / 60.0)
+            return remainingPauseSeconds * (currentBPM / 60.0)
         }
     }
     
@@ -260,7 +293,13 @@ class SwarMandal: Instrument {
         let targetPitch = masterPitch + swarCents
         
         if let sample = sampleRegistry["SwarMandal_C#3"] ?? sampleRegistry.values.first {
-            let _ = voicePool.play(sample: sample, targetPitchCents: targetPitch, volume: effectiveVolume, time: nil)
+            AudioLogger.logSwarMandalPluck(
+                stringIndex: index,
+                noteName: noteName,
+                sample: sample.fileName,
+                hostTime: 0
+            )
+            let _ = voicePool.play(sample: sample, targetPitchCents: targetPitch, volume: 1.0, time: nil)
         }
     }
     
@@ -268,10 +307,12 @@ class SwarMandal: Instrument {
     public func triggerManualStrumPass() {
         if isPlaying {
             // Reset auto-looper sequence to step 0 immediately
-            clock.start(stepsCount: stringCount + 1, startingAtStep: 0)
+            atomicState.withLock { $0.currentStep = 0 }
+            clock.start()
         } else {
             // Trigger single non-looping strum pass via lookahead scheduler
-            clock.triggerSinglePass(stepsCount: stringCount)
+            atomicState.withLock { $0.currentStep = 0 }
+            clock.triggerSinglePass(ticks: stringCount)
         }
     }
 }
