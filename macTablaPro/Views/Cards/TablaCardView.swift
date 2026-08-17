@@ -9,6 +9,8 @@ struct TablaCardView: View {
     
     @State private var bpmInputText: String = ""
     @State private var isEditingBPM: Bool = false
+    @State private var isTapFlashing: Bool = false
+    @State private var tapTracker = TapTempoTracker(minSamples: 4, maxSamples: 5, timeoutInterval: 2.0)
 
     private func tempoCategoryName(tier: Int) -> String {
         switch tier {
@@ -280,6 +282,30 @@ struct TablaCardView: View {
                         }
                     }
                 }
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    guard !isEditingBPM else { return }
+                    withAnimation(.easeOut(duration: 0.1)) {
+                        isTapFlashing = true
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                        withAnimation(.easeIn(duration: 0.15)) {
+                            isTapFlashing = false
+                        }
+                    }
+                    if let calculatedBPM = tapTracker.recordTap() {
+                        let range = tabla.allowedBPMRange()
+                        tabla.tempoBPM = max(range.lowerBound, min(range.upperBound, round(calculatedBPM)))
+                    }
+                }
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .stroke(
+                            isAntique ? Color.orange : Color.cyan,
+                            lineWidth: isTapFlashing ? 2.5 : 0
+                        )
+                        .opacity(isTapFlashing ? 0.9 : 0)
+                )
 
                 Button(action: { tabla.togglePlay() }) {
                     Image(systemName: tabla.isPlaying ? "stop.fill" : "play.fill")
