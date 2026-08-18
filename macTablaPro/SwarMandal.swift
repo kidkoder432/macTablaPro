@@ -259,7 +259,7 @@ class SwarMandal: Instrument {
             
             // Calculate step duration with natural physical slow-down (decay curve) from the user's chosen tempo
             let stepBPM = tempoBPM * pow(SwarMandalTimingConfig.decayRate, Double(stepIndex))
-            return 100.0 / max(50.0, stepBPM)
+            return tempoBPM / stepBPM
         } else {
             // Step N: Auto-Loop Pause step (start-to-start interval calculation)
             let totalTargetSeconds = Double(loopOption.rawValue)

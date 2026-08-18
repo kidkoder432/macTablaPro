@@ -67,7 +67,6 @@ struct SwarMandalCardView: View {
                 Slider(
                     value: $swarMandal.tempoBPM,
                     in: SwarMandalTimingConfig.minTempoBPM...SwarMandalTimingConfig.maxTempoBPM,
-                    step: 5
                 )
                 .tint(isAntique ? .orange : .accentColor)
                 
@@ -172,56 +171,147 @@ struct SwarMandalCardView: View {
                 }
                 
                 // 2. Bottom Interactive Strum Bar
-                GeometryReader { geo in
-                    let totalWidth = geo.size.width
-                    let count = max(1, swarMandal.stringCount)
-                    let stepWidth = totalWidth / CGFloat(count)
-                    
-                    HStack(spacing: 0) {
-                        ForEach(0..<count, id: \.self) { idx in
-                            let isPlucked = activePluckedIndex == idx
-                            let isHovered = hoveredStringIndex == idx
-                            let noteName = idx < swarMandal.stringNotes.count ? swarMandal.stringNotes[idx] : "Off"
-                            let isOff = noteName == "Off"
-                            
-                            ZStack {
-                                Rectangle()
-                                    .fill(isHovered || isPlucked ? (isAntique ? Color.orange.opacity(0.3) : Color.accentColor.opacity(0.25)) : Color.clear)
+                VStack(spacing: 4) {
+                    GeometryReader { geo in
+                        let totalWidth = geo.size.width
+                        let count = max(1, swarMandal.stringCount)
+                        let stepWidth = totalWidth / CGFloat(count)
+                        
+                        HStack(spacing: 0) {
+                            ForEach(0..<count, id: \.self) { idx in
+                                let isEditing = selectedStringIndex == idx && isPopoverPresented
+                                let isPlucked = activePluckedIndex == idx
+                                let isHovered = hoveredStringIndex == idx
+                                let noteName = idx < swarMandal.stringNotes.count ? swarMandal.stringNotes[idx] : "Off"
+                                let isOff = noteName == "Off"
                                 
-                                Rectangle()
-                                    .fill(
-                                        isOff ?
-                                        Color.secondary.opacity(0.2) :
-                                        (isPlucked || isHovered ? (isAntique ? Color.yellow : Color.accentColor) : (isAntique ? Color.orange.opacity(0.7) : Color.primary.opacity(0.5)))
-                                    )
-                                    .frame(width: isPlucked || isHovered ? 2.5 : 1.0)
-                            }
-                            .frame(width: stepWidth, height: 40)
-                        }
-                    }
-                    .contentShape(Rectangle())
-                    .gesture(
-                        DragGesture(minimumDistance: 0)
-                            .onChanged { value in
-                                let locX = value.location.x
-                                let clampedX = max(0, min(totalWidth - 1, locX))
-                                let stringIdx = Int(clampedX / stepWidth)
+                                let lineColor: Color = {
+                                    if isEditing {
+                                        return Color.green
+                                    } else if isPlucked {
+                                        return isAntique ? Color.yellow : Color.accentColor
+                                    } else if isHovered {
+                                        return isAntique ? Color.orange : Color.accentColor.opacity(0.8)
+                                    } else if isOff {
+                                        return Color.secondary.opacity(0.25)
+                                    } else {
+                                        return isAntique ? Color.orange.opacity(0.7) : Color.primary.opacity(0.45)
+                                    }
+                                }()
                                 
-                                if stringIdx != activePluckedIndex && stringIdx >= 0 && stringIdx < swarMandal.stringCount {
-                                    activePluckedIndex = stringIdx
-                                    hoveredStringIndex = stringIdx
-                                    swarMandal.pluckString(at: stringIdx)
+                                let lineWidth: CGFloat = isEditing ? 3.0 : ((isPlucked || isHovered) ? 2.5 : 1.0)
+                                
+                                ZStack {
+                                    Rectangle()
+                                        .fill(
+                                            isEditing ?
+                                            Color.green.opacity(0.3) :
+                                            (isHovered || isPlucked ? (isAntique ? Color.orange.opacity(0.3) : Color.accentColor.opacity(0.25)) : Color.clear)
+                                        )
+                                    
+                                    Rectangle()
+                                        .fill(lineColor)
+                                        .frame(width: lineWidth)
+                                        .shadow(color: isEditing ? Color.green.opacity(0.8) : (isPlucked ? lineColor.opacity(0.6) : Color.clear), radius: isEditing ? 4 : 2)
+                                }
+                                .frame(width: stepWidth, height: 40)
+                                .contentShape(Rectangle())
+                                .help("String \(idx + 1): \(noteName)")
+                                .contextMenu {
+                                    Text("Tune String #\(idx + 1) (Current: \(noteName))")
+                                    Divider()
+                                    Button("Open Tuner Window...") {
+                                        selectedStringIndex = idx
+                                        isPopoverPresented = true
+                                    }
+                                    Divider()
+                                    Menu("Middle Octave") {
+                                        ForEach(SwarNoteHelper.middleOctaveSwars, id: \.self) { swar in
+                                            Button(swar) {
+                                                swarMandal.stringNotes[idx] = swar
+                                                swarMandal.pluckString(at: idx)
+                                            }
+                                        }
+                                    }
+                                    Menu("Lower Octave") {
+                                        ForEach(SwarNoteHelper.lowerOctaveSwars, id: \.self) { swar in
+                                            Button(swar) {
+                                                swarMandal.stringNotes[idx] = swar
+                                                swarMandal.pluckString(at: idx)
+                                            }
+                                        }
+                                    }
+                                    Menu("Higher Octave") {
+                                        ForEach(SwarNoteHelper.higherOctaveSwars, id: \.self) { swar in
+                                            Button(swar) {
+                                                swarMandal.stringNotes[idx] = swar
+                                                swarMandal.pluckString(at: idx)
+                                            }
+                                        }
+                                    }
+                                    Button("Mute String (Off)") {
+                                        swarMandal.stringNotes[idx] = "Off"
+                                    }
                                 }
                             }
-                            .onEnded { _ in
-                                activePluckedIndex = nil
+                        }
+                        .contentShape(Rectangle())
+                        .onContinuousHover { phase in
+                            switch phase {
+                            case .active(let location):
+                                let clampedX = max(0, min(totalWidth - 1, location.x))
+                                let stringIdx = Int(clampedX / stepWidth)
+                                if stringIdx >= 0 && stringIdx < swarMandal.stringCount {
+                                    hoveredStringIndex = stringIdx
+                                    // If mouse button 1 is down while moving over strings:
+                                    if NSEvent.pressedMouseButtons & 1 != 0 {
+                                        if activePluckedIndex != stringIdx {
+                                            activePluckedIndex = stringIdx
+                                            swarMandal.pluckString(at: stringIdx)
+                                        }
+                                    }
+                                }
+                            case .ended:
                                 hoveredStringIndex = nil
+                                if NSEvent.pressedMouseButtons & 1 == 0 {
+                                    activePluckedIndex = nil
+                                }
                             }
-                    )
+                        }
+                        .gesture(
+                            DragGesture(minimumDistance: 0)
+                                .onChanged { value in
+                                    let locX = value.location.x
+                                    let clampedX = max(0, min(totalWidth - 1, locX))
+                                    let stringIdx = Int(clampedX / stepWidth)
+                                    
+                                    if stringIdx != activePluckedIndex && stringIdx >= 0 && stringIdx < swarMandal.stringCount {
+                                        activePluckedIndex = stringIdx
+                                        hoveredStringIndex = stringIdx
+                                        swarMandal.pluckString(at: stringIdx)
+                                    }
+                                }
+                                .onEnded { _ in
+                                    activePluckedIndex = nil
+                                    hoveredStringIndex = nil
+                                }
+                        )
+                    }
+                    .frame(height: 40)
+                    .background(isAntique ? Color.black.opacity(0.25) : Color(NSColor.controlBackgroundColor).opacity(0.5))
+                    .cornerRadius(6)
+                    
+                    // Subtle feature guidance hint
+                    HStack(spacing: 4) {
+                        Image(systemName: "hand.draw")
+                            .font(.system(size: 8))
+                        Text("Drag across strings to strum • Right-click to tune")
+                            .font(.system(size: 9))
+                    }
+                    .foregroundColor(isAntique ? Color.orange.opacity(0.4) : Color.secondary.opacity(0.5))
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.top, 1)
                 }
-                .frame(height: 40)
-                .background(isAntique ? Color.black.opacity(0.25) : Color(NSColor.controlBackgroundColor).opacity(0.5))
-                .cornerRadius(6)
             }
         }
         .padding(14)
