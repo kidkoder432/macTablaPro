@@ -12,14 +12,17 @@ var logger = Logger(subsystem: "com.praj.macTablaPro", category: "SwarMandal")
 
 // MARK: - Swar Mandal Timing Configuration
 nonisolated public struct SwarMandalTimingConfig: Sendable {
-    /// Initial tempo (BPM) for Pluck Mode at string index 0
-    public static let pluckBPM: Double = 400.0
+    /// Minimum tempo (BPM) for delicate arpeggios
+    public static let minTempoBPM: Double = 300.0
     
-    /// Final tempo (BPM) for Pluck Mode at string index (stringCount - 1)
-    public static let pluckDecay: Double = 0.95
+    /// Maximum tempo (BPM) for fast glissandos
+    public static let maxTempoBPM: Double = 800.0
     
-    /// Constant tempo (BPM) for Strum Mode (fast ambient glissando)
-    public static let strumBPM: Double = 800.0
+    /// Default tempo (BPM)
+    public static let defaultTempoBPM: Double = 450.0
+    
+    /// Natural physical slow-down decay factor per string plucked
+    public static let decayRate: Double = 0.96
     
     /// String count constraints
     public static let minStringCount: Int = 15
@@ -151,13 +154,10 @@ let swarMandalManifest: [PitchedSample] = [
 // MARK: - Swar Mandal Instrument Class (LookaheadAudioScheduler Integration)
 @MainActor
 class SwarMandal: Instrument {
-    nonisolated let atomicState = Locked<(mode: SwarMandalMode, loopOption: SwarMandalLoopOption, stringCount: Int, stringNotes: [String], currentStep: Int)>(
-        (mode: .pluck, loopOption: .min1, stringCount: SwarMandalTimingConfig.defaultStringCount, stringNotes: [], currentStep: 0)
+    nonisolated let atomicState = Locked<(loopOption: SwarMandalLoopOption, stringCount: Int, stringNotes: [String], currentStep: Int)>(
+        (loopOption: .min1, stringCount: SwarMandalTimingConfig.defaultStringCount, stringNotes: [], currentStep: 0)
     )
 
-    @Published public var mode: SwarMandalMode = .pluck {
-        didSet { syncAtomicState() }
-    }
     @Published public var loopOption: SwarMandalLoopOption = .min1 {
         didSet { syncAtomicState() }
     }
@@ -180,7 +180,6 @@ class SwarMandal: Instrument {
 
     private func syncAtomicState() {
         atomicState.withLock {
-            $0.mode = mode
             $0.loopOption = loopOption
             $0.stringCount = stringCount
             $0.stringNotes = stringNotes
@@ -189,10 +188,10 @@ class SwarMandal: Instrument {
     
     public override init(id: String, name: String, orchestrator: AppAudioOrchestrator, voicePool: VoicePool, registry: [String: PitchedSample]) {
         super.init(id: id, name: name, orchestrator: orchestrator, voicePool: voicePool, registry: registry)
+        self.tempoBPM = SwarMandalTimingConfig.defaultTempoBPM
         let initialNotes = Array(SwarNoteHelper.middleOctaveSwars + SwarNoteHelper.higherOctaveSwars.prefix(12))
         self.stringNotes = initialNotes
         self.atomicState.withLock {
-            $0.mode = .pluck
             $0.loopOption = .min1
             $0.stringCount = stringCount
             $0.stringNotes = initialNotes
@@ -232,13 +231,13 @@ class SwarMandal: Instrument {
     
     @discardableResult
     nonisolated override internal func executeSequenceTick(time: AVAudioTime?) -> Double {
-        let (stepIndex, mode, loopOption, stringCount, stringNotes) = atomicState.withLock { state -> (Int, SwarMandalMode, SwarMandalLoopOption, Int, [String]) in
+        let (stepIndex, loopOption, stringCount, stringNotes) = atomicState.withLock { state -> (Int, SwarMandalLoopOption, Int, [String]) in
             let step = state.currentStep
             state.currentStep = (state.currentStep + 1) % (state.stringCount + 1)
-            return (step, state.mode, state.loopOption, state.stringCount, state.stringNotes)
+            return (step, state.loopOption, state.stringCount, state.stringNotes)
         }
         let masterPitch = orchestrator.atomicScaleOffsetCents + orchestrator.atomicFineTuneCents
-        let currentBPM = atomicBPM.value
+        let tempoBPM = atomicBPM.value
 
         if stepIndex < stringCount && stepIndex < stringNotes.count {
             let noteName = stringNotes[stepIndex]
@@ -258,27 +257,19 @@ class SwarMandal: Instrument {
                 }
             }
             
-            // Return step duration fraction based on mode (Pluck mode ramps from 400 to 240 BPM)
-            if mode == .pluck {
-                return 100.0 / (SwarMandalTimingConfig.pluckBPM * pow(SwarMandalTimingConfig.pluckDecay, Double(stepIndex)))
-            } else {
-                return 100.0 / SwarMandalTimingConfig.strumBPM
-            }
+            // Calculate step duration with natural physical slow-down (decay curve) from the user's chosen tempo
+            let stepBPM = tempoBPM * pow(SwarMandalTimingConfig.decayRate, Double(stepIndex))
+            return 100.0 / max(50.0, stepBPM)
         } else {
             // Step N: Auto-Loop Pause step (start-to-start interval calculation)
             let totalTargetSeconds = Double(loopOption.rawValue)
             var strumPassSeconds = 0.0
-            if mode == .pluck {
-                var stepBPM = SwarMandalTimingConfig.pluckBPM
-                for _ in 0..<stringCount {
-                    strumPassSeconds += 60.0 / stepBPM
-                    stepBPM *= SwarMandalTimingConfig.pluckDecay
-                }
-            } else {
-                strumPassSeconds = Double(stringCount) * (60.0 / SwarMandalTimingConfig.strumBPM)
+            for i in 0..<stringCount {
+                let stepBPM = tempoBPM * pow(SwarMandalTimingConfig.decayRate, Double(i))
+                strumPassSeconds += 60.0 / max(50.0, stepBPM)
             }
             let remainingPauseSeconds = max(0.1, totalTargetSeconds - strumPassSeconds)
-            return remainingPauseSeconds * (currentBPM / 60.0)
+            return remainingPauseSeconds * (tempoBPM / 60.0)
         }
     }
     

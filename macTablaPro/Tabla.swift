@@ -289,7 +289,7 @@ class Tabla: Instrument {
             $0.lastScheduledQuarterBeat = -0.25
         }
         presentationEngine.start()
-        clock.start(initialDelaySec: 0.005)
+        clock.start(initialDelaySec: 0.025)
     }
 
     override func stopPlay() {

@@ -58,13 +58,44 @@ struct SwarMandalCardView: View {
                 .help("Manual Strum Now")
             }
             
-            // MARK: - Row 1: Mode Segmented Control
-            Picker("Mode", selection: $swarMandal.mode) {
-                ForEach(SwarMandalMode.allCases) { mode in
-                    Text(mode.rawValue).tag(mode)
-                }
+            // MARK: - Row 1: Tempo Control (Slider & Direct Input, 300 to 800 BPM)
+            HStack(spacing: 8) {
+                Text("Tempo:")
+                    .font(.caption2)
+                    .foregroundColor(isAntique ? Color.orange : .secondary)
+                
+                Slider(
+                    value: $swarMandal.tempoBPM,
+                    in: SwarMandalTimingConfig.minTempoBPM...SwarMandalTimingConfig.maxTempoBPM,
+                    step: 5
+                )
+                .tint(isAntique ? .orange : .accentColor)
+                
+                TextField(
+                    "",
+                    value: $swarMandal.tempoBPM,
+                    format: .number
+                )
+                .textFieldStyle(.plain)
+                .multilineTextAlignment(.trailing)
+                .font(.caption)
+                .monospacedDigit()
+                .frame(width: 36)
+                .padding(.horizontal, 4)
+                .padding(.vertical, 2)
+                .background(
+                    RoundedRectangle(cornerRadius: 4, style: .continuous)
+                        .fill(isAntique ? Color.black.opacity(0.3) : Color(NSColor.controlBackgroundColor))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 4, style: .continuous)
+                        .stroke(isAntique ? Color.orange.opacity(0.3) : Color.gray.opacity(0.2), lineWidth: 1)
+                )
+                
+                Text("BPM")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
             }
-            .pickerStyle(.segmented)
             
             // MARK: - Row 2: Strings Stepper & Loop Duration Picker
             HStack(spacing: 8) {
