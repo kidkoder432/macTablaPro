@@ -217,67 +217,26 @@ struct SwarMandalCardView: View {
                                 .frame(width: stepWidth, height: 40)
                                 .contentShape(Rectangle())
                                 .help("String \(idx + 1): \(noteName)")
-                                .contextMenu {
-                                    Text("Tune String #\(idx + 1) (Current: \(noteName))")
-                                    Divider()
-                                    Button("Open Tuner Window...") {
-                                        selectedStringIndex = idx
-                                        isPopoverPresented = true
-                                    }
-                                    Divider()
-                                    Menu("Middle Octave") {
-                                        ForEach(SwarNoteHelper.middleOctaveSwars, id: \.self) { swar in
-                                            Button(swar) {
-                                                swarMandal.stringNotes[idx] = swar
-                                                swarMandal.pluckString(at: idx)
-                                            }
-                                        }
-                                    }
-                                    Menu("Lower Octave") {
-                                        ForEach(SwarNoteHelper.lowerOctaveSwars, id: \.self) { swar in
-                                            Button(swar) {
-                                                swarMandal.stringNotes[idx] = swar
-                                                swarMandal.pluckString(at: idx)
-                                            }
-                                        }
-                                    }
-                                    Menu("Higher Octave") {
-                                        ForEach(SwarNoteHelper.higherOctaveSwars, id: \.self) { swar in
-                                            Button(swar) {
-                                                swarMandal.stringNotes[idx] = swar
-                                                swarMandal.pluckString(at: idx)
-                                            }
-                                        }
-                                    }
-                                    Button("Mute String (Off)") {
-                                        swarMandal.stringNotes[idx] = "Off"
+                                .onHover { isHovering in
+                                    if isHovering {
+                                        hoveredStringIndex = idx
+                                    } else if hoveredStringIndex == idx {
+                                        hoveredStringIndex = nil
                                     }
                                 }
                             }
                         }
                         .contentShape(Rectangle())
-                        .onContinuousHover { phase in
-                            switch phase {
-                            case .active(let location):
+                        .overlay(
+                            RightClickBarDetector { location in
                                 let clampedX = max(0, min(totalWidth - 1, location.x))
                                 let stringIdx = Int(clampedX / stepWidth)
                                 if stringIdx >= 0 && stringIdx < swarMandal.stringCount {
-                                    hoveredStringIndex = stringIdx
-                                    // If mouse button 1 is down while moving over strings:
-                                    if NSEvent.pressedMouseButtons & 1 != 0 {
-                                        if activePluckedIndex != stringIdx {
-                                            activePluckedIndex = stringIdx
-                                            swarMandal.pluckString(at: stringIdx)
-                                        }
-                                    }
-                                }
-                            case .ended:
-                                hoveredStringIndex = nil
-                                if NSEvent.pressedMouseButtons & 1 == 0 {
-                                    activePluckedIndex = nil
+                                    selectedStringIndex = stringIdx
+                                    isPopoverPresented = true
                                 }
                             }
-                        }
+                        )
                         .gesture(
                             DragGesture(minimumDistance: 0)
                                 .onChanged { value in
@@ -399,6 +358,42 @@ struct SwarOctaveSectionView: View {
                     .buttonStyle(.plain)
                 }
             }
+        }
+    }
+}
+
+// MARK: - Right-Click Gesture Interceptor for macOS Strum Bar
+struct RightClickBarDetector: NSViewRepresentable {
+    var onRightClick: (CGPoint) -> Void
+
+    func makeNSView(context: Context) -> RightClickNSView {
+        let view = RightClickNSView()
+        view.onRightClick = onRightClick
+        return view
+    }
+
+    func updateNSView(_ nsView: RightClickNSView, context: Context) {
+        nsView.onRightClick = onRightClick
+    }
+
+    class RightClickNSView: NSView {
+        var onRightClick: ((CGPoint) -> Void)?
+
+        override func rightMouseDown(with event: NSEvent) {
+            let localPoint = convert(event.locationInWindow, from: nil)
+            onRightClick?(localPoint)
+        }
+
+        override func mouseDown(with event: NSEvent) {
+            nextResponder?.mouseDown(with: event)
+        }
+
+        override func mouseDragged(with event: NSEvent) {
+            nextResponder?.mouseDragged(with: event)
+        }
+
+        override func mouseUp(with event: NSEvent) {
+            nextResponder?.mouseUp(with: event)
         }
     }
 }

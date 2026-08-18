@@ -217,10 +217,27 @@ class SwarMandal: Instrument {
         }
         self.stringNotes = Array(padded.prefix(targetCount))
         self.stringCount = targetCount
+        syncAtomicState()
     }
     
     public override func startPlay() {
         guard !isPlaying else { return }
+        isPlaying = true
+        syncAtomicState()
+        atomicState.withLock { $0.currentStep = 0 }
+        clock.start()
+    }
+
+    public override func stopPlay() {
+        guard isPlaying else { return }
+        isPlaying = false
+        clock.stop()
+        voicePool.stopFuture()
+    }
+
+    public func restartPlay() {
+        clock.stop()
+        voicePool.stopFuture()
         isPlaying = true
         syncAtomicState()
         atomicState.withLock { $0.currentStep = 0 }
