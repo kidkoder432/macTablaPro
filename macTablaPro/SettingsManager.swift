@@ -27,9 +27,9 @@ nonisolated struct TablaSettings: Codable, Equatable, Sendable {
 nonisolated struct SwarMandalSettings: Codable, Equatable, Sendable {
     var volume: Double = 0.25
     var isMuted: Bool = false
-    var mode: String = "Pluck Mode"
+    var tempoBPM: Double = 450.0
     var loopDurationSec: Int = 60
-    var stringCount: Int = 24
+    var stringCount: Int = 20
     var stringNotes: [String] = []
 }
 

@@ -6,6 +6,29 @@
 import Foundation
 import AppKit
 
+// MARK: - Preset Loading Scope Configuration
+nonisolated public struct PresetLoadOptions: Codable, Equatable, Sendable {
+    public var loadTanpura: Bool = true
+    public var loadSwarMandal: Bool = true
+    public var loadMixer: Bool = true
+    public var loadPitch: Bool = false
+    public var loadTabla: Bool = false
+
+    public init(
+        loadTanpura: Bool = true,
+        loadSwarMandal: Bool = true,
+        loadMixer: Bool = true,
+        loadPitch: Bool = false,
+        loadTabla: Bool = false
+    ) {
+        self.loadTanpura = loadTanpura
+        self.loadSwarMandal = loadSwarMandal
+        self.loadMixer = loadMixer
+        self.loadPitch = loadPitch
+        self.loadTabla = loadTabla
+    }
+}
+
 // MARK: - SwarMandal Notes Container
 nonisolated struct SwarMandalNotesContainer: Codable, Equatable, Sendable {
     var nsObjects: [String]?
@@ -66,6 +89,7 @@ nonisolated struct ITablaProPreset: Codable, Equatable, Identifiable, Sendable {
     var SwarMandalPan: Double?
     var SwarMandalLoopDuration: Int?
     var SwarMandalNotes: SwarMandalNotesContainer?
+    var SwarMandalTempo: Double?
 
     var SavedAudioDeviceName: String?
     var SharedTanpuraBPM: Double?
@@ -108,7 +132,8 @@ nonisolated struct ITablaProPreset: Codable, Equatable, Identifiable, Sendable {
             SwarMandalGain: 0.25,
             SwarMandalPan: 0.0,
             SwarMandalLoopDuration: 60,
-            SwarMandalNotes: nil
+            SwarMandalNotes: nil,
+            SwarMandalTempo: 450.0
         )
     }
 }

@@ -66,6 +66,38 @@ struct PresetsDrawerView: View {
             .padding(.vertical, 5)
             .background(Color(NSColor.controlBackgroundColor).opacity(0.5), in: RoundedRectangle(cornerRadius: 8))
 
+            // MARK: - Preset Load Options (Scope Checkboxes)
+            VStack(alignment: .leading, spacing: 6) {
+                Text("APPLY TO PRESET LOADING")
+                    .font(.system(size: 9, weight: .bold))
+                    .foregroundColor(audio.isAntiqueThemeEnabled ? Color.orange.opacity(0.8) : .secondary)
+
+                HStack(spacing: 8) {
+                    Toggle("Tanpuras", isOn: $audio.presetLoadOptions.loadTanpura)
+                    Toggle("Swar Mandal", isOn: $audio.presetLoadOptions.loadSwarMandal)
+                    Toggle("Mixer", isOn: $audio.presetLoadOptions.loadMixer)
+                }
+                .toggleStyle(.checkbox)
+                .font(.system(size: 11))
+
+                HStack(spacing: 8) {
+                    Toggle("Pitch", isOn: $audio.presetLoadOptions.loadPitch)
+                    Toggle("Tabla", isOn: $audio.presetLoadOptions.loadTabla)
+                }
+                .toggleStyle(.checkbox)
+                .font(.system(size: 11))
+            }
+            .padding(8)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(Color(NSColor.controlBackgroundColor).opacity(0.35))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .stroke(audio.isAntiqueThemeEnabled ? Color.orange.opacity(0.2) : Color.gray.opacity(0.15), lineWidth: 1)
+            )
+
             Divider()
 
             // Presets Scroll List (Auto-centered on active preset)
