@@ -63,7 +63,7 @@ nonisolated public final class LookaheadAudioScheduler: @unchecked Sendable {
     // MARK: - 2. Ahead-of-Time Scheduling Loop
 
     /// Starts the ahead-of-time lookahead scheduler loop on the background queue.
-    public func start(initialDelaySec: Double = 0.05) {
+    public func start(initialDelaySec: Double = 0.005) {
         stop()
 
         os_unfair_lock_lock(lock)

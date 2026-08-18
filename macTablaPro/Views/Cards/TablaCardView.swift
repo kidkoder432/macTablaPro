@@ -58,6 +58,7 @@ struct TablaCardView: View {
     }
 
     private var subBeatDotsText: String {
+        guard presentation.currentMatra != nil else { return "" }
         let activeDots = (presentation.currentMatraSubStep % 4) + 1
         return String(repeating: "· ", count: activeDots).trimmingCharacters(in: .whitespaces)
     }
@@ -66,7 +67,8 @@ struct TablaCardView: View {
         if !presentation.currentTaalSymbol.isEmpty {
             return presentation.currentTaalSymbol
         }
-        return getTaalSymbol(matra: presentation.currentMatra, taal: database.taalCatalog[tabla.activeTaal])
+        guard let matra = presentation.currentMatra else { return "" }
+        return getTaalSymbol(matra: matra, taal: database.taalCatalog[tabla.activeTaal])
     }
 
     var body: some View {
@@ -272,8 +274,8 @@ struct TablaCardView: View {
                         .padding(8)
 
                         // 2. Center: Larger Matra Beat Number (No "OFF" label)
-                        if tabla.isPlaying {
-                            Text("\(presentation.currentMatra)")
+                        if tabla.isPlaying, let matra = presentation.currentMatra {
+                            Text("\(matra)")
                                 .font(isAntique ?
                                     .system(size: 44, weight: .bold, design: .monospaced) :
                                     .system(size: 44, weight: .bold, design: .rounded))

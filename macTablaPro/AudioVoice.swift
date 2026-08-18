@@ -7,6 +7,7 @@ nonisolated class AudioVoice: @unchecked Sendable {
 
     private let lock = NSLock()
     private var _isBusy = false
+    private var _scheduledPlayTime: AVAudioTime?
 
     var isBusy: Bool {
         get {
@@ -17,6 +18,19 @@ nonisolated class AudioVoice: @unchecked Sendable {
         set {
             lock.lock()
             _isBusy = newValue
+            lock.unlock()
+        }
+    }
+
+    var scheduledPlayTime: AVAudioTime? {
+        get {
+            lock.lock()
+            defer { lock.unlock() }
+            return _scheduledPlayTime
+        }
+        set {
+            lock.lock()
+            _scheduledPlayTime = newValue
             lock.unlock()
         }
     }
@@ -47,12 +61,15 @@ nonisolated class AudioVoice: @unchecked Sendable {
             return
         }
 
-        isBusy = true
-        
         try? buffer = OfflineAudioResampler.resample(
             sourceBuffer: buffer,
             centsOffset: targetPitchCents - sample.resampledPitch
         ) ?? buffer
+
+        lock.lock()
+        _scheduledPlayTime = time
+        _isBusy = true
+        lock.unlock()
 
         playerNode.volume = Float(volume)
         // Schedule the buffer on the real-time audio thread pipeline
@@ -61,8 +78,11 @@ nonisolated class AudioVoice: @unchecked Sendable {
             at: time,
             options: [],
             completionHandler: { [weak self] in
-                // Fires automatically when the buffer reaches absolute end-of-file
-                self?.isBusy = false
+                guard let self = self else { return }
+                self.lock.lock()
+                self._isBusy = false
+                self._scheduledPlayTime = nil
+                self.lock.unlock()
             }
         )
 
@@ -70,10 +90,13 @@ nonisolated class AudioVoice: @unchecked Sendable {
     }
 
     func stop() {
-        if playerNode.isPlaying {
-            playerNode.volume = 0.0
-            playerNode.stop()
-        }
-        isBusy = false
+        playerNode.volume = 0.0
+        playerNode.stop()
+        playerNode.reset()
+        
+        lock.lock()
+        _isBusy = false
+        _scheduledPlayTime = nil
+        lock.unlock()
     }
 }

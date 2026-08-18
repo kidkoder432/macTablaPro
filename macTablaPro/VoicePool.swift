@@ -43,4 +43,14 @@ nonisolated class VoicePool: @unchecked Sendable {
         defer { lock.unlock() }
         voicePool.forEach { $0.stop() }
     }
+    
+    func stopFuture(after hostTime: UInt64 = mach_absolute_time()) {
+        lock.lock()
+        defer { lock.unlock() }
+        voicePool.forEach { voice in
+            if voice.isBusy, let sched = voice.scheduledPlayTime?.hostTime, sched > hostTime {
+                voice.stop()
+            }
+        }
+    }
 }

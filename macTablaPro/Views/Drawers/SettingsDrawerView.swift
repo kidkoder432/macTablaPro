@@ -167,7 +167,7 @@ struct SettingsDrawerView: View {
                                     get: { presentation.visualLatencyOffsetMs },
                                     set: { presentation.setCustomLatency($0) }
                                 ),
-                                in: -300.0...300.0
+                                in: 0...400.0
                             )
                             .tint(audio.isAntiqueThemeEnabled ? .orange : .accentColor)
 

@@ -436,5 +436,8 @@ class AppAudioOrchestrator: ObservableObject {
         engine.stop()
         engine.reset()
         setupAudioGraph()
+        if !VisualPresentationEngine.shared.isCustomLatency {
+            VisualPresentationEngine.shared.autoDetectLatency()
+        }
     }
 }

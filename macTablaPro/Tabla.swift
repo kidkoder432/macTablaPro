@@ -71,7 +71,7 @@ class Tabla: Instrument {
     nonisolated let presentationEngine: VisualPresentationEngine
 
     // Computed properties forwarding directly to the presentation engine
-    var currentMatra: Int { presentationEngine.currentMatra }
+    var currentMatra: Int? { presentationEngine.currentMatra }
     var currentMatraSubStep: Int { presentationEngine.currentMatraSubStep }
     var currentBolName: String { presentationEngine.currentBolName }
     var currentTaalSymbol: String { presentationEngine.currentTaalSymbol }
@@ -286,7 +286,7 @@ class Tabla: Instrument {
         syncAtomicState()
         atomicTablaState.withLock { $0.currentBeat = 0.0 }
         presentationEngine.start()
-        clock.start()
+        clock.start(initialDelaySec: 0.005)
     }
 
     override func stopPlay() {
@@ -294,7 +294,7 @@ class Tabla: Instrument {
         isPlaying = false
         clock.stop()
         presentationEngine.stop()
-        // Allow the final bol / resonance tail to play out completely without cutting off
+        voicePool.stopFuture()
     }
 
     nonisolated override internal func executeSequenceTick(time: AVAudioTime?) -> Double {
@@ -319,6 +319,7 @@ class Tabla: Instrument {
         let calculatedMatra = event.matra
         let bolName = event.bolName
         let taalSymbol = Tabla.getTaalSymbol(matra: calculatedMatra, taal: taalDb[currentTaal])
+        let primaryHostTime = time?.hostTime ?? mach_absolute_time()
 
         // In Ati-Drut (Tier 4: BPM > 300), only enqueue visual events on Khand / Vibhag boundaries (Taali/Khaali beats)
         // to minimize UI redraw churn and prevent strobing at ultra-high speeds (300-700 BPM)
@@ -329,9 +330,36 @@ class Tabla: Instrument {
                 subStep: subStep,
                 bolName: bolName,
                 taalSymbol: taalSymbol,
-                targetHostTime: time?.hostTime ?? mach_absolute_time()
+                targetHostTime: primaryHostTime
             )
             presentationEngine.ringBuffer.push(visualEvent)
+
+            // If this stroke duration spans across intermediate quarter-matra fractions (e.g. Ati-Vilambit sustained matras),
+            // enqueue visual sub-beat clock pulses for all intermediate quarter-matra boundaries [0.25, 0.50, 0.75]
+            // so the quarter-matra dots advance steadily regardless of stroke density.
+            if activeTier == 0 && event.durationFraction > 0.25 {
+                let startFraction = event.startBeatFraction
+                let endFraction = startFraction + event.durationFraction
+                
+                let firstQ = (floor(startFraction * 4.0) + 1.0) / 4.0
+                var q = firstQ
+                while q < endFraction - 0.001 {
+                    let offsetSeconds = (q - startFraction) * 60.0 / max(1.0, currentBPM)
+                    let subHostTime = primaryHostTime + clock.secondsToHostTicks(offsetSeconds)
+                    let qSubStep = Int(round((q.truncatingRemainder(dividingBy: 1.0)) * 4.0)) % 4
+                    let qMatra = Int(floor(q)) + 1
+                    
+                    let subPulse = VisualBeatEvent(
+                        matra: qMatra,
+                        subStep: qSubStep,
+                        bolName: nil,
+                        taalSymbol: "",
+                        targetHostTime: subHostTime
+                    )
+                    presentationEngine.ringBuffer.push(subPulse)
+                    q += 0.25
+                }
+            }
         }
 
         // Execute Left Hand (Bayan)

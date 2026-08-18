@@ -39,7 +39,7 @@ public final class VisualPresentationEngine: ObservableObject {
     public static let shared = VisualPresentationEngine()
 
     // MARK: - Published Presentation State
-    @Published public var currentMatra: Int = 1
+    @Published public var currentMatra: Int? = nil
     @Published public var currentMatraSubStep: Int = 0
     @Published public var currentBolName: String = ""
     @Published public var currentTaalSymbol: String = ""
@@ -180,7 +180,7 @@ public final class VisualPresentationEngine: ObservableObject {
         displayTimer = nil
         ringBuffer.clear()
         
-        currentMatra = 1
+        currentMatra = nil
         currentMatraSubStep = 0
         currentBolName = ""
         currentTaalSymbol = ""
@@ -189,7 +189,7 @@ public final class VisualPresentationEngine: ObservableObject {
     /// Resets presentation state without stopping the timer.
     public func reset() {
         ringBuffer.clear()
-        currentMatra = 1
+        currentMatra = nil
         currentMatraSubStep = 0
         currentBolName = ""
         currentTaalSymbol = ""
