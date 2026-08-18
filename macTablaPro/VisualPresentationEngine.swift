@@ -8,6 +8,7 @@
 //
 
 import AppKit
+import AVFoundation
 import Combine
 import CoreAudio
 import Foundation
@@ -69,6 +70,39 @@ public final class VisualPresentationEngine: ObservableObject {
             let detected = Self.detectCoreAudioOutputLatencyMs()
             self.visualLatencyOffsetMs = detected
             self.isCustomLatency = false
+        }
+
+        // Hardware listener for default audio output device changes (AirPods, Bluetooth speakers, USB DACs)
+        var propertyAddress = AudioObjectPropertyAddress(
+            mSelector: kAudioHardwarePropertyDefaultOutputDevice,
+            mScope: kAudioObjectPropertyScopeGlobal,
+            mElement: kAudioObjectPropertyElementMain
+        )
+        AudioObjectAddPropertyListenerBlock(
+            AudioObjectID(kAudioObjectSystemObject),
+            &propertyAddress,
+            DispatchQueue.main
+        ) { [weak self] _, _ in
+            Task { @MainActor [weak self] in
+                guard let self = self else { return }
+                if !self.isCustomLatency {
+                    let detected = self.autoDetectLatency()
+                    print("🎧 Hardware default output device changed -> Auto-detected latency: \(detected) ms")
+                }
+            }
+        }
+        // Notification observer for AVAudioEngine configuration changes
+        NotificationCenter.default.addObserver(
+            forName: .AVAudioEngineConfigurationChange,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard let self = self else { return }
+                if !self.isCustomLatency {
+                    self.autoDetectLatency()
+                }
+            }
         }
     }
 
@@ -141,6 +175,7 @@ public final class VisualPresentationEngine: ObservableObject {
         self.visualLatencyOffsetMs = detected
         self.isCustomLatency = false
         UserDefaults.standard.set(false, forKey: "IsCustomVisualLatency")
+        self.objectWillChange.send()
         return detected
     }
 
@@ -226,7 +261,7 @@ public final class VisualPresentationEngine: ObservableObject {
             if let newBol = event.bolName, !newBol.isEmpty {
                 self.currentBolName = newBol
             }
-            if self.currentTaalSymbol != event.taalSymbol {
+            if !event.taalSymbol.isEmpty && self.currentTaalSymbol != event.taalSymbol {
                 self.currentTaalSymbol = event.taalSymbol
             }
         }

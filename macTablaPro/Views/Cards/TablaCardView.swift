@@ -209,8 +209,8 @@ struct TablaCardView: View {
                                 
                                 Spacer()
 
-                                // Top-Center: Quarter-Matra Sub-Clock Dots (STRICTLY for Ati-Vilambit, Tier 0)
-                                if tabla.isPlaying && tabla.currentTempoTier() == 0 {
+                                // Top-Center: Quarter-Matra Sub-Clock Dots
+                                if tabla.isPlaying && !subBeatDotsText.isEmpty {
                                     Text(subBeatDotsText)
                                         .font(.system(size: 15, weight: .bold, design: .monospaced))
                                         .foregroundColor(isAntique ? Color.yellow : Color.cyan)

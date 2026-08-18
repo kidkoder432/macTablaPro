@@ -334,10 +334,10 @@ class Tabla: Instrument {
             )
             presentationEngine.ringBuffer.push(visualEvent)
 
-            // If this stroke duration spans across intermediate quarter-matra fractions (e.g. Ati-Vilambit sustained matras),
+            // If this stroke duration spans across intermediate quarter-matra fractions (e.g. Vilambit/Madhya sustained matras),
             // enqueue visual sub-beat clock pulses for all intermediate quarter-matra boundaries [0.25, 0.50, 0.75]
             // so the quarter-matra dots advance steadily regardless of stroke density.
-            if activeTier == 0 && event.durationFraction > 0.25 {
+            if activeTier != 4 && event.durationFraction > 0.25 {
                 let startFraction = event.startBeatFraction
                 let endFraction = startFraction + event.durationFraction
                 
@@ -347,13 +347,14 @@ class Tabla: Instrument {
                     let offsetSeconds = (q - startFraction) * 60.0 / max(1.0, currentBPM)
                     let subHostTime = primaryHostTime + clock.secondsToHostTicks(offsetSeconds)
                     let qSubStep = Int(round((q.truncatingRemainder(dividingBy: 1.0)) * 4.0)) % 4
-                    let qMatra = Int(floor(q)) + 1
+                    let qMatra = Int(floor(q.truncatingRemainder(dividingBy: totalMatras))) + 1
+                    let qSymbol = Tabla.getTaalSymbol(matra: qMatra, taal: taalDb[currentTaal])
                     
                     let subPulse = VisualBeatEvent(
                         matra: qMatra,
                         subStep: qSubStep,
                         bolName: nil,
-                        taalSymbol: "",
+                        taalSymbol: qSymbol,
                         targetHostTime: subHostTime
                     )
                     presentationEngine.ringBuffer.push(subPulse)
