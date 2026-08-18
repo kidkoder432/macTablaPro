@@ -14,11 +14,25 @@ import CoreAudio
 import Foundation
 
 nonisolated public struct VisualBeatEvent: Sendable {
-    public let matra: Int
-    public let subStep: Int
+    public let matra: Int?
+    public let subStep: Int?
     public let bolName: String?
-    public let taalSymbol: String
+    public let taalSymbol: String?
     public let targetHostTime: UInt64
+
+    public init(
+        matra: Int? = nil,
+        subStep: Int? = nil,
+        bolName: String? = nil,
+        taalSymbol: String? = nil,
+        targetHostTime: UInt64
+    ) {
+        self.matra = matra
+        self.subStep = subStep
+        self.bolName = bolName
+        self.taalSymbol = taalSymbol
+        self.targetHostTime = targetHostTime
+    }
 
     public init(
         matra: Int,
@@ -243,26 +257,23 @@ public final class VisualPresentationEngine: ObservableObject {
             let baseTarget = Int64(nextEvent.targetHostTime)
             let effectiveTarget = UInt64(max(0, baseTarget + offsetTicks))
             if now >= effectiveTarget {
-                latestEvent = ringBuffer.pop()
+                if let event = ringBuffer.pop() {
+                    if let matra = event.matra, self.currentMatra != matra {
+                        self.currentMatra = matra
+                    }
+                    if let subStep = event.subStep, self.currentMatraSubStep != subStep {
+                        self.currentMatraSubStep = subStep
+                    }
+                    if let newBol = event.bolName, !newBol.isEmpty {
+                        self.currentBolName = newBol
+                    }
+                    if let symbol = event.taalSymbol, !symbol.isEmpty && self.currentTaalSymbol != symbol {
+                        self.currentTaalSymbol = symbol
+                    }
+                }
             } else {
                 // Future event: stop consuming and wait for subsequent frames
                 break
-            }
-        }
-
-        // Apply only the latest valid event to avoid unnecessary intermediate redraws
-        if let event = latestEvent {
-            if self.currentMatra != event.matra {
-                self.currentMatra = event.matra
-            }
-            if self.currentMatraSubStep != event.subStep {
-                self.currentMatraSubStep = event.subStep
-            }
-            if let newBol = event.bolName, !newBol.isEmpty {
-                self.currentBolName = newBol
-            }
-            if !event.taalSymbol.isEmpty && self.currentTaalSymbol != event.taalSymbol {
-                self.currentTaalSymbol = event.taalSymbol
             }
         }
     }

@@ -32,8 +32,8 @@ let tablaManifest: [PitchedSample] = wavURLs.filter { url in
 
 @MainActor
 class Tabla: Instrument {
-    nonisolated let atomicTablaState = Locked<(taal: String, variation: String, sur: Bool, currentBeat: Double)>(
-        (taal: "Teentaal", variation: "Pro Default", sur: false, currentBeat: 0.0)
+    nonisolated let atomicTablaState = Locked<(taal: String, variation: String, sur: Bool, currentBeat: Double, lastScheduledQuarterBeat: Double)>(
+        (taal: "Teentaal", variation: "Pro Default", sur: false, currentBeat: 0.0, lastScheduledQuarterBeat: -0.25)
     )
 
     @Published var activeTaal: String = "Teentaal" {
@@ -284,7 +284,10 @@ class Tabla: Instrument {
         guard !isPlaying else { return }
         isPlaying = true
         syncAtomicState()
-        atomicTablaState.withLock { $0.currentBeat = 0.0 }
+        atomicTablaState.withLock {
+            $0.currentBeat = 0.0
+            $0.lastScheduledQuarterBeat = -0.25
+        }
         presentationEngine.start()
         clock.start(initialDelaySec: 0.005)
     }
@@ -299,7 +302,7 @@ class Tabla: Instrument {
 
     nonisolated override internal func executeSequenceTick(time: AVAudioTime?) -> Double {
         let currentBPM = atomicBPM.value
-        let (currentTaal, currentVariation, surMode, currentBeat) = atomicTablaState.value
+        let (currentTaal, currentVariation, surMode, currentBeat, lastScheduledQuarter) = atomicTablaState.value
         let timeline = resolveActiveTimeline(bpm: currentBPM, taalName: currentTaal, variationName: currentVariation)
         
         guard !timeline.isEmpty else {
@@ -311,55 +314,77 @@ class Tabla: Instrument {
             return 1.0
         }
 
-        // Advance to next beat timestamp for subsequent tick
-        let nextBeat = (event.startBeatFraction + event.durationFraction).truncatingRemainder(dividingBy: totalMatras)
-        atomicTablaState.withLock { $0.currentBeat = nextBeat }
+        let startFraction = event.startBeatFraction
+        let duration = event.durationFraction
+        let endFraction = startFraction + duration
 
-        let subStep = Int(round((event.startBeatFraction.truncatingRemainder(dividingBy: 1.0)) * 4.0)) % 4
+        // Advance to next beat timestamp for subsequent tick
+        let nextBeat = endFraction.truncatingRemainder(dividingBy: totalMatras)
+
         let calculatedMatra = event.matra
         let bolName = event.bolName
         let taalSymbol = Tabla.getTaalSymbol(matra: calculatedMatra, taal: taalDb[currentTaal])
         let primaryHostTime = time?.hostTime ?? mach_absolute_time()
-
-        // In Ati-Drut (Tier 4: BPM > 300), only enqueue visual events on Khand / Vibhag boundaries (Taali/Khaali beats)
-        // to minimize UI redraw churn and prevent strobing at ultra-high speeds (300-700 BPM)
         let activeTier = currentTempoTier(bpm: currentBPM, taalName: currentTaal, variationName: currentVariation)
-        if activeTier != 4 || !taalSymbol.isEmpty {
-            let visualEvent = VisualBeatEvent(
-                matra: calculatedMatra,
-                subStep: subStep,
-                bolName: bolName,
-                taalSymbol: taalSymbol,
-                targetHostTime: primaryHostTime
-            )
-            presentationEngine.ringBuffer.push(visualEvent)
 
-            // If this stroke duration spans across intermediate quarter-matra fractions (e.g. Vilambit/Madhya sustained matras),
-            // enqueue visual sub-beat clock pulses for all intermediate quarter-matra boundaries [0.25, 0.50, 0.75]
-            // so the quarter-matra dots advance steadily regardless of stroke density.
-            if activeTier != 4 && event.durationFraction > 0.25 {
-                let startFraction = event.startBeatFraction
-                let endFraction = startFraction + event.durationFraction
-                
-                let firstQ = (floor(startFraction * 4.0) + 1.0) / 4.0
-                var q = firstQ
-                while q < endFraction - 0.001 {
+        if activeTier == 0 {
+            // AT-VILAMBIT (Tier 0): Metronomic quarter-matra sub-clock is completely decoupled from stroke events.
+            // Enqueue visual quarter-matra pulses strictly for every 0.25 matra boundary [0.0, 0.25, 0.50, 0.75].
+            var maxScheduledQ = lastScheduledQuarter
+            let firstPossibleQ = max(0.0, floor((lastScheduledQuarter + 0.001) * 4.0 + 1.0) / 4.0)
+            var q = (lastScheduledQuarter < 0) ? 0.0 : firstPossibleQ
+
+            while q < endFraction - 0.0001 || (abs(q - startFraction) < 0.0001 && q <= lastScheduledQuarter + 0.25) {
+                if q > lastScheduledQuarter + 0.0001 {
                     let offsetSeconds = (q - startFraction) * 60.0 / max(1.0, currentBPM)
-                    let subHostTime = primaryHostTime + clock.secondsToHostTicks(offsetSeconds)
+                    let qHostTime = primaryHostTime + clock.secondsToHostTicks(offsetSeconds)
                     let qSubStep = Int(round((q.truncatingRemainder(dividingBy: 1.0)) * 4.0)) % 4
                     let qMatra = Int(floor(q.truncatingRemainder(dividingBy: totalMatras))) + 1
-                    let qSymbol = Tabla.getTaalSymbol(matra: qMatra, taal: taalDb[currentTaal])
-                    
-                    let subPulse = VisualBeatEvent(
+                    let qSymbol = (qSubStep == 0) ? Tabla.getTaalSymbol(matra: qMatra, taal: taalDb[currentTaal]) : nil
+
+                    let quarterPulse = VisualBeatEvent(
                         matra: qMatra,
                         subStep: qSubStep,
                         bolName: nil,
                         taalSymbol: qSymbol,
-                        targetHostTime: subHostTime
+                        targetHostTime: qHostTime
                     )
-                    presentationEngine.ringBuffer.push(subPulse)
-                    q += 0.25
+                    presentationEngine.ringBuffer.push(quarterPulse)
+                    maxScheduledQ = max(maxScheduledQ, q)
                 }
+                q += 0.25
+                if q > endFraction + 0.001 { break }
+            }
+
+            atomicTablaState.withLock {
+                $0.currentBeat = nextBeat
+                $0.lastScheduledQuarterBeat = maxScheduledQ
+            }
+
+            // Enqueue the stroke event with subStep = nil so strokes never perturb the 0.25 metronomic dots
+            let strokeEvent = VisualBeatEvent(
+                matra: calculatedMatra,
+                subStep: nil,
+                bolName: bolName,
+                taalSymbol: taalSymbol,
+                targetHostTime: primaryHostTime
+            )
+            presentationEngine.ringBuffer.push(strokeEvent)
+        } else {
+            atomicTablaState.withLock { $0.currentBeat = nextBeat }
+
+            // In Ati-Drut (Tier 4: BPM > 300), only enqueue visual events on Khand / Vibhag boundaries (Taali/Khaali beats)
+            // to minimize UI redraw churn and prevent strobing at ultra-high speeds (300-700 BPM)
+            if activeTier != 4 || !taalSymbol.isEmpty {
+                let subStep = Int(round((event.startBeatFraction.truncatingRemainder(dividingBy: 1.0)) * 4.0)) % 4
+                let visualEvent = VisualBeatEvent(
+                    matra: calculatedMatra,
+                    subStep: subStep,
+                    bolName: bolName,
+                    taalSymbol: taalSymbol,
+                    targetHostTime: primaryHostTime
+                )
+                presentationEngine.ringBuffer.push(visualEvent)
             }
         }
 
