@@ -1,19 +1,39 @@
 import SwiftUI
 import AppKit
 
-// MARK: - Left Presets Translucent Glass Drawer View
+// MARK: - Preset Tab Filter
+enum PresetTab: String, CaseIterable, Identifiable {
+    case all = "All"
+    case favorites = "Favorites"
+
+    var id: String { rawValue }
+}
+
+// MARK: - Full-Height Presets Sidebar View
 struct PresetsDrawerView: View {
     @ObservedObject var audio: AppAudioOrchestrator
+    @State private var selectedTab: PresetTab = .all
     @State private var searchFilter: String = ""
     @State private var newPresetName: String = ""
     @State private var isShowingSaveField = false
 
+    var allPresetsSorted: [ITablaProPreset] {
+        audio.allPresets.sorted { $0.PresetName.localizedStandardCompare($1.PresetName) == .orderedAscending }
+    }
+
+    var favoritePresetsCount: Int {
+        audio.allPresets.filter { $0.IsFavorite }.count
+    }
+
     var filteredPresets: [ITablaProPreset] {
-        let baseList = audio.allPresets.sorted { $0.PresetName.localizedStandardCompare($1.PresetName) == .orderedAscending }
-        if searchFilter.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            return baseList
+        var baseList = allPresetsSorted
+        if selectedTab == .favorites {
+            baseList = baseList.filter { $0.IsFavorite }
         }
-        return baseList.filter { $0.PresetName.localizedCaseInsensitiveContains(searchFilter) }
+        if !searchFilter.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            baseList = baseList.filter { $0.PresetName.localizedCaseInsensitiveContains(searchFilter) }
+        }
+        return baseList
     }
 
     private func presetTooltipText(for preset: ITablaProPreset) -> String {
@@ -27,25 +47,42 @@ struct PresetsDrawerView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        let isAntique = audio.isAntiqueThemeEnabled
+
+        VStack(alignment: .leading, spacing: 12) {
+            // MARK: - Header: Title & Close / Collapse Button
             HStack {
-                Text("Workstation Presets")
+                Label("Presets", systemImage: "slider.horizontal.2.square")
                     .font(.headline)
-                    .fontWeight(.semibold)
+                    .fontWeight(.bold)
+                    .foregroundColor(isAntique ? Color.orange : .primary)
+
                 Spacer()
+
                 Button(action: {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
                         audio.isPresetsPresented = false
                     }
                 }) {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.title3)
+                    Image(systemName: "sidebar.left")
+                        .font(.system(size: 14, weight: .semibold))
                         .foregroundColor(.secondary)
                 }
                 .buttonStyle(.plain)
+                .help("Hide Presets Sidebar")
             }
+            .padding(.horizontal, 14)
+            .padding(.top, 14)
 
-            // Search Bar Filter
+            // MARK: - Tab Segment: All vs Favorites
+            Picker("", selection: $selectedTab) {
+                Text("All (\(audio.allPresets.count))").tag(PresetTab.all)
+                Text("★ Favorites (\(favoritePresetsCount))").tag(PresetTab.favorites)
+            }
+            .pickerStyle(.segmented)
+            .padding(.horizontal, 14)
+
+            // MARK: - Search Bar Filter
             HStack {
                 Image(systemName: "magnifyingglass")
                     .foregroundColor(.secondary)
@@ -64,13 +101,21 @@ struct PresetsDrawerView: View {
             }
             .padding(.horizontal, 8)
             .padding(.vertical, 5)
-            .background(Color(NSColor.controlBackgroundColor).opacity(0.5), in: RoundedRectangle(cornerRadius: 8))
+            .background(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(Color(NSColor.controlBackgroundColor).opacity(0.6))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .stroke(isAntique ? Color.orange.opacity(0.3) : Color.gray.opacity(0.2), lineWidth: 1)
+            )
+            .padding(.horizontal, 14)
 
             // MARK: - Preset Load Options (Scope Checkboxes)
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 5) {
                 Text("APPLY TO PRESET LOADING")
                     .font(.system(size: 9, weight: .bold))
-                    .foregroundColor(audio.isAntiqueThemeEnabled ? Color.orange.opacity(0.8) : .secondary)
+                    .foregroundColor(isAntique ? Color.orange.opacity(0.8) : .secondary)
 
                 HStack(spacing: 8) {
                     Toggle("Tanpuras", isOn: $audio.presetLoadOptions.loadTanpura)
@@ -78,14 +123,14 @@ struct PresetsDrawerView: View {
                     Toggle("Mixer", isOn: $audio.presetLoadOptions.loadMixer)
                 }
                 .toggleStyle(.checkbox)
-                .font(.system(size: 11))
+                .font(.system(size: 10))
 
                 HStack(spacing: 8) {
                     Toggle("Pitch", isOn: $audio.presetLoadOptions.loadPitch)
                     Toggle("Tabla", isOn: $audio.presetLoadOptions.loadTabla)
                 }
                 .toggleStyle(.checkbox)
-                .font(.system(size: 11))
+                .font(.system(size: 10))
             }
             .padding(8)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -95,21 +140,45 @@ struct PresetsDrawerView: View {
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .stroke(audio.isAntiqueThemeEnabled ? Color.orange.opacity(0.2) : Color.gray.opacity(0.15), lineWidth: 1)
+                    .stroke(isAntique ? Color.orange.opacity(0.2) : Color.gray.opacity(0.15), lineWidth: 1)
             )
+            .padding(.horizontal, 14)
 
             Divider()
+                .padding(.horizontal, 10)
 
-            // Presets Scroll List (Auto-centered on active preset)
+            // MARK: - Presets Scroll List (Full Height)
             if filteredPresets.isEmpty {
-                Text("No matching presets found.")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .padding(.vertical, 8)
+                VStack(spacing: 10) {
+                    Spacer()
+                    if selectedTab == .favorites {
+                        Image(systemName: "star.slash")
+                            .font(.system(size: 32))
+                            .foregroundColor(isAntique ? Color.orange.opacity(0.5) : Color.secondary.opacity(0.4))
+                        Text("No Favorite Presets")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundColor(.primary)
+                        Text("Click the star on any preset to add it to your favorites.")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 16)
+                    } else {
+                        Image(systemName: "magnifyingglass")
+                            .font(.system(size: 28))
+                            .foregroundColor(.secondary.opacity(0.4))
+                        Text("No matching presets found.")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                    Spacer()
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 ScrollViewReader { scrollProxy in
                     ScrollView {
-                        LazyVStack(alignment: .leading, spacing: 6) {
+                        LazyVStack(alignment: .leading, spacing: 4) {
                             ForEach(filteredPresets) { preset in
                                 let isActive = (audio.activePresetName == preset.PresetName)
                                 HStack(spacing: 6) {
@@ -122,11 +191,12 @@ struct PresetsDrawerView: View {
                                     }) {
                                         Image(systemName: preset.IsFavorite ? "star.fill" : "star")
                                             .font(.caption)
-                                            .foregroundColor(preset.IsFavorite ? .yellow : .secondary.opacity(0.5))
+                                            .foregroundColor(preset.IsFavorite ? .yellow : .secondary.opacity(0.4))
                                     }
                                     .buttonStyle(.plain)
+                                    .help(preset.IsFavorite ? "Remove from Favorites" : "Add to Favorites")
 
-                                    // Apply Preset Button with Hover Tooltip & Right-Click Context Menu
+                                    // Apply Preset Button
                                     Button(action: {
                                         audio.applyPreset(preset)
                                         Task {
@@ -135,25 +205,26 @@ struct PresetsDrawerView: View {
                                     }) {
                                         HStack {
                                             Image(systemName: isActive ? "checkmark.circle.fill" : "circle")
-                                                .foregroundColor(isActive ? (audio.isAntiqueThemeEnabled ? .orange : .accentColor) : .secondary)
+                                                .foregroundColor(isActive ? (isAntique ? .orange : .accentColor) : .secondary.opacity(0.5))
+                                                .font(.system(size: 11))
                                             Text(preset.PresetName)
-                                                .font(.system(size: 13, weight: isActive ? .bold : .medium))
+                                                .font(.system(size: 12, weight: isActive ? .bold : .medium))
                                                 .foregroundColor(isActive ? .primary : .secondary)
                                                 .lineLimit(1)
                                             Spacer()
                                         }
                                         .padding(.vertical, 5)
-                                        .padding(.horizontal, 8)
+                                        .padding(.horizontal, 6)
                                         .background(
-                                            RoundedRectangle(cornerRadius: 8)
+                                            RoundedRectangle(cornerRadius: 6)
                                                 .fill(isActive ?
-                                                    (audio.isAntiqueThemeEnabled ? Color.orange.opacity(0.25) : Color.accentColor.opacity(0.2)) :
-                                                    Color(NSColor.controlBackgroundColor).opacity(0.4)
+                                                    (isAntique ? Color.orange.opacity(0.25) : Color.accentColor.opacity(0.2)) :
+                                                    Color.clear
                                                 )
                                         )
                                         .overlay(
-                                            RoundedRectangle(cornerRadius: 8)
-                                                .stroke(isActive ? (audio.isAntiqueThemeEnabled ? Color.orange : Color.accentColor) : Color.clear, lineWidth: 1.5)
+                                            RoundedRectangle(cornerRadius: 6)
+                                                .stroke(isActive ? (isAntique ? Color.orange : Color.accentColor) : Color.clear, lineWidth: 1.5)
                                         )
                                     }
                                     .buttonStyle(.plain)
@@ -178,8 +249,8 @@ struct PresetsDrawerView: View {
                                         }
                                     }) {
                                         Image(systemName: "trash")
-                                            .font(.caption2)
-                                            .foregroundColor(.red.opacity(0.7))
+                                            .font(.system(size: 10))
+                                            .foregroundColor(.red.opacity(0.6))
                                     }
                                     .buttonStyle(.plain)
                                     .help("Delete Preset")
@@ -187,8 +258,9 @@ struct PresetsDrawerView: View {
                                 .id(preset.PresetName)
                             }
                         }
+                        .padding(.horizontal, 14)
                     }
-                    .frame(maxHeight: 280)
+                    .frame(maxHeight: .infinity)
                     .onAppear {
                         if let activeName = audio.activePresetName {
                             scrollProxy.scrollTo(activeName, anchor: .center)
@@ -203,88 +275,104 @@ struct PresetsDrawerView: View {
             }
 
             Divider()
+                .padding(.horizontal, 10)
 
-            // Save Custom Preset Field
-            if isShowingSaveField {
-                VStack(spacing: 8) {
-                    TextField("Preset Name", text: $newPresetName)
-                        .textFieldStyle(.roundedBorder)
+            // MARK: - Save Custom Preset Field / Trigger
+            VStack(spacing: 8) {
+                if isShowingSaveField {
+                    VStack(spacing: 8) {
+                        TextField("Preset Name", text: $newPresetName)
+                            .textFieldStyle(.roundedBorder)
 
-                    HStack {
-                        Button("Cancel") {
-                            isShowingSaveField = false
-                            newPresetName = ""
-                        }
-                        .buttonStyle(.plain)
-
-                        Spacer()
-
-                        Button("Save") {
-                            let name = newPresetName.trimmingCharacters(in: .whitespacesAndNewlines)
-                            let snapshot = audio.capturePreset(name: name)
-                            Task {
-                                await SettingsStorageService.shared.savePreset(snapshot)
-                                audio.activePresetName = name
-                                audio.refreshAllPresets()
+                        HStack {
+                            Button("Cancel") {
                                 isShowingSaveField = false
                                 newPresetName = ""
                             }
+                            .buttonStyle(.plain)
+
+                            Spacer()
+
+                            Button("Save") {
+                                let name = newPresetName.trimmingCharacters(in: .whitespacesAndNewlines)
+                                let snapshot = audio.capturePreset(name: name)
+                                Task {
+                                    await SettingsStorageService.shared.savePreset(snapshot)
+                                    audio.activePresetName = name
+                                    audio.refreshAllPresets()
+                                    isShowingSaveField = false
+                                    newPresetName = ""
+                                }
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .disabled(newPresetName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                         }
-                        .buttonStyle(.borderedProminent)
-                        .disabled(newPresetName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                     }
-                }
-            } else {
-                Button(action: {
-                    isShowingSaveField = true
-                }) {
-                    HStack {
-                        Image(systemName: "plus.circle.fill")
-                        Text("Save Current as Preset")
+                } else {
+                    Button(action: {
+                        isShowingSaveField = true
+                    }) {
+                        HStack {
+                            Image(systemName: "plus.circle.fill")
+                            Text("Save Current as Preset")
+                        }
+                        .font(.system(size: 12, weight: .medium))
+                        .frame(maxWidth: .infinity)
                     }
-                    .font(.system(size: 12, weight: .medium))
+                    .buttonStyle(.bordered)
                 }
-                .buttonStyle(.bordered)
+
+                // Finder & Reset Utility Buttons
+                HStack(spacing: 8) {
+                    Button(action: {
+                        Task {
+                            await SettingsStorageService.shared.openPresetsFolderInFinder()
+                        }
+                    }) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "folder.fill")
+                            Text("Reveal in Finder")
+                        }
+                        .font(.system(size: 11, weight: .regular))
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundColor(.secondary)
+                    .help("Open Application Support folder containing presets.json to share")
+
+                    Spacer()
+
+                    Button(action: {
+                        Task {
+                            await SettingsStorageService.shared.resetPresetsToDefault()
+                            audio.refreshAllPresets()
+                        }
+                    }) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "arrow.counterclockwise")
+                            Text("Reset Defaults")
+                        }
+                        .font(.system(size: 11, weight: .regular))
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundColor(.orange.opacity(0.8))
+                    .help("Restore factory presets.json from app bundle")
+                }
+                .padding(.top, 2)
             }
-
-            // Finder & Reset Utility Buttons
-            HStack(spacing: 8) {
-                Button(action: {
-                    Task {
-                        await SettingsStorageService.shared.openPresetsFolderInFinder()
-                    }
-                }) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "folder.fill")
-                        Text("Reveal in Finder")
-                    }
-                    .font(.system(size: 11, weight: .regular))
-                }
-                .buttonStyle(.plain)
-                .foregroundColor(.secondary)
-                .help("Open Application Support folder containing presets.json to share")
-
-                Spacer()
-
-                Button(action: {
-                    Task {
-                        await SettingsStorageService.shared.resetPresetsToDefault()
-                        audio.refreshAllPresets()
-                    }
-                }) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "arrow.counterclockwise")
-                        Text("Reset Defaults")
-                    }
-                    .font(.system(size: 11, weight: .regular))
-                }
-                .buttonStyle(.plain)
-                .foregroundColor(.orange.opacity(0.8))
-                .help("Restore factory presets.json from app bundle")
-            }
+            .padding(.horizontal, 14)
+            .padding(.bottom, 14)
         }
-        .padding(16)
-        .frame(width: 280)
-        .nativeCard(isAntique: audio.isAntiqueThemeEnabled, cornerRadius: 20)
+        .frame(width: 275)
+        .frame(maxHeight: .infinity)
+        .background(
+            ZStack {
+                if isAntique {
+                    Color.black.opacity(0.55)
+                } else {
+                    VisualEffectView(material: .sidebar, blendingMode: .behindWindow)
+                }
+            }
+            .ignoresSafeArea()
+        )
     }
 }

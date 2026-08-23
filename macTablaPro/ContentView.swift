@@ -9,66 +9,72 @@ struct ContentView: View {
             VisualEffectBackground()
                 .ignoresSafeArea()
 
-            // MARK: - Main Workspace (Collapsible Sidebar + Zero-Scroll 3-Column Layout)
+            // MARK: - Main Workspace (Full-Height Collapsible Sidebar + Zero-Scroll 3-Column Layout)
             let cardWidth = WorkstationLayout.cardWidth(isPresetsPresented: audio.isPresetsPresented)
 
             ZStack(alignment: .top) {
                 HStack(alignment: .top, spacing: 0) {
-                    // MARK: - In-Flow Collapsible Presets Sidebar
+                    // MARK: - In-Flow Full-Height Sidebar (Like Xcode Inspector)
                     if audio.isPresetsPresented {
                         PresetsDrawerView(audio: audio)
-                            .padding(.leading, WorkstationLayout.minHorizontalSpacing)
                             .transition(.asymmetric(
                                 insertion: .move(edge: .leading).combined(with: .opacity),
                                 removal: .move(edge: .leading).combined(with: .opacity)
                             ))
+
+                        Divider()
+                            .ignoresSafeArea()
                     }
 
-                    Spacer(minLength: WorkstationLayout.minHorizontalSpacing)
+                    // 3-Column Workstation Container
+                    HStack(alignment: .top, spacing: 0) {
+                        Spacer(minLength: WorkstationLayout.minHorizontalSpacing)
 
-                    // 1. LEFT COLUMN: Tanpura 1 & 2 Cards Stacked + Swar Mandal Underneath
-                    VStack(spacing: WorkstationLayout.verticalCardSpacing) {
-                        if let tanpura1 = audio.tanpura1 {
-                            TanpuraCardView(tanpura: tanpura1, title: "Tanpura 1")
-                        }
+                        // 1. LEFT COLUMN: Tanpura 1 & 2 Cards Stacked + Swar Mandal Underneath
+                        VStack(spacing: WorkstationLayout.verticalCardSpacing) {
+                            if let tanpura1 = audio.tanpura1 {
+                                TanpuraCardView(tanpura: tanpura1, title: "Tanpura 1")
+                            }
 
-                        if let tanpura2 = audio.tanpura2 {
-                            TanpuraCardView(tanpura: tanpura2, title: "Tanpura 2")
-                        }
+                            if let tanpura2 = audio.tanpura2 {
+                                TanpuraCardView(tanpura: tanpura2, title: "Tanpura 2")
+                            }
 
-                        if let swarMandal = audio.swarMandal {
-                            SwarMandalCardView(swarMandal: swarMandal)
+                            if let swarMandal = audio.swarMandal {
+                                SwarMandalCardView(swarMandal: swarMandal)
+                            }
                         }
+                        .frame(width: cardWidth)
+
+                        Spacer(minLength: WorkstationLayout.minHorizontalSpacing)
+
+                        // 2. CENTER COLUMN: Master Pitch (Top) + Tabla Controls (Center)
+                        VStack(spacing: WorkstationLayout.verticalCardSpacing) {
+                            MasterPitchCardView(audio: audio)
+                            
+                            if let tabla = audio.tabla {
+                                TablaCardView(tabla: tabla)
+                            }
+                        }
+                        .frame(width: cardWidth)
+
+                        Spacer(minLength: WorkstationLayout.minHorizontalSpacing)
+
+                        // 3. RIGHT COLUMN: Master Mixer Hub (ALWAYS VISIBLE!) + Sankalp Card
+                        VStack(spacing: WorkstationLayout.verticalCardSpacing) {
+                            MixerCardView(audio: audio)
+                            SankalpCardView(sankalp: audio.sankalp, isAntique: audio.isAntiqueThemeEnabled)
+                        }
+                        .frame(width: cardWidth)
+
+                        Spacer(minLength: WorkstationLayout.minHorizontalSpacing)
                     }
-                    .frame(width: cardWidth)
-
-                    Spacer(minLength: WorkstationLayout.minHorizontalSpacing)
-
-                    // 2. CENTER COLUMN: Master Pitch (Top) + Tabla Controls (Center)
-                    VStack(spacing: WorkstationLayout.verticalCardSpacing) {
-                        MasterPitchCardView(audio: audio)
-                        
-                        if let tabla = audio.tabla {
-                            TablaCardView(tabla: tabla)
-                        }
-                    }
-                    .frame(width: cardWidth)
-
-                    Spacer(minLength: WorkstationLayout.minHorizontalSpacing)
-
-                    // 3. RIGHT COLUMN: Master Mixer Hub (ALWAYS VISIBLE!) + Sankalp Card
-                    VStack(spacing: WorkstationLayout.verticalCardSpacing) {
-                        MixerCardView(audio: audio)
-                        SankalpCardView(sankalp: audio.sankalp, isAntique: audio.isAntiqueThemeEnabled)
-                    }
-                    .frame(width: cardWidth)
-
-                    Spacer(minLength: WorkstationLayout.minHorizontalSpacing)
+                    .padding(.top, WorkstationLayout.topPadding)
+                    .padding(.bottom, WorkstationLayout.bottomPadding)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                 }
                 .animation(.spring(response: 0.35, dampingFraction: 0.82), value: audio.isPresetsPresented)
-                .padding(.top, WorkstationLayout.topPadding)
-                .padding(.bottom, WorkstationLayout.bottomPadding)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
 
                 // MARK: - Liquid Glass Translucent Overlay (Floating Settings Panel)
                 if audio.isInspectorPresented {
