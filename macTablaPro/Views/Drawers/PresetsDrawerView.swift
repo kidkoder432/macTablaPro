@@ -181,6 +181,8 @@ struct PresetsDrawerView: View {
                         LazyVStack(alignment: .leading, spacing: 4) {
                             ForEach(filteredPresets) { preset in
                                 let isActive = (audio.activePresetName == preset.PresetName)
+                                let isModified = isActive && audio.isPresetModified
+
                                 HStack(spacing: 6) {
                                     // Favorite Star Toggle
                                     Button(action: {
@@ -196,39 +198,62 @@ struct PresetsDrawerView: View {
                                     .buttonStyle(.plain)
                                     .help(preset.IsFavorite ? "Remove from Favorites" : "Add to Favorites")
 
-                                    // Apply Preset Button
+                                    // Apply / Restore Preset Button
                                     Button(action: {
                                         audio.applyPreset(preset)
                                         Task {
                                             await SettingsStorageService.shared.saveActiveSettings(preset)
                                         }
                                     }) {
-                                        HStack {
-                                            Image(systemName: isActive ? "checkmark.circle.fill" : "circle")
-                                                .foregroundColor(isActive ? (isAntique ? .orange : .accentColor) : .secondary.opacity(0.5))
-                                                .font(.system(size: 11))
+                                        HStack(spacing: 6) {
+                                            if isModified {
+                                                Image(systemName: "pencil.circle.fill")
+                                                    .foregroundColor(isAntique ? Color.yellow : Color.orange)
+                                                    .font(.system(size: 11, weight: .semibold))
+                                            } else {
+                                                Image(systemName: isActive ? "checkmark.circle.fill" : "circle")
+                                                    .foregroundColor(isActive ? (isAntique ? .orange : .accentColor) : .secondary.opacity(0.5))
+                                                    .font(.system(size: 11))
+                                            }
+
                                             Text(preset.PresetName)
                                                 .font(.system(size: 12, weight: isActive ? .bold : .medium))
                                                 .foregroundColor(isActive ? .primary : .secondary)
                                                 .lineLimit(1)
+
+                                            if isModified {
+                                                Text("(Modified)")
+                                                    .font(.system(size: 9, weight: .semibold, design: .rounded))
+                                                    .foregroundColor(isAntique ? Color.yellow : Color.orange)
+                                            }
+
                                             Spacer()
                                         }
-                                        .padding(.vertical, 5)
-                                        .padding(.horizontal, 6)
+                                        .padding(.vertical, 6)
+                                        .padding(.horizontal, 8)
+                                        .frame(maxWidth: .infinity)
+                                        .contentShape(Rectangle())
                                         .background(
                                             RoundedRectangle(cornerRadius: 6)
                                                 .fill(isActive ?
-                                                    (isAntique ? Color.orange.opacity(0.25) : Color.accentColor.opacity(0.2)) :
+                                                    (isModified ?
+                                                        (isAntique ? Color.yellow.opacity(0.18) : Color.orange.opacity(0.18)) :
+                                                        (isAntique ? Color.orange.opacity(0.25) : Color.accentColor.opacity(0.2))) :
                                                     Color.clear
                                                 )
                                         )
                                         .overlay(
                                             RoundedRectangle(cornerRadius: 6)
-                                                .stroke(isActive ? (isAntique ? Color.orange : Color.accentColor) : Color.clear, lineWidth: 1.5)
+                                                .stroke(isActive ?
+                                                    (isModified ? (isAntique ? Color.yellow : Color.orange) : (isAntique ? Color.orange : Color.accentColor)) :
+                                                    Color.clear,
+                                                    lineWidth: 1.5
+                                                )
                                         )
                                     }
                                     .buttonStyle(.plain)
-                                    .help(presetTooltipText(for: preset))
+                                    .contentShape(Rectangle())
+                                    .help(isModified ? "Modified from saved preset. Click to restore '\(preset.PresetName)'" : presetTooltipText(for: preset))
                                     .contextMenu {
                                         Text("🎵 \(preset.PresetName)").font(.headline)
                                         Divider()

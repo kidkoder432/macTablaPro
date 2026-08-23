@@ -75,6 +75,7 @@ class AppAudioOrchestrator: ObservableObject {
     @Published var isInspectorPresented: Bool = false
     @Published var hasStartedFirstTime: Bool = false
     @Published var activePresetName: String? = nil
+    @Published var isPresetModified: Bool = false
     @Published var allPresets: [ITablaProPreset] = []
     @Published var isAppLoading: Bool = true
 
@@ -227,11 +228,26 @@ class AppAudioOrchestrator: ObservableObject {
         }
     }
 
+    // Cancellable Staggered Preset Entrance Work Items
+    private var pendingTanpura2WorkItem: DispatchWorkItem?
+    private var pendingSwarMandalWorkItem: DispatchWorkItem?
+
     func applyPreset(_ preset: ITablaProPreset, respectScope: Bool = true) {
         isApplyingPreset = true
         activePresetBase = preset
         activePresetName = preset.PresetName
         let options = respectScope ? self.presetLoadOptions : PresetLoadOptions(loadTanpura: true, loadSwarMandal: true, loadMixer: true, loadPitch: true, loadTabla: true)
+
+        // Cancel any pending staggered entrance timers from previously clicked presets
+        pendingTanpura2WorkItem?.cancel()
+        pendingTanpura2WorkItem = nil
+        pendingSwarMandalWorkItem?.cancel()
+        pendingSwarMandalWorkItem = nil
+
+        // Stop existing Swar Mandal loop immediately so old notes don't overlap
+        if let sm = self.swarMandal {
+            sm.stopPlay()
+        }
 
         // 1. Master Pitch & Fine Tune
         if options.loadPitch {
@@ -302,57 +318,125 @@ class AppAudioOrchestrator: ObservableObject {
             if preset.TablaOn { tb.startPlay() } else { tb.stopPlay() }
         }
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.75) { [weak self] in
-            guard let self = self else { return }
-            if self.presetLoadOptions.loadTanpura, let t2 = self.tanpura2 {
-                if preset.Tanpura2On { t2.startPlay() } else { t2.stopPlay() }
+        // Staggered Entrance Tier 2: Tanpura 2 enters at +0.75s
+        if options.loadTanpura, let t2 = self.tanpura2 {
+            if preset.Tanpura2On {
+                let item = DispatchWorkItem { [weak self, weak t2] in
+                    guard let self = self, let t2 = t2 else { return }
+                    t2.startPlay()
+                }
+                self.pendingTanpura2WorkItem = item
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.75, execute: item)
+            } else {
+                t2.stopPlay()
             }
         }
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
-            guard let self = self else { return }
-            if self.presetLoadOptions.loadSwarMandal, let sm = self.swarMandal {
-                let shouldPlay = (preset.SwarMandalOn ?? false) || sm.isPlaying
-                if shouldPlay {
-                    sm.restartPlay()
-                } else {
-                    sm.stopPlay()
+        // Staggered Entrance Tier 3: Swar Mandal enters at +2.5s and begins its auto loop from scratch
+        if options.loadSwarMandal, let sm = self.swarMandal {
+            let shouldPlay = preset.SwarMandalOn ?? false
+            if shouldPlay {
+                let item = DispatchWorkItem { [weak self, weak sm] in
+                    guard let self = self, let sm = sm else { return }
+                    sm.restartPlay() // Starts the loop fresh from step 0
                 }
+                self.pendingSwarMandalWorkItem = item
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.5, execute: item)
+            } else {
+                sm.stopPlay()
             }
-            self.isApplyingPreset = false
+        }
+
+        // Update musical snapshot to match new preset state
+        self.lastAppliedPresetSnapshot = currentAudioSnapshot()
+        self.isPresetModified = false
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { [weak self] in
+            self?.isApplyingPreset = false
         }
     }
 
     private var isApplyingPreset = false
-    private var lastMusicalSnapshot: (Double, Double, Double, Double, String, String, Double, Double)? = nil
+    private var lastAppliedPresetSnapshot: PresetAudioSnapshot? = nil
+
+    struct PresetAudioSnapshot: Equatable {
+        var scaleOffsetCents: Double
+        var fineTuneCents: Double
+        var t1Pitch: Double
+        var t2Pitch: Double
+        var taal: String
+        var variation: String
+        var tablaBPM: Double
+        var swarBPM: Double
+        var t1Vol: Double
+        var t2Vol: Double
+        var tbVol: Double
+        var smVol: Double
+    }
+
+    func currentAudioSnapshot() -> PresetAudioSnapshot {
+        PresetAudioSnapshot(
+            scaleOffsetCents: self.scaleOffsetCents,
+            fineTuneCents: self.fineTuneCents,
+            t1Pitch: self.tanpura1?.firstStringPitch ?? 700.0,
+            t2Pitch: self.tanpura2?.firstStringPitch ?? 1200.0,
+            taal: self.tabla?.activeTaal ?? "",
+            variation: self.tabla?.activeVariation ?? "",
+            tablaBPM: self.tabla?.tempoBPM ?? 100.0,
+            swarBPM: self.swarMandal?.tempoBPM ?? 450.0,
+            t1Vol: self.tanpura1?.volume ?? 0.8,
+            t2Vol: self.tanpura2?.volume ?? 0.8,
+            tbVol: self.tabla?.volume ?? 0.8,
+            smVol: self.swarMandal?.volume ?? 0.25
+        )
+    }
+
+    func isSnapshotModified(from base: PresetAudioSnapshot, current: PresetAudioSnapshot) -> Bool {
+        let opts = self.presetLoadOptions
+        if opts.loadPitch {
+            if base.scaleOffsetCents != current.scaleOffsetCents || base.fineTuneCents != current.fineTuneCents {
+                return true
+            }
+        }
+        if opts.loadTanpura {
+            if base.t1Pitch != current.t1Pitch || base.t2Pitch != current.t2Pitch {
+                return true
+            }
+        }
+        if opts.loadTabla {
+            if base.taal != current.taal || base.variation != current.variation || base.tablaBPM != current.tablaBPM {
+                return true
+            }
+        }
+        if opts.loadSwarMandal {
+            if base.swarBPM != current.swarBPM {
+                return true
+            }
+        }
+        if opts.loadMixer {
+            if abs(base.t1Vol - current.t1Vol) > 0.01 || abs(base.t2Vol - current.t2Vol) > 0.01 || abs(base.tbVol - current.tbVol) > 0.01 || abs(base.smVol - current.smVol) > 0.01 {
+                return true
+            }
+        }
+        return false
+    }
 
     private func setupAutosavePipeline() {
         objectWillChange
-            .debounce(for: .milliseconds(500), scheduler: RunLoop.main)
+            .debounce(for: .milliseconds(400), scheduler: RunLoop.main)
             .sink { [weak self] _ in
                 guard let self = self else { return }
 
-                let currentSnapshot = (
-                    self.scaleOffsetCents,
-                    self.fineTuneCents,
-                    self.tanpura1?.firstStringPitch ?? 700.0,
-                    self.tanpura2?.firstStringPitch ?? 1200.0,
-                    self.tabla?.activeTaal ?? "",
-                    self.tabla?.activeVariation ?? "",
-                    self.tabla?.tempoBPM ?? 100.0,
-                    self.swarMandal?.tempoBPM ?? 450.0
-                )
+                let currentSnapshot = self.currentAudioSnapshot()
 
                 if !self.isApplyingPreset && self.activePresetName != nil {
-                    if let last = self.lastMusicalSnapshot,
-                       (last.0 != currentSnapshot.0 || last.1 != currentSnapshot.1 ||
-                        last.2 != currentSnapshot.2 || last.3 != currentSnapshot.3 ||
-                        last.4 != currentSnapshot.4 || last.5 != currentSnapshot.5 ||
-                        last.6 != currentSnapshot.6 || last.7 != currentSnapshot.7) {
-                        self.activePresetName = nil
+                    if let base = self.lastAppliedPresetSnapshot {
+                        let modified = self.isSnapshotModified(from: base, current: currentSnapshot)
+                        if self.isPresetModified != modified {
+                            self.isPresetModified = modified
+                        }
                     }
                 }
-                self.lastMusicalSnapshot = currentSnapshot
 
                 let current = self.capturePreset()
                 Task.detached(priority: .utility) {
