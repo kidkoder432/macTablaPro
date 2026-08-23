@@ -9,9 +9,19 @@ struct ContentView: View {
             VisualEffectBackground()
                 .ignoresSafeArea()
 
-            // MARK: - Main Workspace (Zero-Scroll 3-Column Layout with Split Glass Overlays)
+            // MARK: - Main Workspace (Collapsible Sidebar + Zero-Scroll 3-Column Layout)
             ZStack(alignment: .top) {
                 HStack(alignment: .top, spacing: 0) {
+                    // MARK: - In-Flow Collapsible Presets Sidebar
+                    if audio.isPresetsPresented {
+                        PresetsDrawerView(audio: audio)
+                            .padding(.leading, WorkstationLayout.minHorizontalSpacing)
+                            .transition(.asymmetric(
+                                insertion: .move(edge: .leading).combined(with: .opacity),
+                                removal: .move(edge: .leading).combined(with: .opacity)
+                            ))
+                    }
+
                     Spacer(minLength: WorkstationLayout.minHorizontalSpacing)
 
                     // 1. LEFT COLUMN: Tanpura 1 & 2 Cards Stacked + Swar Mandal Underneath
@@ -57,16 +67,6 @@ struct ContentView: View {
                 .padding(.bottom, WorkstationLayout.bottomPadding)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
 
-                // MARK: - Left Presets Drawer Overlay (Pre-rendered offscreen for 0ms instant open)
-                HStack {
-                    PresetsDrawerView(audio: audio)
-                        .offset(x: audio.isPresetsPresented ? 0 : -350)
-                        .opacity(audio.isPresetsPresented ? 1 : 0)
-                        .animation(.spring(response: 0.35, dampingFraction: 0.82), value: audio.isPresetsPresented)
-                    Spacer()
-                }
-                .allowsHitTesting(audio.isPresetsPresented)
-
                 // MARK: - Liquid Glass Translucent Overlay (Floating Settings Panel)
                 if audio.isInspectorPresented {
                     HStack {
@@ -74,6 +74,22 @@ struct ContentView: View {
                         SettingsDrawerView(audio: audio)
                     }
                     .transition(.move(edge: .trailing).combined(with: .opacity))
+                }
+
+                // MARK: - Acoustic Instrument Tuner Popover Overlay
+                if audio.isTunerPresented {
+                    ZStack {
+                        Color.black.opacity(0.35)
+                            .ignoresSafeArea()
+                            .onTapGesture {
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                                    audio.isTunerPresented = false
+                                }
+                            }
+
+                        TunerDrawerView(audio: audio)
+                    }
+                    .transition(.opacity.combined(with: .scale(scale: 0.96)))
                 }
 
                 // MARK: - Launch Blurry Loading Overlay
@@ -103,7 +119,9 @@ struct ContentView: View {
         .toolbar {
             ToolbarItem(placement: .navigation) {
                 Button(action: {
-                    audio.isPresetsPresented.toggle()
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
+                        audio.isPresetsPresented.toggle()
+                    }
                 }) {
                     HStack(spacing: 4) {
                         Image(systemName: "sidebar.left")
@@ -113,7 +131,7 @@ struct ContentView: View {
                     .foregroundColor(audio.isPresetsPresented ? .accentColor : .primary)
                 }
                 .buttonStyle(.plain)
-                .help("Toggle Presets Drawer")
+                .help("Toggle Presets Sidebar")
             }
 
             ToolbarItem(placement: .principal) {
@@ -124,6 +142,21 @@ struct ContentView: View {
 
             ToolbarItem(placement: .primaryAction) {
                 HStack(spacing: 12) {
+                    Button(action: {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                            audio.isTunerPresented.toggle()
+                        }
+                    }) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "tuningfork")
+                            Text("Tuner")
+                        }
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(audio.isTunerPresented ? .accentColor : .primary)
+                    }
+                    .buttonStyle(.plain)
+                    .help("Toggle Acoustic Instrument Tuner")
+
                     Button(action: {
                         audio.isMasterMuted.toggle()
                     }) {
