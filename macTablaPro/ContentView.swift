@@ -10,6 +10,8 @@ struct ContentView: View {
                 .ignoresSafeArea()
 
             // MARK: - Main Workspace (Collapsible Sidebar + Zero-Scroll 3-Column Layout)
+            let cardWidth = WorkstationLayout.cardWidth(isPresetsPresented: audio.isPresetsPresented)
+
             ZStack(alignment: .top) {
                 HStack(alignment: .top, spacing: 0) {
                     // MARK: - In-Flow Collapsible Presets Sidebar
@@ -38,7 +40,7 @@ struct ContentView: View {
                             SwarMandalCardView(swarMandal: swarMandal)
                         }
                     }
-                    .frame(width: WorkstationLayout.cardWidth)
+                    .frame(width: cardWidth)
 
                     Spacer(minLength: WorkstationLayout.minHorizontalSpacing)
 
@@ -50,7 +52,7 @@ struct ContentView: View {
                             TablaCardView(tabla: tabla)
                         }
                     }
-                    .frame(width: WorkstationLayout.cardWidth)
+                    .frame(width: cardWidth)
 
                     Spacer(minLength: WorkstationLayout.minHorizontalSpacing)
 
@@ -59,10 +61,11 @@ struct ContentView: View {
                         MixerCardView(audio: audio)
                         SankalpCardView(sankalp: audio.sankalp, isAntique: audio.isAntiqueThemeEnabled)
                     }
-                    .frame(width: WorkstationLayout.cardWidth)
+                    .frame(width: cardWidth)
 
                     Spacer(minLength: WorkstationLayout.minHorizontalSpacing)
                 }
+                .animation(.spring(response: 0.35, dampingFraction: 0.82), value: audio.isPresetsPresented)
                 .padding(.top, WorkstationLayout.topPadding)
                 .padding(.bottom, WorkstationLayout.bottomPadding)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)

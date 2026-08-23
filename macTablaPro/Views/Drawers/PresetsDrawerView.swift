@@ -284,7 +284,7 @@ struct PresetsDrawerView: View {
             }
         }
         .padding(16)
-        .frame(width: 300)
+        .frame(width: 280)
         .nativeCard(isAntique: audio.isAntiqueThemeEnabled, cornerRadius: 20)
     }
 }

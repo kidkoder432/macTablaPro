@@ -3,12 +3,12 @@ import AppKit
 
 // MARK: - Native Display Box (LED / LCD Note and Tempo Display Container)
 struct NativeDisplayBox<Content: View>: View {
-    let width: CGFloat
+    var width: CGFloat? = nil
     let height: CGFloat
     var isAntique: Bool = false
     let content: () -> Content
 
-    init(width: CGFloat, height: CGFloat, isAntique: Bool = false, @ViewBuilder content: @escaping () -> Content) {
+    init(width: CGFloat? = nil, height: CGFloat, isAntique: Bool = false, @ViewBuilder content: @escaping () -> Content) {
         self.width = width
         self.height = height
         self.isAntique = isAntique
@@ -35,6 +35,7 @@ struct NativeDisplayBox<Content: View>: View {
 
             content()
         }
-        .frame(width: width, height: height)
+        .frame(height: height)
+        .frame(maxWidth: width ?? .infinity)
     }
 }

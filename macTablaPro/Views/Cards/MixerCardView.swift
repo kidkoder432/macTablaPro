@@ -76,7 +76,7 @@ struct MixerCardView: View {
             }
         }
         .padding(20)
-        .frame(width: 340)
+        .frame(maxWidth: .infinity)
         .nativeCard(isAntique: isAntique, cornerRadius: 16)
     }
 }
@@ -92,7 +92,7 @@ struct MixerChannelRow: View {
             Button(action: { instrument.togglePlay() }) {
                 Text(name)
                     .font(isAntique ? .custom("Baskerville-Italic", size: 14).weight(.semibold) : .caption)
-                    .frame(width: 70, alignment: .leading)
+                    .frame(maxWidth: 68, alignment: .leading)
             }
             .buttonStyle(CustomTagButtonStyle(isSelected: instrument.isPlaying, isAntique: isAntique))
 

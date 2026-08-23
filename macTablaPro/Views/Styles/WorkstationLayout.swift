@@ -3,13 +3,20 @@ import AppKit
 
 // MARK: - Workstation Layout Constants
 struct WorkstationLayout {
+    static let defaultCardWidth: CGFloat = 340
+    static let compactCardWidth: CGFloat = 265
     static let cardWidth: CGFloat = 340
+
+    static func cardWidth(isPresetsPresented: Bool) -> CGFloat {
+        isPresetsPresented ? compactCardWidth : defaultCardWidth
+    }
+
     static let cardCornerRadius: CGFloat = 16
     
-    static let minHorizontalSpacing: CGFloat = 16
-    static let verticalCardSpacing: CGFloat = 14
-    static let topPadding: CGFloat = 16
-    static let bottomPadding: CGFloat = 16
+    static let minHorizontalSpacing: CGFloat = 14
+    static let verticalCardSpacing: CGFloat = 12
+    static let topPadding: CGFloat = 14
+    static let bottomPadding: CGFloat = 14
 
     static let minWindowWidth: CGFloat = 1100
     static let minWindowHeight: CGFloat = 670

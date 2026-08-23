@@ -96,7 +96,7 @@ struct TanpuraCardView: View {
             }
         }
         .padding(16)
-        .frame(width: 340)
+        .frame(maxWidth: .infinity)
         .nativeCard(isAntique: isAntique, cornerRadius: 16)
     }
 }

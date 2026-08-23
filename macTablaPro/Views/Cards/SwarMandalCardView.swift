@@ -118,7 +118,7 @@ struct SwarMandalCardView: View {
                     }
                 }
                 .pickerStyle(.menu)
-                .frame(width: 150)
+                .frame(maxWidth: 140)
             }
             
             // MARK: - Row 3: Volume Slider
@@ -274,7 +274,7 @@ struct SwarMandalCardView: View {
             }
         }
         .padding(14)
-        .frame(width: 340)
+        .frame(maxWidth: .infinity)
         .nativeCard(isAntique: isAntique, cornerRadius: 16)
         .popover(isPresented: $isPopoverPresented, arrowEdge: .bottom) {
             if let idx = selectedStringIndex, idx < swarMandal.stringNotes.count {

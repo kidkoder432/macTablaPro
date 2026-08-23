@@ -23,27 +23,27 @@ struct MasterPitchCardView: View {
                 .foregroundColor(isAntique ? Color.orange : .secondary)
             
             // Giant Pitch Display with Chevrons (Full Display Height Click Target)
-            HStack(spacing: 16) {
+            HStack(spacing: 12) {
                 RepeatingTouchButton(action: { executeCoarsePitchStep(upwards: false) }) {
                     ZStack {
                         RoundedRectangle(cornerRadius: 12, style: .continuous)
                             .fill(Color(NSColor.controlBackgroundColor).opacity(0.5))
                         Image(systemName: "chevron.left")
-                            .font(.system(size: 26, weight: .bold))
+                            .font(.system(size: 24, weight: .bold))
                             .foregroundColor(isAntique ? Color.orange : .secondary)
                     }
-                    .frame(width: 44, height: 105)
+                    .frame(width: 38, height: 105)
                     .contentShape(Rectangle())
                 }
                 
                 let displayData = getDisplayData(baseCents: audio.scaleOffsetCents, fineCents: audio.fineTuneCents)
                 
-                NativeDisplayBox(width: 170, height: 105, isAntique: isAntique) {
+                NativeDisplayBox(height: 105, isAntique: isAntique) {
                     ZStack(alignment: .topLeading) {
                         Text(displayData.noteName)
                             .font(isAntique ?
-                                .system(size: 54, weight: .bold, design: .monospaced) :
-                                .system(size: 54, weight: .bold, design: .rounded))
+                                .system(size: 50, weight: .bold, design: .monospaced) :
+                                .system(size: 50, weight: .bold, design: .rounded))
                             .foregroundColor(isAntique ? Color.orange : .accentColor)
                             .shadow(color: isAntique ? Color.orange.opacity(0.8) : Color.cyan.opacity(0.4), radius: isAntique ? 8 : 6)
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -63,10 +63,10 @@ struct MasterPitchCardView: View {
                         RoundedRectangle(cornerRadius: 12, style: .continuous)
                             .fill(Color(NSColor.controlBackgroundColor).opacity(0.5))
                         Image(systemName: "chevron.right")
-                            .font(.system(size: 26, weight: .bold))
+                            .font(.system(size: 24, weight: .bold))
                             .foregroundColor(isAntique ? Color.orange : .secondary)
                     }
-                    .frame(width: 44, height: 105)
+                    .frame(width: 38, height: 105)
                     .contentShape(Rectangle())
                 }
             }
@@ -96,7 +96,7 @@ struct MasterPitchCardView: View {
             }
         }
         .padding(16)
-        .frame(width: 340)
+        .frame(maxWidth: .infinity)
         .nativeCard(isAntique: isAntique, cornerRadius: 14)
     }
     

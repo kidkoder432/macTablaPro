@@ -191,8 +191,8 @@ struct TablaCardView: View {
             }
 
             // Central Display and Play/Stop Control
-            HStack(spacing: 20) {
-                NativeDisplayBox(width: 145, height: 95, isAntique: isAntique) {
+            HStack(spacing: 16) {
+                NativeDisplayBox(height: 95, isAntique: isAntique) {
                     ZStack {
                         // 1. Top Bar: Symbol (Left), Sub-beat Dots (Center), BPM Number & Label (Right)
                         VStack {
@@ -396,7 +396,7 @@ struct TablaCardView: View {
             .tint(isAntique ? Color.orange : .secondary)
         }
         .padding(16)
-        .frame(width: 340)
+        .frame(maxWidth: .infinity)
         .nativeCard(isAntique: isAntique, cornerRadius: 16)
     }
 }

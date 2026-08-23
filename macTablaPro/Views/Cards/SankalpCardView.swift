@@ -98,7 +98,7 @@ struct SankalpCardView: View {
             .buttonStyle(SankalpButtonStyle(isProminent: !sankalp.hasLoggedToday, isAntique: isAntique))
         }
         .padding(16)
-        .frame(width: 340)
+        .frame(maxWidth: .infinity)
         .nativeCard(isAntique: isAntique, cornerRadius: 16)
         .sheet(isPresented: $isShowingLogDialog) {
             SankalpLogDialog(sankalp: sankalp, isAntique: isAntique, isPresented: $isShowingLogDialog)
