@@ -7,8 +7,8 @@ struct NoteDisplayData {
 }
 
 let centsNoteNames: [String] = [
-    "A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#",
-    "A (High)", "A# (High)", "B (High)", "C (High)", "C# (High)", "D (High)", "D# (High)", "E (High)"
+    "A2", "A#2", "B2", "C3", "C#3", "D3", "D#3", "E3", "F3", "F#3", "G3", "G#3",
+    "A3", "A#3", "B3", "C4", "C#4", "D4", "D#4", "E4"
 ]
 
 // MARK: - Master Pitch Card View
@@ -102,11 +102,21 @@ struct MasterPitchCardView: View {
     
     private func executeCoarsePitchStep(upwards: Bool) {
         if upwards {
-            audio.scaleOffsetCents = min(1600, audio.scaleOffsetCents + 100)
+            if audio.fineTuneCents < 0 {
+                audio.fineTuneCents = 0.0
+            } else {
+                audio.scaleOffsetCents = min(1600, audio.scaleOffsetCents + 100)
+                audio.fineTuneCents = 0.0
+            }
         } else {
-            audio.scaleOffsetCents = max(-300, audio.scaleOffsetCents - 100)
+            if audio.fineTuneCents > 0 {
+                audio.fineTuneCents = 0.0
+            } else {
+                audio.scaleOffsetCents = max(-300, audio.scaleOffsetCents - 100)
+                audio.fineTuneCents = 0.0
+            }
         }
-        audio.fineTuneCents = 0.0
+        audio.commitPitchChange()
     }
 
     private func getDisplayData(baseCents: Double, fineCents: Double) -> NoteDisplayData {

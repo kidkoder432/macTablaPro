@@ -92,7 +92,6 @@ nonisolated class AudioVoice: @unchecked Sendable {
     func stop() {
         playerNode.volume = 0.0
         playerNode.stop()
-        playerNode.reset()
         
         lock.lock()
         _isBusy = false

@@ -52,7 +52,8 @@
 
   ──────                                                                                     
   ### Question 4: How does this generalize to Tanpura and Swar Mandal?                       
-                                                                                             
+                                                    
+
   Tanpura plays 4 strings + 1 rest. Swar Mandal plays 20 strings + a 60-second pause.        
                                                                                              
   • What should the contract between LookaheadAudioScheduler and Instrument look like so the 

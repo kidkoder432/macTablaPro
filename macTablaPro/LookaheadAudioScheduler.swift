@@ -119,10 +119,8 @@ nonisolated public final class LookaheadAudioScheduler: @unchecked Sendable {
         isRunning = false
         os_unfair_lock_unlock(lock)
 
-        schedulerQueue.sync {
-            self.schedulerTimer?.cancel()
-            self.schedulerTimer = nil
-        }
+        schedulerTimer?.cancel()
+        schedulerTimer = nil
     }
 
     /// Runs a single non-looping pass of N ticks on the background queue.

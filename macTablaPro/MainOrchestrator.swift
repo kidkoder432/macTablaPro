@@ -9,6 +9,8 @@ class AppAudioOrchestrator: ObservableObject {
     private let engine = AVAudioEngine()
     private let masterMixer = AVAudioMixerNode()
 
+    var sharedEngine: AVAudioEngine { engine }
+
     // The single, master database of loaded audio data in RAM
     private var masterSampleRegistry: [String: PitchedSample] = [:]
 
@@ -69,6 +71,7 @@ class AppAudioOrchestrator: ObservableObject {
         }
     }
     @Published var isPresetsPresented: Bool = false
+    @Published var isTunerPresented: Bool = false
     @Published var isInspectorPresented: Bool = false
     @Published var hasStartedFirstTime: Bool = false
     @Published var activePresetName: String? = nil
@@ -84,18 +87,26 @@ class AppAudioOrchestrator: ObservableObject {
         }
     }
 
+    @Published var isTunerMuted: Bool = false {
+        didSet {
+            updateMasterOutputVolume()
+        }
+    }
+
     @Published var masterVolume: Double = 1.0 {
         didSet {
-            if !isMasterMuted {
-                masterMixer.outputVolume = Float(masterVolume)
-            }
+            updateMasterOutputVolume()
         }
     }
 
     @Published var isMasterMuted: Bool = false {
         didSet {
-            masterMixer.outputVolume = isMasterMuted ? 0.0 : Float(masterVolume)
+            updateMasterOutputVolume()
         }
+    }
+
+    private func updateMasterOutputVolume() {
+        masterMixer.outputVolume = (isMasterMuted || isTunerMuted) ? 0.0 : Float(masterVolume)
     }
 
     private var activeInstrumentsSnapshot: Set<ObjectIdentifier> = []
@@ -389,21 +400,12 @@ class AppAudioOrchestrator: ObservableObject {
 
     func stopAllWorkstationAudio() {
         activeInstrumentsSnapshot.removeAll()
-        if tanpura1.isPlaying {
-            activeInstrumentsSnapshot.insert(ObjectIdentifier(tanpura1))
-            tanpura1.togglePlay()
-        }
-        if tanpura2.isPlaying {
-            activeInstrumentsSnapshot.insert(ObjectIdentifier(tanpura2))
-            tanpura2.togglePlay()
-        }
-        if tabla.isPlaying {
-            activeInstrumentsSnapshot.insert(ObjectIdentifier(tabla))
-            tabla.togglePlay()
-        }
-        if let sm = swarMandal, sm.isPlaying {
-            activeInstrumentsSnapshot.insert(ObjectIdentifier(sm))
-            sm.togglePlay()
+        for instrument in instruments {
+            if instrument.isPlaying {
+                activeInstrumentsSnapshot.insert(ObjectIdentifier(instrument))
+                instrument.stopPlay()
+            }
+            instrument.voicePool.stopFuture() // Cancel future scheduled ahead-of-time beats, let currently sounding notes ring out naturally!
         }
     }
 
@@ -416,18 +418,11 @@ class AppAudioOrchestrator: ObservableObject {
                 activeInstrumentsSnapshot.insert(ObjectIdentifier(sm))
             }
         }
-        
-        if activeInstrumentsSnapshot.contains(ObjectIdentifier(tanpura1)) && !tanpura1.isPlaying {
-            tanpura1.togglePlay()
-        }
-        if activeInstrumentsSnapshot.contains(ObjectIdentifier(tanpura2)) && !tanpura2.isPlaying {
-            tanpura2.togglePlay()
-        }
-        if activeInstrumentsSnapshot.contains(ObjectIdentifier(tabla)) && !tabla.isPlaying {
-            tabla.togglePlay()
-        }
-        if let sm = swarMandal, activeInstrumentsSnapshot.contains(ObjectIdentifier(sm)) && !sm.isPlaying {
-            sm.togglePlay()
+
+        for instrument in instruments {
+            if activeInstrumentsSnapshot.contains(ObjectIdentifier(instrument)) && !instrument.isPlaying {
+                instrument.startPlay()
+            }
         }
     }
                                                                                           
