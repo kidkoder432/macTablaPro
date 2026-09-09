@@ -1,21 +1,36 @@
 import SwiftUI
 
-struct PickerNote: Hashable {
+struct PickerNote: Hashable, Identifiable {
+    var id: Double { cents }
     let name: String
     let cents: Double
 }
 
-private let tanpuraNotesMap: [String: Double] = [
-    "Ni (Low)": 1100.0, "Sa": 0.0, "Re (komal)": 100.0, "Re": 200.0,
-    "Ga (komal)": 300.0, "Ga": 400.0, "Ma": 500.0, "Ma (tivra)": 600.0,
-    "Pa": 700.0, "Dha (komal)": 800.0, "Dha": 900.0, "Ni": 1100.0
+let lowerOctavePickerNotes: [PickerNote] = [
+    PickerNote(name: "Kharaj", cents: 0.0),
+    PickerNote(name: "Re Komal", cents: 100.0),
+    PickerNote(name: "Re", cents: 200.0),
+    PickerNote(name: "Ga Komal", cents: 300.0),
+    PickerNote(name: "Ga Shuddha", cents: 400.0),
+    PickerNote(name: "Ma", cents: 500.0),
+    PickerNote(name: "Ma Teevra", cents: 600.0),
+    PickerNote(name: "Pa", cents: 700.0),
+    PickerNote(name: "Dha Komal", cents: 800.0),
+    PickerNote(name: "Dha", cents: 900.0),
+    PickerNote(name: "Ni Komal", cents: 1000.0),
+    PickerNote(name: "Ni", cents: 1100.0),
 ]
 
-let stringPickerItems: [PickerNote] = [
-    "Ni (Low)", "Sa", "Re (komal)", "Re", "Ga (komal)", "Ga", "Ma", "Ma (tivra)", "Pa", "Dha (komal)", "Dha", "Ni"
+let higherOctavePickerNotes: [PickerNote] = [
+    PickerNote(name: "Sa", cents: 1200.0),
+    PickerNote(name: "Re Higher Komal", cents: 1300.0),
+    PickerNote(name: "Re Higher", cents: 1400.0),
+    PickerNote(name: "Ga Higher Komal", cents: 1500.0),
+    PickerNote(name: "Ga Higher", cents: 1600.0),
+    PickerNote(name: "Ma Higher", cents: 1700.0),
 ]
-.sorted(by: { (tanpuraNotesMap[$0] ?? 0.0) < (tanpuraNotesMap[$1] ?? 0.0) })
-.map { PickerNote(name: $0, cents: tanpuraNotesMap[$0] ?? -1.0) }
+
+let stringPickerItems: [PickerNote] = lowerOctavePickerNotes + higherOctavePickerNotes
 
 // MARK: - Tanpura Card View
 struct TanpuraCardView: View {
@@ -30,6 +45,17 @@ struct TanpuraCardView: View {
 
     var isQuickOptionSelected: Bool {
         quickOptions.contains { $0.cents == tanpura.firstStringPitch }
+    }
+
+    var isCustomSelected: Bool {
+        tanpura.isPlaying && !isQuickOptionSelected
+    }
+
+    var customOptionLabel: String {
+        if isCustomSelected {
+            return ITablaProPreset.centsToStringName(tanpura.firstStringPitch)
+        }
+        return "..."
     }
 
     var body: some View {
@@ -72,24 +98,49 @@ struct TanpuraCardView: View {
                     .buttonStyle(CustomTagButtonStyle(isSelected: tanpura.isPlaying && tanpura.firstStringPitch == option.cents, isAntique: isAntique))
                 }
 
-                // 3. Overflow Menu for custom pitches
-                let isCustomSelected = tanpura.isPlaying && !isQuickOptionSelected
+                // 3. Overflow Menu for custom pitches (Kharaj through Ma Higher)
                 Menu {
-                    ForEach(stringPickerItems, id: \.self) { item in
-                        Button(action: {
-                            tanpura.firstStringPitch = item.cents
-                            if !tanpura.isPlaying {
-                                tanpura.togglePlay()
+                    Section("Lower Octave (Kharaj - Ni)") {
+                        ForEach(lowerOctavePickerNotes) { item in
+                            Button(action: {
+                                tanpura.firstStringPitch = item.cents
+                                if !tanpura.isPlaying {
+                                    tanpura.togglePlay()
+                                }
+                            }) {
+                                HStack {
+                                    Text(item.name)
+                                    if tanpura.firstStringPitch == item.cents {
+                                        Image(systemName: "checkmark")
+                                    }
+                                }
                             }
-                        }) {
-                            HStack {
-                                Text(item.name)
-                                if tanpura.firstStringPitch == item.cents { Image(systemName: "checkmark") }
+                        }
+                    }
+
+                    Section("Higher Octave (Sa - Ma Higher)") {
+                        ForEach(higherOctavePickerNotes) { item in
+                            Button(action: {
+                                tanpura.firstStringPitch = item.cents
+                                if !tanpura.isPlaying {
+                                    tanpura.togglePlay()
+                                }
+                            }) {
+                                HStack {
+                                    Text(item.name)
+                                    if tanpura.firstStringPitch == item.cents {
+                                        Image(systemName: "checkmark")
+                                    }
+                                }
                             }
                         }
                     }
                 } label: {
-                    Text("...").fontWeight(.medium).frame(maxWidth: .infinity)
+                    Text(customOptionLabel)
+                        .fontWeight(.medium)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.75)
+                        .frame(maxWidth: .infinity)
                 }
                 .menuIndicator(.hidden)
                 .buttonStyle(CustomTagButtonStyle(isSelected: isCustomSelected, isAntique: isAntique))
